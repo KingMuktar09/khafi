@@ -1,0 +1,6 @@
+{
+  "name": "KHAFI LIBRARY",
+  "description": "A Private Space for Ilm - A private digital library for discovering, organizing, reading, and preserving knowledge.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
