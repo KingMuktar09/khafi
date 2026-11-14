@@ -1,0 +1,144 @@
+import { RouteState, ViewName } from '../types';
+
+type RouteChangeListener = (route: RouteState) => void;
+
+class Router {
+  private listeners: Set<RouteChangeListener> = new Set();
+  private currentRoute: RouteState = { view: 'home' };
+
+  constructor() {
+    // Parse URL on init
+    this.currentRoute = this.parseUrl(window.location.pathname, window.location.search);
+
+    // Listen for browser back/forward buttons
+    window.addEventListener('popstate', () => {
+      const parsed = this.parseUrl(window.location.pathname, window.location.search);
+      this.currentRoute = parsed;
+      this.notify();
+    });
+  }
+
+  public getRoute(): RouteState {
+    return { ...this.currentRoute };
+  }
+
+  public subscribe(listener: RouteChangeListener): () => void {
+    this.listeners.add(listener);
+    // Initial emission
+    listener(this.getRoute());
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify(): void {
+    const route = this.getRoute();
+    this.listeners.forEach((fn) => fn(route));
+  }
+
+  public navigate(
+    view: ViewName,
+    params?: { folderId?: string | null; subfolderId?: string | null; bookId?: string | null; searchQuery?: string },
+    options?: { replace?: boolean }
+  ): void {
+    const newRoute: RouteState = {
+      view,
+      folderId: params?.folderId ?? null,
+      subfolderId: params?.subfolderId ?? null,
+      bookId: params?.bookId ?? null,
+      searchQuery: params?.searchQuery ?? undefined,
+    };
+
+    const url = this.buildUrl(newRoute);
+
+    if (options?.replace) {
+      window.history.replaceState(newRoute, '', url);
+    } else {
+      // Check if URL is already identical to prevent duplicate history entries
+      const currentUrl = window.location.pathname + window.location.search;
+      if (currentUrl !== url) {
+        window.history.pushState(newRoute, '', url);
+      }
+    }
+
+    this.currentRoute = newRoute;
+    this.notify();
+
+    // Scroll to top on navigation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  public back(): void {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      this.navigate('home');
+    }
+  }
+
+  private buildUrl(route: RouteState): string {
+    switch (route.view) {
+      case 'home':
+        return '/';
+      case 'library': {
+        const searchParams = new URLSearchParams();
+        if (route.folderId) searchParams.set('folderId', route.folderId);
+        if (route.subfolderId) searchParams.set('subfolderId', route.subfolderId);
+        if (route.searchQuery) searchParams.set('q', route.searchQuery);
+        const query = searchParams.toString();
+        return query ? `/library?${query}` : '/library';
+      }
+      case 'favorites':
+        return '/favorites';
+      case 'info':
+        return '/info';
+      case 'book':
+        return route.bookId ? `/book/${route.bookId}` : '/library';
+      case 'read':
+        return route.bookId ? `/read/${route.bookId}` : '/library';
+      case 'admin':
+        return '/admin';
+      default:
+        return '/';
+    }
+  }
+
+  private parseUrl(pathname: string, search: string): RouteState {
+    const params = new URLSearchParams(search);
+
+    if (pathname.startsWith('/book/')) {
+      const bookId = pathname.replace('/book/', '').trim();
+      return { view: 'book', bookId };
+    }
+
+    if (pathname.startsWith('/read/')) {
+      const bookId = pathname.replace('/read/', '').trim();
+      return { view: 'read', bookId };
+    }
+
+    if (pathname === '/library' || pathname.startsWith('/library/')) {
+      return {
+        view: 'library',
+        folderId: params.get('folderId') || null,
+        subfolderId: params.get('subfolderId') || null,
+        searchQuery: params.get('q') || undefined,
+      };
+    }
+
+    if (pathname === '/favorites') {
+      return { view: 'favorites' };
+    }
+
+    if (pathname === '/info') {
+      return { view: 'info' };
+    }
+
+    if (pathname === '/admin') {
+      return { view: 'admin' };
+    }
+
+    return { view: 'home' };
+  }
+}
+
+export const router = new Router();
