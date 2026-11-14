@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index?__path=$1"
+    },
+    {
+      "source": "/((?!api/|uploads/|sample-pdfs/|assets/|favicon.ico|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
