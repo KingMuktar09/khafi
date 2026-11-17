@@ -26,6 +26,7 @@ import {
   pullCatalogFromDrive,
   testDriveConnection,
   fetchLiveDriveCatalog,
+  syncCatalogFromDrive,
   createDriveFolder,
   renameDriveFolder,
   invalidateDriveCache,
@@ -72,16 +73,35 @@ export function getAdminUsername(): string {
   return (process.env.ADMIN_USERNAME || "Khafi").trim();
 }
 
+// SECURITY: there is NO default admin password. If ADMIN_PASSWORD is not
+// set in the environment, admin login is impossible (an empty stored
+// password never matches a non-empty login attempt). A hardcoded fallback
+// password in a public repo is a standing admin backdoor for anyone who
+// reads the code, so it must not exist.
 export function getAdminPassword(): string {
-  return (process.env.ADMIN_PASSWORD || "Alaliyy").trim();
+  return (process.env.ADMIN_PASSWORD || "").trim();
 }
 
 export function getAdminPasswordHash(): string {
   return (process.env.ADMIN_PASSWORD_HASH || "").trim();
 }
 
+// SECURITY: there is NO default session secret. If SESSION_SECRET is not
+// set, an ephemeral random secret is generated per process and admin
+// sessions do not survive a restart. A hardcoded secret in a public repo
+// lets anyone forge valid admin session tokens (HMAC-SHA256 with a known
+// key), so it must not exist in code. Set SESSION_SECRET in Vercel.
+let ephemeralSessionSecret: string | null = null;
 export function getSessionSecret(): string {
-  return (process.env.SESSION_SECRET || "bIxUXZwpXKAdyZaqlVjqsOUQIG5vVxPV3tT2F4TFIvelgr4p/SoQlXPyLg9vTH8k").trim();
+  const configured = (process.env.SESSION_SECRET || "").trim();
+  if (configured) return configured;
+  if (!ephemeralSessionSecret) {
+    ephemeralSessionSecret = crypto.randomBytes(32).toString("hex");
+    console.warn(
+      "SECURITY WARNING: SESSION_SECRET is not set; using an ephemeral per-process secret. Admin sessions will not survive a restart. Set SESSION_SECRET in Vercel."
+    );
+  }
+  return ephemeralSessionSecret;
 }
 
 // Store active admin sessions in server memory
@@ -111,6 +131,14 @@ export function verifySessionToken(token: string | undefined): boolean {
     // ignore malformed tokens
   }
   return false;
+}
+
+// Constant-time secret comparison (via SHA-256 digests) so password checks
+// do not leak how much of the guess matched through timing.
+export function safeEqualSecret(a: string, b: string): boolean {
+  const ha = crypto.createHash("sha256").update(a).digest();
+  const hb = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(ha, hb);
 }
 
 export function extractAdminToken(req: express.Request): string | undefined {
@@ -501,8 +529,8 @@ app.get(["/api/health", "/api"], (req, res) => {
 });
 
 // Public library status: honest, no secrets. Reports whether the live Drive
-// sync is configured, and that the catalog served is the Islamic Library
-// collection only (Drive links, no files stored here).
+// sync is configured, and that the catalog served is the All Islamic History
+// Books collection only (Drive links, no files stored here).
 app.get(["/api/library-status", "/library-status"], (req, res) => {
   const catalog = readCatalog();
   const folders = catalog.folders || [];
@@ -512,7 +540,7 @@ app.get(["/api/library-status", "/library-status"], (req, res) => {
     status: "ok",
     library: "Ilm-e-Ghayb Library",
     brand: "Ghayb Chronicles",
-    driveFolder: "Islamic Library only",
+    driveFolder: "All Islamic History Books only",
     driveFolderId: getDriveFolderId(),
     driveConfigured,
     mode: driveConfigured ? "drive-sync" : "catalog-links",
@@ -659,7 +687,12 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
   }
 
   if (!driveFileId && !localFilePath) {
-    if (/^[a-zA-Z0-9_-]{20,}$/.test(cleanId)) {
+    // SECURITY: an arbitrary Drive file ID must only be streamed for the
+    // admin (e.g. previewing a just-uploaded file before it is catalogued).
+    // Public readers may only stream files that are catalog books; otherwise
+    // this endpoint would proxy any file the server's Drive credentials can
+    // read, not just library books.
+    if (verifyAdminRequest(req) && /^[a-zA-Z0-9_-]{20,}$/.test(cleanId)) {
       driveFileId = cleanId;
     } else if (cleanId.includes("sample-pdfs") || cleanId.includes("sample-reading")) {
       localFilePath = path.join(samplePdfDir, path.basename(cleanId));
@@ -872,8 +905,10 @@ app.get(pdfDownloadRoutes, async (req, res) => {
     (b: any) => b.id === cleanId || b.id === rawId || b.driveFileId === cleanId
   );
 
-  let driveFileId = book?.driveFileId || extractDriveFileId(book?.fileUrl || book?.pdfUrl || book?.driveUrl || cleanId);
-  if (!driveFileId && (/^[a-zA-Z0-9_-]{20,}$/.test(cleanId) || cleanId.startsWith("1"))) {
+  // SECURITY: only a catalog book's Drive file may be downloaded by the
+  // public; a caller-supplied Drive ID is only honoured for the admin.
+  let driveFileId = book?.driveFileId || extractDriveFileId(book?.fileUrl || book?.pdfUrl || book?.driveUrl || "");
+  if (!driveFileId && verifyAdminRequest(req) && (/^[a-zA-Z0-9_-]{20,}$/.test(cleanId) || cleanId.startsWith("1"))) {
     driveFileId = cleanId;
   }
 
@@ -989,7 +1024,10 @@ app.get(["/api/download", "/download"], async (req, res) => {
     return;
   }
 
-  const driveFileId = book?.driveFileId || extractDriveFileId(relPath);
+  // SECURITY: only resolve a caller-supplied Drive ID/URL for the admin or
+  // for a catalog book; otherwise any Drive file ID in the query would be
+  // streamed through the server's Drive credentials.
+  const driveFileId = book?.driveFileId || (verifyAdminRequest(req) ? extractDriveFileId(relPath) : null);
   if (driveFileId && isGoogleDriveConfigured()) {
     const drive = getDriveClient();
     try {
@@ -1186,17 +1224,22 @@ app.post(["/api/admin/login", "/admin/login"], (req, res) => {
   const passwordHash = crypto.createHash("sha256").update(cleanPassword).digest("hex");
 
   const isUserValid = cleanUsername.toLowerCase() === adminUser.toLowerCase();
+  // Timing-safe comparison; an unset stored password ("") never matches.
   const isPasswordValid =
-    cleanPassword === adminPass ||
-    (adminPassHash && (cleanPassword === adminPassHash || passwordHash === adminPassHash.toLowerCase()));
+    (adminPass !== "" && safeEqualSecret(cleanPassword, adminPass)) ||
+    (adminPassHash !== "" &&
+      (safeEqualSecret(cleanPassword, adminPassHash) ||
+        safeEqualSecret(passwordHash, adminPassHash.toLowerCase())));
 
   if (isUserValid && isPasswordValid) {
     const sessionToken = generateSessionToken();
     activeSessions.add(sessionToken);
 
+    // httpOnly so page JavaScript (and any injected script) cannot read the
+    // session cookie; Secure on Vercel/HTTPS so it is never sent over HTTP.
     res.cookie("khafi_admin_session", sessionToken, {
-      httpOnly: false,
-      secure: false,
+      httpOnly: true,
+      secure: isServerless,
       sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
@@ -1324,6 +1367,79 @@ app.get(["/api/admin/drive/status", "/admin/drive/status"], requireAdmin, async 
     res.json({ success: true, ...status });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || "Failed to check Drive status." });
+  }
+});
+
+// 4.6 Admin "Sync now": rebuild the saved catalog from a fresh live
+// listing of the Drive folder (real-time sync on demand). Admin-only.
+// When Drive is not configured this returns a clear 503, never a crash.
+// Readers already get live Drive data through /api/catalog whenever Drive
+// is configured (30s cache), so a sync mainly refreshes the saved
+// snapshot, the admin's counts, and the copy of catalog.json kept in Drive.
+app.post(["/api/admin/sync", "/admin/sync"], requireAdmin, async (req, res) => {
+  try {
+    const result = await syncCatalogFromDrive(readCatalog());
+    if (!result.ok || !result.catalog) {
+      res.status(503).json({ success: false, configured: result.configured, error: result.error || "Drive sync failed." });
+      return;
+    }
+    const saved = writeCatalog(result.catalog);
+    invalidateDriveCache();
+    res.json({
+      success: true,
+      configured: true,
+      folders: result.folders,
+      books: result.books,
+      categories: result.categories,
+      addedBooks: result.addedBooks,
+      removedBooks: result.removedBooks,
+      addedFolders: result.addedFolders,
+      removedFolders: result.removedFolders,
+      savedLocally: saved,
+      syncedAt: result.syncedAt,
+    });
+  } catch (err: any) {
+    console.error("Admin Drive sync failed:", err?.message || err);
+    res.status(500).json({ success: false, error: `Drive sync failed: ${err?.message || err}` });
+  }
+});
+
+// 4.7 Daily auto-sync for the Vercel Cron (free on the Hobby plan, once a
+// day). Vercel calls this with `Authorization: Bearer <CRON_SECRET>` when
+// the CRON_SECRET env var is set in the project. The secret is required:
+// an unprotected trigger would let anyone rebuild the catalog. Set
+// CRON_SECRET in Vercel (any long random value) for the daily cron to work.
+app.get(["/api/cron/sync", "/cron/sync"], async (req, res) => {
+  const cronSecret = (process.env.CRON_SECRET || "").trim();
+  if (!cronSecret) {
+    res.status(503).json({ success: false, error: "CRON_SECRET is not set in Vercel, so the daily auto-sync is disabled. Add any long random value as CRON_SECRET in the Vercel dashboard." });
+    return;
+  }
+  const auth = req.headers.authorization || "";
+  if (auth !== `Bearer ${cronSecret}`) {
+    res.status(401).json({ success: false, error: "Unauthorized cron request." });
+    return;
+  }
+  try {
+    const result = await syncCatalogFromDrive(readCatalog());
+    if (!result.ok || !result.catalog) {
+      res.status(503).json({ success: false, configured: result.configured, error: result.error || "Drive sync failed." });
+      return;
+    }
+    writeCatalog(result.catalog);
+    invalidateDriveCache();
+    res.json({
+      success: true,
+      folders: result.folders,
+      books: result.books,
+      categories: result.categories,
+      addedBooks: result.addedBooks,
+      removedBooks: result.removedBooks,
+      syncedAt: result.syncedAt,
+    });
+  } catch (err: any) {
+    console.error("Cron Drive sync failed:", err?.message || err);
+    res.status(500).json({ success: false, error: `Drive sync failed: ${err?.message || err}` });
   }
 });
 

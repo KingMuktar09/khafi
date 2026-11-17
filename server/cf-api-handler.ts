@@ -2,29 +2,49 @@ import {
   GoogleDriveConfig,
   isDriveConfigured,
   isValidPrivateKey,
-  parsePrivateKey,
   extractDriveFolderId,
-  maskEmail,
   getGoogleDriveAccessToken,
   testDriveConnectionCf,
-  pullCatalogFromDriveCf,
   syncCatalogWithDriveCf,
   fetchLiveDriveCatalogCf,
   createDriveFolderCf,
   renameDriveFolderCf,
   uploadBinaryToDriveCf,
-  deleteDriveFileCf,
   invalidateDriveCacheCf,
 } from "./cf-drive";
-import { initialCatalog } from "./initial-catalog";
+// Bundled saved catalog (36 folders, 173 books: All Islamic History Books
+// incl. Hidden Wisdoms + the Book of Wonders notes). The worker has no disk,
+// so this is the catalog served when Drive is not configured — the same
+// catalog-links mode as the Vercel deploy.
+import bundledCatalog from "../data/catalog.json" with { type: "json" };
+import bundledPaymentSettings from "../data/payment-settings.json" with { type: "json" };
 import type { Book, Folder } from "../src/types";
 
 // In-memory catalog state for edge worker runtime
 let runtimeCatalog: any = null;
 const activeTokens = new Set<string>();
 
+// UPI payment settings in memory (per isolate). The durable copy is the
+// bundled data/payment-settings.json in the repo; admin edits here do not
+// survive a redeploy or a different isolate, same as Vercel /tmp writes.
+let runtimePaymentSettings: any = null;
+
 // Upload session state for chunked uploads
 const chunkSessions = new Map<string, { chunks: Map<number, Uint8Array>; metadata: any }>();
+
+// SECURITY: no default admin password and no default session secret. A
+// hardcoded fallback in a public repo is a standing admin backdoor (and a
+// forgeable HMAC key). When unset, login is impossible and sessions use an
+// ephemeral per-isolate random secret.
+let cachedEphemeralSecret = "";
+function ephemeralSessionSecret(): string {
+  if (!cachedEphemeralSecret) {
+    cachedEphemeralSecret = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+  return cachedEphemeralSecret;
+}
 
 function getEnvConfig(env: any) {
   const getVar = (name: string, fallback = ""): string => {
@@ -37,13 +57,19 @@ function getEnvConfig(env: any) {
   };
 
   const adminUsername = getVar("ADMIN_USERNAME", "Khafi");
-  const adminPassword = getVar("ADMIN_PASSWORD", "Alaliyy");
+  const adminPassword = getVar("ADMIN_PASSWORD", "");
   const adminPasswordHash = getVar("ADMIN_PASSWORD_HASH", "");
-  const sessionSecret = getVar("SESSION_SECRET", "bIxUXZwpXKAdyZaqlVjqsOUQIG5vVxPV3tT2F4TFIvelgr4p/SoQlXPyLg9vTH8k");
+  const sessionSecret = getVar("SESSION_SECRET", "") || ephemeralSessionSecret();
 
-  let email = getVar("GOOGLE_SERVICE_ACCOUNT_EMAIL") || getVar("GOOGLE_CLIENT_EMAIL") || getVar("GCP_SERVICE_ACCOUNT_EMAIL") || "khafi-library-storage@gen-lang-client-0661184713.iam.gserviceaccount.com";
+  // SECURITY: no hardcoded service-account email and no hardcoded folder.
+  // A literal service-account email in a public repo tells anyone which
+  // account can read the library's Drive, and the old default pointed at
+  // the whole "KHAFI LIBRARY" root. When unset, Drive is simply not
+  // configured and the bundled catalog is served. The default folder is
+  // the "All Islamic History Books" folder only.
+  let email = getVar("GOOGLE_SERVICE_ACCOUNT_EMAIL") || getVar("GOOGLE_CLIENT_EMAIL") || getVar("GCP_SERVICE_ACCOUNT_EMAIL") || "";
   let rawKey = getVar("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY") || getVar("GOOGLE_PRIVATE_KEY") || getVar("GCP_SERVICE_ACCOUNT_PRIVATE_KEY");
-  let folderId = getVar("GOOGLE_DRIVE_FOLDER_ID") || getVar("DRIVE_FOLDER_ID") || getVar("GOOGLE_DRIVE_FOLDER") || "11XFqHOjiDj6ChlBX65XFR0p9SOqjpHX5";
+  let folderId = getVar("GOOGLE_DRIVE_FOLDER_ID") || getVar("DRIVE_FOLDER_ID") || getVar("GOOGLE_DRIVE_FOLDER") || "1MAFF2F5pK1HJMoQFSZ6IXoZT9D2LpyIB";
 
   // Check if entire credentials JSON was passed in an alias or in private key
   const fullJson = getVar("GOOGLE_APPLICATION_CREDENTIALS") || getVar("GOOGLE_SERVICE_ACCOUNT_KEY") || getVar("GCP_SERVICE_ACCOUNT_KEY") || rawKey;
@@ -171,6 +197,16 @@ async function sha256Hex(str: string): Promise<string> {
     .join("");
 }
 
+// Constant-time secret comparison (via SHA-256 digests) so password checks
+// do not leak how much of the guess matched through timing.
+async function safeEqualSecretCf(a: string, b: string): Promise<boolean> {
+  const ha = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(a)));
+  const hb = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(b)));
+  let diff = 0;
+  for (let i = 0; i < ha.length; i++) diff |= ha[i] ^ hb[i];
+  return diff === 0;
+}
+
 function getMimeType(fileName: string, override?: string): string {
   if (override && override !== "application/octet-stream") return override;
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
@@ -235,8 +271,9 @@ async function getCatalogData(driveConfig: GoogleDriveConfig): Promise<any> {
     return runtimeCatalog;
   }
 
-  // Fallback to clone of initialCatalog only when Drive is not configured
-  runtimeCatalog = JSON.parse(JSON.stringify(initialCatalog));
+  // Fallback to a clone of the bundled saved catalog when Drive is not
+  // configured. This is the 173-book All Islamic History Books catalog.
+  runtimeCatalog = JSON.parse(JSON.stringify(bundledCatalog));
   return runtimeCatalog;
 }
 
@@ -252,6 +289,60 @@ async function saveCatalogData(data: any, driveConfig: GoogleDriveConfig): Promi
       console.warn("Async Drive catalog sync warning:", err);
     }
   }
+}
+
+/**
+ * Rebuild the saved catalog from a fresh live listing of the Drive folder.
+ * Shared by POST /api/admin/sync and GET /api/cron/sync. Never overwrites
+ * the saved catalog with an empty live result (e.g. a Drive timeout), so a
+ * failed sync can never wipe the library.
+ */
+async function runDriveSyncCf(driveConfig: GoogleDriveConfig): Promise<any> {
+  if (!isDriveConfigured(driveConfig)) {
+    return {
+      ok: false,
+      configured: false,
+      error:
+        "Google Drive is not configured on this server. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY in Cloudflare, and share the All Islamic History Books folder with that service account, then sync again.",
+    };
+  }
+  const previous = runtimeCatalog || JSON.parse(JSON.stringify(bundledCatalog));
+  const prevBookIds = new Set((previous.books || []).map((b: any) => b.id));
+  const prevFolderIds = new Set((previous.folders || []).map((f: any) => f.id));
+  invalidateDriveCacheCf();
+  let live: any;
+  try {
+    live = await fetchLiveDriveCatalogCf(driveConfig, previous);
+  } catch (err: any) {
+    return { ok: false, configured: true, error: `Drive sync failed: ${err?.message || err}` };
+  }
+  const folders = live?.folders || [];
+  const books = live?.books || [];
+  if (folders.length === 0 && books.length === 0) {
+    return { ok: false, configured: true, error: "Drive returned an empty catalog; the saved catalog was kept unchanged." };
+  }
+  const newBookIds = new Set(books.map((b: any) => b.id));
+  const newFolderIds = new Set(folders.map((f: any) => f.id));
+  const roots = new Set(folders.filter((r: any) => !r.parentId).map((r: any) => r.id));
+  const result = {
+    ok: true,
+    configured: true,
+    folders: folders.length,
+    books: books.length,
+    categories: folders.filter((f: any) => f.parentId && roots.has(f.parentId)).length,
+    addedBooks: books.filter((b: any) => !prevBookIds.has(b.id)).length,
+    removedBooks: (previous.books || []).filter((b: any) => !newBookIds.has(b.id)).length,
+    addedFolders: folders.filter((f: any) => !prevFolderIds.has(f.id)).length,
+    removedFolders: (previous.folders || []).filter((f: any) => !newFolderIds.has(f.id)).length,
+    syncedAt: new Date().toISOString(),
+  };
+  runtimeCatalog = { folders, books };
+  try {
+    await syncCatalogWithDriveCf(runtimeCatalog, driveConfig);
+  } catch (err) {
+    console.warn("Drive catalog.json backup warning:", err);
+  }
+  return result;
 }
 
 /**
@@ -339,9 +430,10 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
 
       const inputPasswordHash = await sha256Hex(password);
       const isPasswordMatch =
-        password === adminPassword ||
+        (await safeEqualSecretCf(password, adminPassword)) ||
         (adminPasswordHash &&
-          (password === adminPasswordHash || inputPasswordHash === adminPasswordHash.toLowerCase()));
+          ((await safeEqualSecretCf(password, adminPasswordHash)) ||
+            (await safeEqualSecretCf(inputPasswordHash, adminPasswordHash.toLowerCase()))));
 
       if (username === adminUsername && isPasswordMatch) {
         const token = await generateSessionToken(sessionSecret);
@@ -472,6 +564,69 @@ function sanitizeCatalog(catalog: any) {
       const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);
       return jsonResponse({ folders: visibleFolders, books: visibleBooks }, 200, { "Cache-Control": "public, max-age=10" });
     }
+  }
+
+  // 7b. Public library status: honest, no secrets. Mirrors the Vercel
+  // /api/library-status shape so the same frontend works on both hosts.
+  if (path === "/api/library-status" && method === "GET") {
+    const catalog = await getCatalogData(driveConfig);
+    const folders = catalog.folders || [];
+    const books = catalog.books || [];
+    const configured = isDriveConfigured(driveConfig);
+    const roots = new Set(folders.filter((r: any) => !r.parentId).map((r: any) => r.id));
+    return jsonResponse({
+      status: "ok",
+      library: "Ilm-e-Ghayb Library",
+      brand: "Ghayb Chronicles",
+      driveFolder: "All Islamic History Books only",
+      driveFolderId: driveConfig.folderId,
+      driveConfigured: configured,
+      mode: configured ? "drive-sync" : "catalog-links",
+      modeNote: configured
+        ? "Live Google Drive sync is configured."
+        : "Drive sync is not configured. The library serves its saved catalog and books open in Google Drive.",
+      categories: folders.filter((f: any) => f.parentId && roots.has(f.parentId)).length,
+      folders: folders.length,
+      books: books.length,
+      paidBooks: books.filter((b: any) => b.isPaid).length,
+    });
+  }
+
+  // 7c. Public UPI payment settings (the three admin-set fields only).
+  // On a Worker there is no disk: the bundled repo file is the durable
+  // copy and admin edits live only in this isolate's memory.
+  if (path === "/api/payment-settings" && method === "GET") {
+    if (!runtimePaymentSettings) {
+      const src: any = bundledPaymentSettings || {};
+      runtimePaymentSettings = {
+        upiId: typeof src.upiId === "string" ? src.upiId.trim() : "",
+        upiQrUrl: typeof src.upiQrUrl === "string" ? src.upiQrUrl.trim() : "",
+        displayName: typeof src.displayName === "string" ? src.displayName.trim() : "",
+      };
+    }
+    return jsonResponse({ ...runtimePaymentSettings });
+  }
+
+  // 7d. Daily auto-sync for Cron Triggers (wrangler.jsonc triggers.crons,
+  // 02:00 UTC). Requires CRON_SECRET as a secret; an unprotected trigger
+  // would let anyone rebuild the catalog.
+  if (path === "/api/cron/sync" && method === "GET") {
+    const cronSecret = getVar("CRON_SECRET", "");
+    if (!cronSecret) {
+      return jsonResponse(
+        { success: false, error: "CRON_SECRET is not set, so the daily auto-sync is disabled. Add any long random value as CRON_SECRET in the Cloudflare dashboard." },
+        503
+      );
+    }
+    const auth = request.headers.get("authorization") || "";
+    if (auth !== `Bearer ${cronSecret}`) {
+      return jsonResponse({ success: false, error: "Unauthorized cron request." }, 401);
+    }
+    const result = await runDriveSyncCf(driveConfig);
+    if (!result.ok) {
+      return jsonResponse({ success: false, configured: result.configured, error: result.error || "Drive sync failed." }, 503);
+    }
+    return jsonResponse({ success: true, ...result });
   }
 
   // 8. Stream / Preview Google Drive File: GET or HEAD /api/drive/file/:fileId, /api/files/:fileId, /api/pdf/:fileId, /api/books/:id/file
@@ -720,14 +875,8 @@ function sanitizeCatalog(catalog: any) {
         return jsonResponse({ success: false, error: "Book not found" }, 404);
       }
 
-      // Delete Drive file if present
-      const driveFileId = book.driveFileId || extractDriveFileId(book.fileUrl || book.pdfUrl || book.driveUrl);
-      if (driveFileId && isDriveConfigured(driveConfig)) {
-        deleteDriveFileCf(driveFileId, driveConfig).catch((err) => {
-          console.warn("Async drive file delete error:", err);
-        });
-      }
-
+      // Delete removes the catalog entry only, never the Drive file.
+      // The book stays in Google Drive; only the library listing loses it.
       catalog.books = (catalog.books || []).filter((b: any) => b.id !== bookId);
       await saveCatalogData(catalog, driveConfig);
 
@@ -825,18 +974,45 @@ function sanitizeCatalog(catalog: any) {
         return jsonResponse({ success: false, error: "Folder not found" }, 404);
       }
 
-      if (isDriveConfigured(driveConfig)) {
-        deleteDriveFileCf(folderId, driveConfig).catch((err) => {
-          console.warn("Drive folder delete error:", err);
-        });
-      }
-
+      // Delete removes the catalog entry only, never the Drive folder.
       catalog.folders = (catalog.folders || []).filter((f: any) => f.id !== folderId);
       await saveCatalogData(catalog, driveConfig);
 
       return jsonResponse({ success: true, message: "Folder deleted successfully." });
     } catch (err: any) {
       return jsonResponse({ success: false, error: err.message || "Failed to delete folder." }, 500);
+    }
+  }
+
+  // 11b. Admin UPI payment settings: POST /api/admin/payment-settings.
+  // Updates this isolate's in-memory copy only — Workers have no durable
+  // disk, so the durable copy is data/payment-settings.json in the repo.
+  if (path === "/api/admin/payment-settings" && method === "POST") {
+    try {
+      const body: any = await request.json();
+      runtimePaymentSettings = {
+        upiId: typeof body?.upiId === "string" ? body.upiId.trim().slice(0, 100) : "",
+        upiQrUrl: typeof body?.upiQrUrl === "string" ? body.upiQrUrl.trim().slice(0, 500) : "",
+        displayName: typeof body?.displayName === "string" ? body.displayName.trim().slice(0, 100) : "",
+      };
+      return jsonResponse({ success: true, settings: { ...runtimePaymentSettings } });
+    } catch (err: any) {
+      return jsonResponse({ success: false, error: err.message || "Failed to save payment settings." }, 500);
+    }
+  }
+
+  // 11c. Admin "Sync now": POST /api/admin/sync. Rebuilds the saved
+  // catalog from a fresh live listing of the Drive folder. When Drive is
+  // not configured this returns a clear 503, never a crash.
+  if (path === "/api/admin/sync" && method === "POST") {
+    try {
+      const result = await runDriveSyncCf(driveConfig);
+      if (!result.ok) {
+        return jsonResponse({ success: false, configured: result.configured, error: result.error || "Drive sync failed." }, 503);
+      }
+      return jsonResponse({ success: true, ...result });
+    } catch (err: any) {
+      return jsonResponse({ success: false, error: `Drive sync failed: ${err?.message || err}` }, 500);
     }
   }
 
