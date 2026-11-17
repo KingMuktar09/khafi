@@ -11,8 +11,8 @@ export const FolderGrid: React.FC<FolderGridProps> = ({ folders }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-      {folders.map((folder) => (
-        <FolderCard key={folder.id} folder={folder} />
+      {folders.map((folder, i) => (
+        <FolderCard key={folder.id} folder={folder} index={i} />
       ))}
     </div>
   );

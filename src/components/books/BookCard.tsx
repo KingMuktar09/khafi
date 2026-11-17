@@ -9,9 +9,11 @@ import { getItemType, getTypeLabel, getTypeBadgeColor } from '../../utils/fileUt
 interface BookCardProps {
   book: Book;
   onSelect?: (book: Book) => void;
+  /** 0-based position in its grid, for the staggered entrance (capped at 11). */
+  index?: number;
 }
 
-export const BookCard: React.FC<BookCardProps> = ({ book, onSelect }) => {
+export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0 }) => {
   const isFav = appState.isFavorite(book.id);
   const progress = appState.getReadingProgress(book.id);
   const percentage = progress?.percentage || 0;
@@ -37,7 +39,8 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect }) => {
   return (
     <div
       onClick={handleCardClick}
-      className="group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] transition-all duration-200 cursor-pointer flex flex-col h-full rounded-lg overflow-hidden animate-fade-in"
+      style={{ '--motion-i': Math.min(index, 11) } as React.CSSProperties}
+      className="motion-card motion-item group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex flex-col h-full rounded-lg overflow-hidden"
     >
       {/* Cover Image Container */}
       <div className="relative aspect-[1/1.35] w-full overflow-hidden bg-[var(--bg-main)]">

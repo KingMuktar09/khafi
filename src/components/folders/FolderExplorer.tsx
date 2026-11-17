@@ -728,7 +728,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           <div className="divide-y divide-[var(--border-subtle)]">
             
             {/* 1. Folders Group */}
-            {sortedFolders.map((folder) => {
+            {sortedFolders.map((folder, i) => {
               const itemCount = appState.getItemCountForFolder(folder.id);
               const formattedDate = formatReadableDate(folder.updatedAt || folder.createdAt);
               const menuKey = `folder-${folder.id}`;
@@ -738,7 +738,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                 <div
                   key={folder.id}
                   onClick={() => handleFolderClick(folder)}
-                  className="grid grid-cols-12 px-4 py-3 items-center hover:bg-[var(--bg-hover)] transition-colors cursor-pointer select-none text-xs sm:text-sm group relative"
+                  style={{ '--motion-i': Math.min(i, 11) } as React.CSSProperties}
+                  className="motion-item grid grid-cols-12 px-4 py-3 items-center hover:bg-[var(--bg-hover)] transition-colors cursor-pointer select-none text-xs sm:text-sm group relative"
                 >
                   {/* Name & Description */}
                   <div className="col-span-7 sm:col-span-5 flex items-center gap-3 min-w-0 pr-2">
@@ -868,7 +869,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
             })}
 
             {/* 2. Files Group */}
-            {sortedBooks.map((book) => {
+            {sortedBooks.map((book, i) => {
               const isFav = appState.isFavorite(book.id);
               const itemType = getItemType(book);
               const typeLabel = getTypeLabel(book);
@@ -919,7 +920,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                 <div
                   key={book.id}
                   onClick={() => handleBookClick(book)}
-                  className="grid grid-cols-12 px-4 py-3 items-center hover:bg-[var(--bg-hover)] transition-colors cursor-pointer select-none text-xs sm:text-sm group relative"
+                  style={{ '--motion-i': Math.min(sortedFolders.length + i, 11) } as React.CSSProperties}
+                  className="motion-item grid grid-cols-12 px-4 py-3 items-center hover:bg-[var(--bg-hover)] transition-colors cursor-pointer select-none text-xs sm:text-sm group relative"
                 >
                   {/* Name & Creator */}
                   <div className="col-span-7 sm:col-span-5 flex items-center gap-3 min-w-0 pr-2">
@@ -1153,13 +1155,14 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           {/* Folders Section */}
           {sortedFolders.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {sortedFolders.map((folder) => {
+              {sortedFolders.map((folder, i) => {
                 const itemCount = appState.getItemCountForFolder(folder.id);
                 return (
                   <div
                     key={folder.id}
                     onClick={() => handleFolderClick(folder)}
-                    className="p-3 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] rounded-lg cursor-pointer transition-colors flex items-center justify-between gap-2 min-w-0 group shadow-2xs"
+                    style={{ '--motion-i': Math.min(i, 11) } as React.CSSProperties}
+                    className="motion-item motion-card p-3 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] rounded-lg cursor-pointer transition-colors flex items-center justify-between gap-2 min-w-0 group shadow-2xs"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <FolderIcon className="w-6 h-6 text-[var(--gold)] fill-[var(--gold)]/20 shrink-0" />
@@ -1194,7 +1197,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           {/* Books / Files Grid Section */}
           {sortedBooks.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {sortedBooks.map((book) => {
+              {sortedBooks.map((book, i) => {
                 const isFav = appState.isFavorite(book.id);
                 const itemType = getItemType(book);
                 const typeLabel = getTypeLabel(book);
@@ -1241,7 +1244,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                   <div
                     key={book.id}
                     onClick={() => handleBookClick(book)}
-                    className="p-3 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] rounded-lg cursor-pointer transition-colors flex flex-col justify-between space-y-2 min-h-[100px] group relative shadow-2xs"
+                    style={{ '--motion-i': Math.min(sortedFolders.length + i, 11) } as React.CSSProperties}
+                    className="motion-item motion-card p-3 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] rounded-lg cursor-pointer transition-colors flex flex-col justify-between space-y-2 min-h-[100px] group relative shadow-2xs"
                   >
                     <div className="flex items-start justify-between gap-2 min-w-0">
                       <div className="flex items-start gap-2 min-w-0">

@@ -5,7 +5,7 @@ import { appState } from '../../state/appState';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="mt-auto border-t border-[var(--border-main)] bg-[var(--bg-surface)] py-8 px-4 sm:px-8 text-xs font-mono text-[var(--text-muted)] transition-colors duration-200">
+    <footer className="animate-fade-in mt-auto border-t border-[var(--border-main)] bg-[var(--bg-surface)] py-8 px-4 sm:px-8 text-xs font-mono text-[var(--text-muted)] transition-colors duration-200">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         
         {/* Brand */}

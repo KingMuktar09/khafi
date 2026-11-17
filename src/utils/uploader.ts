@@ -39,8 +39,16 @@ export interface UploadResult {
   error?: string;
 }
 
-const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MiB per chunk
-const MULTIPART_THRESHOLD = 100 * 1024 * 1024; // 100 MB threshold for multipart upload
+// Vercel caps EVERY serverless request body at 4.5 MB (all plans —
+// a bigger body fails with 413 FUNCTION_PAYLOAD_TOO_LARGE). So a chunk
+// must stay under that, multipart overhead included, and any file bigger
+// than one safe request must go the chunked way. The old values (10 MB
+// chunks, chunked only above 100 MB) meant a normal 5–100 MB book PDF was
+// sent in ONE request, failed with 413, and was then retried whole from
+// zero three times — the endless "Uploading..." spinner. A 100 MB+ file
+// fared no better: every 10 MB part was over the same 4.5 MB cap.
+const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MiB per chunk — safely under 4.5 MB
+const MULTIPART_THRESHOLD = 4 * 1024 * 1024; // files above 4 MB go chunked
 const MAX_RETRIES = 3;
 
 /**
@@ -277,9 +285,10 @@ async function uploadMultipart(
       percentage: Math.min(99, Math.round((completedBytes / file.size) * 100)),
     });
 
-    // 3. Upload missing chunks sequentially/in-parallel with retries
-    // We upload up to 2 chunks concurrently for high throughput without overloading socket buffers
-    const PARALLEL_PARTS = 2;
+    // 3. Upload missing chunks in parallel with retries. Small (4 MB)
+    // parts mean a slow connection still finishes each part quickly, and a
+    // failed part is retried on its own instead of restarting the file.
+    const PARALLEL_PARTS = 3;
     const missingPartIndices: number[] = [];
     for (let p = 0; p < totalChunks; p++) {
       if (!completedPartsSet.has(p)) {

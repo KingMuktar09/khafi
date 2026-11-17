@@ -611,7 +611,7 @@ function sanitizeCatalog(catalog: any) {
   // 02:00 UTC). Requires CRON_SECRET as a secret; an unprotected trigger
   // would let anyone rebuild the catalog.
   if (path === "/api/cron/sync" && method === "GET") {
-    const cronSecret = getVar("CRON_SECRET", "");
+    const cronSecret = typeof env?.CRON_SECRET === "string" ? env.CRON_SECRET.trim() : "";
     if (!cronSecret) {
       return jsonResponse(
         { success: false, error: "CRON_SECRET is not set, so the daily auto-sync is disabled. Add any long random value as CRON_SECRET in the Cloudflare dashboard." },

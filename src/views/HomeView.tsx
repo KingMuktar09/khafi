@@ -37,23 +37,23 @@ export const HomeView: React.FC = () => {
     <div className="space-y-6 animate-fade-in py-2 font-sans">
       
       {/* Hero — Ilm-e-Ghayb Library */}
-      <div className="hero-glow bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-10 shadow-2xl">
+      <div className="hero-glow hero-sheen bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-10 shadow-2xl">
         <div className="max-w-2xl space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 animate-fade-up" style={{ animationDelay: '0ms' }}>
             <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full flex items-center gap-1.5 tracking-wide">
               <Compass className="w-3.5 h-3.5 text-[var(--gold)]" />
               <span>Ghayb Chronicles • Islamic esoteric knowledge</span>
             </span>
           </div>
-          <h1 className="font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05]">
-            Ilm-e-Ghayb <span className="text-[var(--gold)]">Library</span>
+          <h1 className="font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05] animate-fade-up" style={{ animationDelay: '70ms' }}>
+            Ilm-e-Ghayb <span className="gold-shimmer">Library</span>
           </h1>
-          <p className="text-sm sm:text-base text-[var(--text-muted)] leading-relaxed max-w-xl">
+          <p className="text-sm sm:text-base text-[var(--text-muted)] leading-relaxed max-w-xl animate-fade-up" style={{ animationDelay: '140ms' }}>
             Hidden knowledge, Sufi wisdom, and the books behind it. Quran, Tafseer,
             Hadith, Seerah and history — with sources in every entry.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-3 pt-1 animate-fade-up" style={{ animationDelay: '210ms' }}>
             <button
               onClick={() => router.navigate('library', rootFolderId ? { folderId: rootFolderId } : undefined)}
               className="tap-target px-5 py-3 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-sm rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer hover:scale-[1.02]"
@@ -73,7 +73,7 @@ export const HomeView: React.FC = () => {
             </a>
           </div>
 
-          <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 border-t border-[var(--border-subtle)]">
+          <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 border-t border-[var(--border-subtle)] animate-fade-up" style={{ animationDelay: '280ms' }}>
             <div>
               <p className="font-display font-semibold text-2xl text-[var(--text-main)]">{collections.length}</p>
               <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">Collections</p>
@@ -96,7 +96,7 @@ export const HomeView: React.FC = () => {
 
       {/* Continue Reading Section (If books are in progress) */}
       {booksInProgress.length > 0 && (
-        <section className="space-y-3">
+        <section className="space-y-3 animate-fade-up" style={{ animationDelay: '80ms' }}>
           <div className="flex items-center justify-between px-1">
             <h2 className="font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
@@ -114,11 +114,12 @@ export const HomeView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {booksInProgress.slice(0, 3).map(({ book, progress }) => (
+            {booksInProgress.slice(0, 3).map(({ book, progress }, i) => (
               <div
                 key={book.id}
                 onClick={() => router.navigate('read', { bookId: book.id })}
-                className="p-3.5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/40 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer transition-all space-y-2.5 flex flex-col justify-between shadow-2xs group"
+                style={{ '--motion-i': i } as React.CSSProperties}
+                className="motion-item motion-card p-3.5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/40 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-2.5 flex flex-col justify-between shadow-2xs group"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-11 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-lg flex items-center justify-center shrink-0 text-[var(--gold)] group-hover:scale-105 group-hover:border-[var(--gold)]/50 transition-all shadow-2xs">
@@ -153,7 +154,7 @@ export const HomeView: React.FC = () => {
       )}
 
       {/* Main Collections Hub */}
-      <section className="space-y-3">
+      <section className="space-y-3 animate-fade-up" style={{ animationDelay: '140ms' }}>
         <div className="flex items-center justify-between px-1">
           <div>
             <h2 className="font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
@@ -177,13 +178,14 @@ export const HomeView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {shownCollections.map((folder) => {
+          {shownCollections.map((folder, i) => {
             const itemCount = appState.getItemCountForFolder(folder.id);
             return (
               <div
                 key={folder.id}
                 onClick={() => router.navigate('library', { folderId: folder.id })}
-                className="card-lift p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-3 group shadow-2xs"
+                style={{ '--motion-i': Math.min(i, 11) } as React.CSSProperties}
+                className="motion-item card-lift p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-3 group shadow-2xs"
               >
                 <div className="flex items-start justify-between">
                   <div className="w-10 h-10 rounded-lg bg-[var(--gold-faint)] border border-[var(--border-main)] flex items-center justify-center text-[var(--gold)] group-hover:scale-110 group-hover:border-[var(--gold)] transition-all">
@@ -226,7 +228,7 @@ export const HomeView: React.FC = () => {
 
       {/* Catalog Highlights / Recent Volumes */}
       {recentBooks.length > 0 && (
-        <section className="space-y-3">
+        <section className="space-y-3 animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between px-1">
             <div>
               <h2 className="font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
@@ -243,11 +245,12 @@ export const HomeView: React.FC = () => {
 
           <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl overflow-hidden text-xs shadow-2xs">
             <div className="divide-y divide-[var(--border-subtle)]">
-              {recentBooks.map((book) => (
+              {recentBooks.map((book, i) => (
                 <div
                   key={book.id}
                   onClick={() => router.navigate('book', { bookId: book.id })}
-                  className="p-3.5 flex items-center justify-between gap-4 hover:bg-[var(--bg-hover)] cursor-pointer transition-colors group"
+                  style={{ '--motion-i': Math.min(i, 11) } as React.CSSProperties}
+                  className="motion-item p-3.5 flex items-center justify-between gap-4 hover:bg-[var(--bg-hover)] cursor-pointer transition-colors group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-10 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-lg flex items-center justify-center text-[var(--gold)] shrink-0 group-hover:border-[var(--gold)]/50 transition-colors shadow-2xs">

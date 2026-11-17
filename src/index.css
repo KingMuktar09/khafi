@@ -88,13 +88,136 @@ body {
   color: var(--gold);
 }
 
+/* ---- Motion system: smooth, transform/opacity-only, 60fps ----
+   All entrance motion uses transform + opacity only (compositor-friendly,
+   no layout thrash). Fill mode is `backwards` everywhere, never `both`, so
+   hover transforms on cards still work after the entrance ends. */
+@keyframes motion-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes motion-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes motion-drop-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes motion-shimmer-x {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+@keyframes motion-sheen-sweep {
+  0% { transform: translateX(-160%) skewX(-12deg); }
+  55%, 100% { transform: translateX(280%) skewX(-12deg); }
+}
+@keyframes motion-gate-glow {
+  0%, 100% { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+  50% { box-shadow: 0 25px 60px -12px rgba(201, 162, 39, 0.3), 0 0 0 1px rgba(201, 162, 39, 0.14); }
+}
+@keyframes motion-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Page / view entry. This defines the long-used `animate-fade-in` class,
+   which previously had no keyframes at all, so it did nothing. */
+.animate-fade-in {
+  animation: motion-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.animate-fade-up {
+  animation: motion-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Staggered entrance for grid / list items. Set --motion-i (0-based index)
+   inline; the delay is capped at 11 in JS so long lists never wait. */
+.motion-item {
+  animation: motion-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--motion-i, 0) * 45ms);
+}
+
+/* Hover lift + soft gold glow for cards. */
+.motion-card {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease, box-shadow 0.35s ease, background-color 0.2s ease;
+}
+.motion-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(201, 162, 39, 0.18);
+}
+
+/* Slow gold light sweep across the hero card (transform-only, GPU-friendly). */
+.hero-sheen { position: relative; overflow: hidden; }
+.hero-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(201, 162, 39, 0.09), transparent);
+  transform: translateX(-160%) skewX(-12deg);
+  animation: motion-sheen-sweep 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Subtle gold shimmer for display text (hero title, gate eyebrow). */
+.gold-shimmer {
+  display: inline-block;
+  background: linear-gradient(100deg, var(--gold) 20%, var(--gold-light) 40%, #f6e27a 50%, var(--gold-light) 60%, var(--gold) 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: motion-shimmer-x 5s ease-in-out infinite;
+}
+
+/* Slow breathing gold glow on the follow-gate card. */
+.gate-glow {
+  animation: motion-gate-glow 4.5s ease-in-out infinite;
+}
+
+/* Gentle breathing scale for the gate brand mark. */
+.motion-breathe {
+  animation: motion-breathe 3.5s ease-in-out infinite;
+}
+
+/* White sheen sweep for the Instagram follow button. */
+.insta-sheen { position: relative; overflow: hidden; isolation: isolate; }
+.insta-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0; width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-160%) skewX(-12deg);
+  animation: motion-sheen-sweep 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Shimmering loading skeleton bars. */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-hover) 50%, var(--bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: motion-shimmer-x 1.6s linear infinite;
+  border-radius: 0.5rem;
+}
+
+/* Header drop-in on first paint. */
+.nav-enter {
+  animation: motion-drop-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Smooth scrolling (disabled under reduced motion below). */
+html {
+  scroll-behavior: smooth;
+}
+
 .card-lift {
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .card-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(201, 162, 39, 0.15);
 }
 
 /* Comfortable tap targets on phones */
@@ -144,8 +267,15 @@ select option {
   color: var(--text-main);
 }
 
-/* Accessibility: Reduced motion preference */
-html.reduced-motion *, html.reduced-motion ::before, html.reduced-motion ::after,
+/* Accessibility: Reduced motion preference — honoured both by the OS setting
+   and by the app's own reduced-motion toggle (html.reduced-motion, set in
+   appState). This block was previously a broken selector list and did nothing. */
+html.reduced-motion *, html.reduced-motion ::before, html.reduced-motion ::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

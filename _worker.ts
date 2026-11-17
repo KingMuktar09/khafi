@@ -25,4 +25,20 @@ export default {
 
     return new Response("Not Found", { status: 404 });
   },
+
+  // Daily auto-sync (wrangler.jsonc triggers.crons, 02:00 UTC). Runs only
+  // when CRON_SECRET is set as a secret; the handler calls the worker's own
+  // /api/cron/sync endpoint with that secret, so the sync logic and its
+  // empty-result guard live in one place (server/cf-api-handler.ts).
+  async scheduled(event: any, env: any, ctx: any): Promise<void> {
+    const secret = (env?.CRON_SECRET || "").trim();
+    if (!secret) {
+      console.warn("[Cron] CRON_SECRET is not set; daily auto-sync is disabled.");
+      return;
+    }
+    const req = new Request("https://worker.local/api/cron/sync", {
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    await handleCloudflareApiRequest(req, env);
+  },
 };

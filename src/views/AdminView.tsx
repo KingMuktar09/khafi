@@ -53,6 +53,7 @@ import {
   getTypeLabel,
   getTypeBadgeColor,
   formatFileSize,
+  extractDriveId,
 } from '../utils/fileUtils';
 
 export const AdminView: React.FC = () => {
@@ -255,6 +256,18 @@ export const AdminView: React.FC = () => {
   const menuButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   const [uploading, setUploading] = useState(false);
+  // Real upload progress for the single-book form (percent + MB), so the
+  // admin is never stuck watching a bare spinner. Null when not uploading.
+  const [uploadProgress, setUploadProgress] = useState<{
+    loadedBytes: number;
+    totalBytes: number;
+    percentage: number;
+  } | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
+
+  // Bulk paid: mark several selected books paid at once with ONE price.
+  const [bulkPaidModalOpen, setBulkPaidModalOpen] = useState(false);
+  const [bulkPaidState, setBulkPaidState] = useState<Partial<Book>>({ isPaid: true });
 
   // Close open row menus when clicking anywhere
   useEffect(() => {
@@ -480,6 +493,13 @@ export const AdminView: React.FC = () => {
       folderId: folderIdToSet,
       category: targetFolder ? targetFolder.name : 'General',
     };
+    // Fast path: a pasted Drive link needs no file upload at all. Store the
+    // Drive file id from the link so readers open the book straight from
+    // Drive and the download/preview helpers can find it.
+    if (!bookPayload.driveFileId && typeof bookPayload.externalUrl === 'string') {
+      const driveId = extractDriveId(bookPayload.externalUrl);
+      if (driveId) bookPayload.driveFileId = driveId;
+    }
     if (!editingBook.isPaid) {
       // price: null (not undefined) so the server merge actually clears it.
       bookPayload.price = null;
@@ -683,66 +703,63 @@ export const AdminView: React.FC = () => {
       appState.showToast('File is too large. Maximum file size is 500 MB.', 'error');
       return;
     }
+    const abortController = new AbortController();
+    uploadAbortRef.current = abortController;
     setUploading(true);
+    setUploadProgress({ loadedBytes: 0, totalBytes: file.size, percentage: 0 });
     appState.showToast(`Uploading ${file.name}...`, 'info');
 
-    const ext = getFileExtension(file.name);
     const cleanTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim();
 
-    const uploadRes = await api.uploadFile(file);
+    // Files over 4 MB go up in small 4 MB chunks (see src/utils/uploader.ts)
+    // because Vercel rejects any single request bigger than 4.5 MB. Progress
+    // is wired up here — the old code never passed a progress callback, so
+    // the admin only ever saw a bare spinner while a big file stalled.
+    const uploadRes = await api.uploadFile(
+      file,
+      (p) => setUploadProgress(p),
+      abortController.signal,
+      editingBook?.folderId || selectedFolderId || undefined
+    );
     setUploading(false);
+    setUploadProgress(null);
+    uploadAbortRef.current = null;
 
     if (uploadRes.success && uploadRes.fileUrl) {
       const detectedType = uploadRes.fileType || detectFileType(file.name, file.type);
       appState.showToast(`${file.name} uploaded successfully.`, 'success');
 
+      // Fill the form in straight away so the admin can keep working. The
+      // cover page used to be extracted before the form was filled in, and
+      // parsing a big PDF in the browser can take a long while — now it runs
+      // in the background and the cover is added when it is ready.
+      setEditingBook((prev) => ({
+        ...prev,
+        title: prev?.title || cleanTitle,
+        originalFilename: file.name,
+        pdfUrl: uploadRes.fileUrl,
+        fileUrl: uploadRes.fileUrl,
+        driveFileId: uploadRes.driveFileId || prev?.driveFileId,
+        fileType: detectedType,
+        mimeType: uploadRes.mimeType || file.type,
+        fileSize: String(uploadRes.size || file.size || prev?.fileSize || ''),
+        coverUrl: detectedType === 'image' ? uploadRes.fileUrl : prev?.coverUrl,
+      }));
       if (detectedType === 'pdf') {
-        try {
-          const generatedCover = await extractPdfCover(file);
-          setEditingBook((prev) => ({
-            ...prev,
-            title: prev?.title || cleanTitle,
-            originalFilename: file.name,
-            pdfUrl: uploadRes.fileUrl,
-            fileUrl: uploadRes.fileUrl,
-            driveFileId: uploadRes.driveFileId || prev?.driveFileId,
-            fileType: detectedType,
-            mimeType: uploadRes.mimeType || file.type,
-            fileSize: String(uploadRes.size || file.size || prev?.fileSize || ''),
-            coverUrl: generatedCover || prev?.coverUrl,
-          }));
-          if (generatedCover) {
-            appState.showToast('Extracted cover page.', 'success');
-          }
-        } catch {
-          setEditingBook((prev) => ({
-            ...prev,
-            title: prev?.title || cleanTitle,
-            originalFilename: file.name,
-            pdfUrl: uploadRes.fileUrl,
-            fileUrl: uploadRes.fileUrl,
-            driveFileId: uploadRes.driveFileId || prev?.driveFileId,
-            fileType: detectedType,
-            mimeType: uploadRes.mimeType || file.type,
-            fileSize: String(uploadRes.size || file.size || prev?.fileSize || ''),
-          }));
-        }
-      } else {
-        setEditingBook((prev) => ({
-          ...prev,
-          title: prev?.title || cleanTitle,
-          originalFilename: file.name,
-          pdfUrl: uploadRes.fileUrl,
-          fileUrl: uploadRes.fileUrl,
-          driveFileId: uploadRes.driveFileId || prev?.driveFileId,
-          fileType: detectedType,
-          mimeType: uploadRes.mimeType || file.type,
-          fileSize: String(uploadRes.size || file.size || prev?.fileSize || ''),
-          coverUrl: detectedType === 'image' ? uploadRes.fileUrl : prev?.coverUrl,
-        }));
+        extractPdfCover(file)
+          .then((generatedCover) => {
+            if (generatedCover) {
+              setEditingBook((prev) => (prev ? { ...prev, coverUrl: generatedCover } : prev));
+            }
+          })
+          .catch(() => {});
       }
     } else {
-      appState.showToast(uploadRes.error || 'Upload failed.', 'error');
+      if (abortController.signal.aborted) {
+        appState.showToast('Upload cancelled.', 'info');
+      } else {
+        appState.showToast(uploadRes.error || 'Upload failed.', 'error');
+      }
     }
   };
 
@@ -879,6 +896,69 @@ export const AdminView: React.FC = () => {
     appState.showToast('Selected items hidden.', 'info');
     setSelectedKeys(new Set());
     await appState.loadCatalog();
+  };
+
+  // Bulk paid: mark every selected BOOK paid at once with ONE price typed
+  // once for the whole batch. No price is ever invented — the admin types
+  // it in the small dialog first. Folders in the selection are ignored.
+  const handleBulkMarkPaid = async () => {
+    if (!(typeof bulkPaidState.price === 'number' && bulkPaidState.price > 0)) {
+      appState.showToast('Set a price in ₹ for the selected books.', 'error');
+      return;
+    }
+    const bookIds = [...selectedKeys]
+      .filter((k) => k.startsWith('book:'))
+      .map((k) => k.slice('book:'.length));
+    if (bookIds.length === 0) {
+      appState.showToast('Select at least one book first.', 'error');
+      return;
+    }
+    let ok = 0;
+    let failed = 0;
+    for (const id of bookIds) {
+      const res = await api.updateBook(id, {
+        isPaid: true,
+        price: bulkPaidState.price,
+        paymentNote: bulkPaidState.paymentNote || '',
+      });
+      if (res.success) ok++;
+      else failed++;
+    }
+    setBulkPaidModalOpen(false);
+    setBulkPaidState({ isPaid: true });
+    setSelectedKeys(new Set());
+    await appState.loadCatalog();
+    appState.showToast(
+      failed > 0
+        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}. ${failed} could not be updated.`
+        : `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}.`,
+      failed > 0 ? 'error' : 'success'
+    );
+  };
+
+  // Bulk free: one click makes every selected paid book free again and
+  // clears its price/note, same as the single-book "Make free" action.
+  const handleBulkMakeFree = async () => {
+    const bookIds = [...selectedKeys]
+      .filter((k) => k.startsWith('book:'))
+      .map((k) => k.slice('book:'.length));
+    if (bookIds.length === 0) {
+      appState.showToast('Select at least one book first.', 'error');
+      return;
+    }
+    let ok = 0;
+    for (const id of bookIds) {
+      const res = await api.updateBook(id, {
+        isPaid: false,
+        price: null as unknown as number,
+        paymentLink: '',
+        paymentNote: '',
+      });
+      if (res.success) ok++;
+    }
+    setSelectedKeys(new Set());
+    await appState.loadCatalog();
+    appState.showToast(`${ok} book${ok === 1 ? '' : 's'} made free.`, 'success');
   };
 
   // Drag and Drop Handler
@@ -1277,6 +1357,25 @@ export const AdminView: React.FC = () => {
               <span>Hide</span>
             </button>
             <button
+              onClick={() => {
+                setBulkPaidState({ isPaid: true });
+                setBulkPaidModalOpen(true);
+              }}
+              className="px-2.5 py-1 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-main)] text-[var(--text-main)] rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer"
+              title="Mark the selected books paid with one price"
+            >
+              <IndianRupee className="w-3 h-3 text-[var(--gold)]" />
+              <span>Mark Paid</span>
+            </button>
+            <button
+              onClick={handleBulkMakeFree}
+              className="px-2.5 py-1 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-main)] text-[var(--text-main)] rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer"
+              title="Make the selected books free"
+            >
+              <X className="w-3 h-3 text-emerald-400" />
+              <span>Make Free</span>
+            </button>
+            <button
               onClick={openDeleteModalForBulk}
               className="px-2.5 py-1 bg-rose-950/30 border border-rose-500/30 text-rose-300 hover:bg-rose-900/40 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer"
             >
@@ -1290,6 +1389,51 @@ export const AdminView: React.FC = () => {
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* BULK PAID MODAL — one price for every selected book */}
+      {bulkPaidModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in font-sans">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg max-w-md w-full p-6 text-[var(--text-main)] space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b border-[var(--border-main)] pb-3">
+              <h3 className="font-semibold text-base text-[var(--text-main)]">
+                Mark selected books as paid
+              </h3>
+              <button
+                onClick={() => setBulkPaidModalOpen(false)}
+                className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 rounded"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-[var(--text-muted)]">
+              {[...selectedKeys].filter((k) => k.startsWith('book:')).length} book
+              {[...selectedKeys].filter((k) => k.startsWith('book:')).length === 1 ? '' : 's'} selected.
+              One price below applies to all of them. Payment is by UPI and you
+              unlock access by hand, as usual.
+            </p>
+            <PaidBookControl
+              book={bulkPaidState}
+              onChange={(patch) => setBulkPaidState((prev) => ({ ...prev, ...patch }))}
+            />
+            <div className="flex justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]">
+              <button
+                type="button"
+                onClick={() => setBulkPaidModalOpen(false)}
+                className="px-3 py-1.5 border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] rounded cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkMarkPaid}
+                className="px-4 py-1.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-semibold rounded cursor-pointer"
+              >
+                Mark Paid
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2047,9 +2191,36 @@ export const AdminView: React.FC = () => {
                   className="border-2 border-dashed border-[var(--border-main)] hover:border-[var(--gold)]/60 bg-[var(--bg-main)] rounded-lg p-3 text-center transition-colors space-y-2 cursor-pointer"
                 >
                   {uploading ? (
-                    <div className="text-xs text-[var(--gold)] font-medium flex items-center justify-center gap-2 py-2">
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Uploading & processing file...</span>
+                    <div className="space-y-2 py-2 text-left">
+                      <div className="text-xs text-[var(--gold)] font-medium flex items-center justify-center gap-2">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>
+                          Uploading… {uploadProgress ? `${uploadProgress.percentage}%` : ''}
+                        </span>
+                      </div>
+                      {uploadProgress && (
+                        <>
+                          <div className="w-full h-2 bg-[var(--bg-main)] rounded-full overflow-hidden border border-[var(--border-main)]">
+                            <div
+                              className="h-full bg-[var(--gold)] transition-all duration-150"
+                              style={{ width: `${uploadProgress.percentage}%` }}
+                            />
+                          </div>
+                          <p className="text-center text-[11px] font-mono text-[var(--text-muted)]">
+                            {formatFileSize(uploadProgress.loadedBytes)} /{' '}
+                            {formatFileSize(uploadProgress.totalBytes)}
+                          </p>
+                        </>
+                      )}
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => uploadAbortRef.current?.abort()}
+                          className="px-3 py-1 border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 rounded text-[11px] font-medium cursor-pointer"
+                        >
+                          Cancel upload
+                        </button>
+                      </div>
                     </div>
                   ) : (editingBook.fileUrl || editingBook.pdfUrl) ? (
                     <div className="flex items-center justify-between gap-3 bg-[var(--bg-surface)] p-2 rounded border border-[var(--border-main)] text-left">
@@ -2114,6 +2285,32 @@ export const AdminView: React.FC = () => {
                   )}
                 </div>
               </div>
+
+              {/* Bulk add: several files or Drive links at once, instead of one by one. */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isBookModified()) {
+                    setUnsavedWarning({
+                      open: true,
+                      onDiscard: () => {
+                        setBookModalOpen(false);
+                        setEditingBook(null);
+                        setInitialBookState(null);
+                        setBatchUploadModalOpen(true);
+                      },
+                    });
+                  } else {
+                    setBookModalOpen(false);
+                    setEditingBook(null);
+                    setInitialBookState(null);
+                    setBatchUploadModalOpen(true);
+                  }
+                }}
+                className="text-[11px] text-[var(--gold)] font-medium hover:underline cursor-pointer"
+              >
+                Adding several books? Use Bulk Upload — pick many files or paste Drive links at once.
+              </button>
 
               {/* Primary Fields */}
               <div className="grid grid-cols-2 gap-3">
@@ -2180,15 +2377,30 @@ export const AdminView: React.FC = () => {
                 <input
                   type="url"
                   value={editingBook.externalUrl || ''}
-                  onChange={(e) =>
-                    setEditingBook((prev) => ({ ...prev, externalUrl: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    const link = e.target.value;
+                    // Fast path: a Drive link needs no file upload at all.
+                    // The file id is pulled out of the link right away so
+                    // the book opens straight from Drive when saved.
+                    const driveId = extractDriveId(link);
+                    setEditingBook((prev) => ({
+                      ...prev,
+                      externalUrl: link,
+                      driveFileId: driveId || prev?.driveFileId,
+                    }));
+                  }}
                   className="w-full px-3 py-2 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
                   placeholder="https://drive.google.com/file/d/... — readers open the book here"
                 />
-                <p className="text-[11px] text-[var(--text-faint)] mt-1">
-                  Paste the Drive share link for this book. The file stays in Drive; only the link is saved.
-                </p>
+                {editingBook.externalUrl && extractDriveId(editingBook.externalUrl) ? (
+                  <p className="text-[11px] text-emerald-400 mt-1">
+                    ✓ Drive link set — no file upload needed. Readers open the book in Drive.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-[var(--text-faint)] mt-1">
+                    Paste the Drive share link for this book. The file stays in Drive; only the link is saved.
+                  </p>
+                )}
               </div>
 
               {/* Collapsible Advanced Options */}

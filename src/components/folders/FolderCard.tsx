@@ -6,9 +6,11 @@ import { router } from '../../router/router';
 
 interface FolderCardProps {
   folder: Folder;
+  /** 0-based position in its grid, for the staggered entrance (capped at 11). */
+  index?: number;
 }
 
-export const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
+export const FolderCard: React.FC<FolderCardProps> = ({ folder, index = 0 }) => {
   const count = appState.getBookCountForFolder(folder.id);
 
   const handleClick = () => {
@@ -22,7 +24,8 @@ export const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
   return (
     <div
       onClick={handleClick}
-      className="card-lift group bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 p-5 rounded-xl cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md"
+      style={{ '--motion-i': Math.min(index, 11) } as React.CSSProperties}
+      className="motion-item card-lift group bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 p-5 rounded-xl cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md"
     >
       <div>
         <div className="flex items-center justify-between mb-3.5">

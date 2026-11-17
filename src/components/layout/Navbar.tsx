@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[var(--bg-header)] border-b border-[var(--border-main)] transition-colors duration-150 shadow-xs">
+    <header className="nav-enter sticky top-0 z-50 w-full bg-[var(--bg-header)] border-b border-[var(--border-main)] transition-colors duration-150 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           
@@ -224,7 +224,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[var(--bg-surface)] border-b border-[var(--border-main)] px-4 py-3 space-y-1 font-sans text-sm">
+        <div className="animate-fade-in lg:hidden bg-[var(--bg-surface)] border-b border-[var(--border-main)] px-4 py-3 space-y-1 font-sans text-sm">
           <button
             onClick={() => handleNav('home')}
             className={`w-full text-left px-3 py-2 rounded ${

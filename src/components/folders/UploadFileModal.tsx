@@ -23,9 +23,11 @@ import {
   formatFileSize,
   getTypeBadgeColor,
   getTypeLabel,
+  extractDriveId,
 } from '../../utils/fileUtils';
 import { extractPdfCover } from '../../services/pdf';
-import { ItemType } from '../../types';
+import { PaidBookControl } from '../admin/PaidBookControl';
+import { ItemType, Book } from '../../types';
 
 interface UploadFileModalProps {
   isOpen: boolean;
@@ -39,7 +41,11 @@ interface UploadFileModalProps {
 
 export interface UploadQueueItem {
   id: string;
-  file: File;
+  // A local file to upload, OR a Drive link (driveLink set, file absent).
+  // Link items never upload any bytes — only the link is saved.
+  file?: File;
+  driveLink?: string;
+  driveFileId?: string;
   originalFilename: string;
   title: string;
   author?: string;
@@ -78,6 +84,13 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
   const [batchDescription, setBatchDescription] = useState('');
   const [batchTags, setBatchTags] = useState('');
   const [showBatchMetadata, setShowBatchMetadata] = useState(false);
+
+  // Batch paid: one price for every book in this batch (files and links).
+  // The admin types the price once; no price is ever invented.
+  const [batchPaid, setBatchPaid] = useState<Partial<Book>>({ isPaid: false });
+
+  // Pasted Drive links, one per line. No file bytes are uploaded for these.
+  const [driveLinksText, setDriveLinksText] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cancelledRef = useRef(false);
@@ -127,6 +140,8 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
       setBatchDescription('');
       setBatchTags('');
       setShowBatchMetadata(false);
+      setBatchPaid({ isPaid: false });
+      setDriveLinksText('');
       cancelledRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -291,6 +306,54 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
     appState.showToast('Batch metadata applied to selected files', 'info');
   };
 
+  // Paste Drive links, one per line. No file bytes are uploaded for these —
+  // only the link is saved, exactly like the single-book Drive link field.
+  // Titles default to "Untitled book" and are editable in the queue below.
+  const addDriveLinks = () => {
+    const lines = driveLinksText.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) return;
+    const bad: string[] = [];
+    const newItems: UploadQueueItem[] = [];
+    for (const link of lines) {
+      const driveId = extractDriveId(link);
+      if (!driveId) {
+        bad.push(link);
+        continue;
+      }
+      newItems.push({
+        id: `q-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        driveLink: link,
+        driveFileId: driveId,
+        originalFilename: link,
+        title: 'Untitled book',
+        fileType: 'pdf',
+        fileSize: 'Drive link',
+        sizeBytes: 0,
+        status: 'ready',
+        progress: 0,
+        loadedBytes: 0,
+        duplicateDetected: false,
+        duplicateAction: 'skip',
+        catalogSaved: false,
+      });
+    }
+    if (bad.length > 0) {
+      setGeneralError(
+        `These are not Google Drive file links and were skipped: ${bad.join(', ')}`
+      );
+    } else {
+      setGeneralError('');
+    }
+    if (newItems.length > 0) {
+      setQueue((prev) => [...prev, ...newItems]);
+      setDriveLinksText('');
+      appState.showToast(
+        `${newItems.length} Drive link${newItems.length === 1 ? '' : 's'} added — no file upload needed.`,
+        'success'
+      );
+    }
+  };
+
   // Helper to process a single item upload
   const uploadSingleItem = async (item: UploadQueueItem, signal: AbortSignal): Promise<boolean> => {
     const { targetFolderId, targetSubfolderId } = getTargetFolders();
@@ -303,6 +366,64 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
         )
       );
       return true;
+    }
+
+    // Drive-link items: no bytes are uploaded at all — only the link is
+    // saved to the catalog, same as the single-book Drive link fast path.
+    if (item.driveLink && item.driveFileId) {
+      setQueue((prev) =>
+        prev.map((q) =>
+          q.id === item.id ? { ...q, status: 'uploading', progress: 50, loadedBytes: 0, errorMsg: undefined } : q
+        )
+      );
+      const paidPatch = batchPaid.isPaid
+        ? { isPaid: true, price: batchPaid.price, paymentNote: batchPaid.paymentNote || '' }
+        : {};
+      const linkTitle = item.title.trim() || 'Untitled book';
+      if (item.duplicateDetected && item.duplicateAction === 'replace' && item.existingBookId) {
+        const updateRes = await api.updateBook(item.existingBookId, {
+          title: linkTitle,
+          author: item.author || batchAuthor.trim() || undefined,
+          description: item.description || batchDescription.trim() || undefined,
+          externalUrl: item.driveLink,
+          driveFileId: item.driveFileId,
+          fileType: item.fileType,
+          ...paidPatch,
+        });
+        if (!updateRes.success) {
+          throw new Error(updateRes.error || 'Failed to update catalog entry.');
+        }
+      } else {
+        const addRes = await api.addBook({
+          title: linkTitle,
+          originalFilename: item.originalFilename,
+          author: item.author || batchAuthor.trim() || undefined,
+          description: item.description || batchDescription.trim() || undefined,
+          folderId: targetFolderId,
+          subfolderId: targetSubfolderId,
+          externalUrl: item.driveLink,
+          driveFileId: item.driveFileId,
+          fileType: item.fileType,
+          fileSize: '',
+          tags: batchTags.trim() ? batchTags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
+          ...paidPatch,
+        });
+        if (!addRes.success) {
+          throw new Error(addRes.error || 'Failed to save book to catalog.');
+        }
+      }
+      setQueue((prev) =>
+        prev.map((q) =>
+          q.id === item.id
+            ? { ...q, status: 'success', progress: 100, loadedBytes: 0, catalogSaved: true }
+            : q
+        )
+      );
+      return true;
+    }
+
+    if (!item.file) {
+      throw new Error('No file attached to this item.');
     }
 
     setQueue((prev) =>
@@ -343,6 +464,11 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
 
     // Save metadata entry to catalog ONCE
     if (!item.catalogSaved) {
+      // Batch paid (if the admin ticked it): the same price applies to
+      // every book in this batch, files and Drive links alike.
+      const batchPaidPatch = batchPaid.isPaid
+        ? { isPaid: true, price: batchPaid.price, paymentNote: batchPaid.paymentNote || '' }
+        : {};
       if (item.duplicateDetected && item.duplicateAction === 'replace' && item.existingBookId) {
         const updateRes = await api.updateBook(item.existingBookId, {
           title: finalTitle,
@@ -353,6 +479,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
           fileType: uploadRes.fileType || item.fileType,
           fileSize: typeof uploadRes.size === 'number' ? formatFileSize(uploadRes.size) : uploadRes.size,
           coverUrl: coverUrl || undefined,
+          ...batchPaidPatch,
         });
         if (!updateRes.success) {
           throw new Error(updateRes.error || 'Failed to update catalog entry.');
@@ -370,6 +497,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
           fileSize: typeof uploadRes.size === 'number' ? formatFileSize(uploadRes.size) : uploadRes.size,
           coverUrl: coverUrl || undefined,
           tags: batchTags.trim() ? batchTags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
+          ...batchPaidPatch,
         });
 
         if (!addRes.success) {
@@ -414,6 +542,10 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
   // Target: 4 simultaneous file uploads by default, adaptively scale up to 5-6 when capable
   const startUpload = async () => {
     if (queue.length === 0) return;
+    if (batchPaid.isPaid && !(typeof batchPaid.price === 'number' && batchPaid.price > 0)) {
+      setGeneralError('Set a price in ₹ for the paid books before uploading.');
+      return;
+    }
     setIsUploading(true);
     setGeneralError('');
     cancelledRef.current = false;
@@ -649,7 +781,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
                 Supports batch uploading multiple PDFs, Documents, Images, Media & Archives
               </p>
               <p className="text-[10px] font-semibold text-[var(--gold)]">
-                High-speed parallel uploads • Resumable multipart for large files (100MB+)
+                High-speed parallel uploads • Resumable multipart for large files (4MB+)
               </p>
             </div>
           </div>
@@ -712,8 +844,35 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
             </div>
           )}
 
+          {/* Paste Drive links — no file upload at all for these */}
+          <div className="border border-[var(--border-main)] rounded-lg p-3 bg-[var(--bg-main)] space-y-2 text-xs">
+            <label className="block font-semibold text-[var(--text-main)]">
+              Or paste Google Drive links — one per line, no upload needed
+            </label>
+            <textarea
+              rows={2}
+              value={driveLinksText}
+              onChange={(e) => setDriveLinksText(e.target.value)}
+              placeholder={'https://drive.google.com/file/d/... \nhttps://drive.google.com/file/d/...'}
+              className="w-full px-2.5 py-1.5 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded text-xs focus:outline-none focus:border-[var(--gold)] resize-y"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-[var(--text-muted)]">
+                Only the link is saved — the file stays in Drive. Give each link a title in the list below.
+              </span>
+              <button
+                type="button"
+                onClick={addDriveLinks}
+                disabled={driveLinksText.trim().length === 0 || isUploading}
+                className="px-3 py-1 bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)] font-semibold rounded text-[11px] hover:bg-[var(--gold)] hover:text-black transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+              >
+                Add links
+              </button>
+            </div>
+          </div>
+
           {/* Optional Batch Metadata Collapsible */}
-          {queue.length > 1 && (
+          {queue.length > 0 && (
             <div className="border border-[var(--border-main)] rounded-lg p-3 bg-[var(--bg-main)] space-y-2 text-xs">
               <button
                 type="button"
@@ -730,7 +889,19 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
               </button>
 
               {showBatchMetadata && (
-                <div className="pt-2 space-y-2 border-t border-[var(--border-subtle)] animate-fade-in">
+                <div className="pt-2 space-y-3 border-t border-[var(--border-subtle)] animate-fade-in">
+                  <div>
+                    <label className="block text-[11px] text-[var(--text-muted)] mb-1">
+                      Paid for the whole batch (optional)
+                    </label>
+                    <PaidBookControl
+                      book={batchPaid}
+                      onChange={(patch) => setBatchPaid((prev) => ({ ...prev, ...patch }))}
+                    />
+                    <p className="text-[11px] text-[var(--text-faint)] mt-1">
+                      One price applies to every book in this batch. Payment is by UPI; you unlock access by hand.
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-[11px] text-[var(--text-muted)] mb-1">
                       Batch Author / Scholar

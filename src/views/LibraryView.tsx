@@ -15,6 +15,11 @@ export const LibraryView: React.FC = () => {
           <RefreshCw className="w-5 h-5 text-[var(--gold)]" />
         </div>
         <p className="text-sm font-semibold text-[var(--text-main)]">Loading folder contents...</p>
+        <div className="space-y-2 pt-2 text-left">
+          <div className="skeleton h-10 w-full" />
+          <div className="skeleton h-10 w-11/12" />
+          <div className="skeleton h-10 w-4/5" />
+        </div>
       </div>
     );
   }
