@@ -191,12 +191,16 @@ export const BookDetailsView: React.FC = () => {
               {book.title}
             </h1>
 
-            {book.isPaid && (
+            {book.isPaid ? (
               <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] bg-[var(--gold-faint)] border border-[var(--gold)]/40 rounded-full px-3 py-1 w-fit">
                 <IndianRupee className="w-3.5 h-3.5" />
                 <span>
                   Paid book{typeof book.price === 'number' ? ` — ₹${book.price.toLocaleString('en-IN')}` : ''}
                 </span>
+              </p>
+            ) : (
+              <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-main)] border border-[var(--border-main)] rounded-full px-3 py-1 w-fit">
+                <span>Free — no payment needed</span>
               </p>
             )}
 

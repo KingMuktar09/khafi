@@ -55,9 +55,13 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect }) => {
           <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border backdrop-blur-sm rounded ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
             {typeLabel}
           </span>
-          {book.isPaid && (
+          {book.isPaid ? (
             <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-[var(--gold)]/60 bg-black/70 text-[var(--gold)] backdrop-blur-sm rounded">
               Paid{typeof book.price === 'number' ? ` • ₹${book.price.toLocaleString('en-IN')}` : ''}
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 backdrop-blur-sm rounded">
+              Free
             </span>
           )}
         </div>

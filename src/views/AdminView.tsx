@@ -28,6 +28,7 @@ import {
   Sparkles,
   QrCode,
   Wallet,
+  IndianRupee,
 } from 'lucide-react';
 import { appState } from '../state/appState';
 import { api } from '../services/api';
@@ -40,6 +41,7 @@ import { ImportUrlModal } from '../components/admin/ImportUrlModal';
 import { AiOrganizerModal } from '../components/admin/AiOrganizerModal';
 import { router } from '../router/router';
 import { MoveModal, isDescendantFolder } from '../components/admin/MoveModal';
+import { PaidBookControl } from '../components/admin/PaidBookControl';
 import { QuickRenameModal } from '../components/admin/QuickRenameModal';
 import { QuickDescriptionModal } from '../components/admin/QuickDescriptionModal';
 import { AdminContextMenu } from '../components/admin/AdminContextMenu';
@@ -112,6 +114,9 @@ export const AdminView: React.FC = () => {
   const [paySaving, setPaySaving] = useState(false);
   const [payLoaded, setPayLoaded] = useState(false);
   const [payUploading, setPayUploading] = useState(false);
+  // Payment settings stay open until the UPI ID is set, then collapse to one
+  // line so they stop taking up space on every admin visit.
+  const [showPaySettings, setShowPaySettings] = useState(false);
 
   // Poll AI pending proposals count on mount
   useEffect(() => {
@@ -134,6 +139,8 @@ export const AdminView: React.FC = () => {
         .then((s) => {
           setPaySettings(s);
           setPayLoaded(true);
+          // Open the section only when there is something to set up.
+          setShowPaySettings(!s.upiId);
         })
         .catch(() => setPayLoaded(true));
     }
@@ -424,17 +431,30 @@ export const AdminView: React.FC = () => {
       return;
     }
 
+    // A paid book must have a price. A free book must not keep stale paid
+    // data (price / payment link / note) from when it was paid before.
+    if (editingBook.isPaid && !(typeof editingBook.price === 'number' && editingBook.price > 0)) {
+      appState.showToast('Set a price in ₹ for this paid book.', 'error');
+      return;
+    }
+
     const folderIdToSet = editingBook.folderId || selectedFolderId || (folders[0]?.id || null);
     const targetFolder = folders.find((f) => f.id === folderIdToSet);
 
-    const bookPayload = {
+    const bookPayload: Record<string, unknown> = {
       ...editingBook,
       folderId: folderIdToSet,
       category: targetFolder ? targetFolder.name : 'General',
     };
+    if (!editingBook.isPaid) {
+      // price: null (not undefined) so the server merge actually clears it.
+      bookPayload.price = null;
+      bookPayload.paymentLink = '';
+      bookPayload.paymentNote = '';
+    }
 
     if (editingBook.id) {
-      const res = await api.updateBook(editingBook.id, bookPayload);
+      const res = await api.updateBook(editingBook.id, bookPayload as Partial<Book>);
       if (res.success) {
         appState.showToast('Book updated.', 'success');
         setBookModalOpen(false);
@@ -445,7 +465,7 @@ export const AdminView: React.FC = () => {
         appState.showToast(res.error || 'Failed to update book.', 'error');
       }
     } else {
-      const res = await api.addBook(bookPayload);
+      const res = await api.addBook(bookPayload as Partial<Book>);
       if (res.success) {
         appState.showToast('Book added to library.', 'success');
         setBookModalOpen(false);
@@ -520,6 +540,44 @@ export const AdminView: React.FC = () => {
     } else {
       appState.showToast(res.error || 'Failed to update visibility.', 'error');
     }
+  };
+
+  // One-click paid toggle from the book list. Paid -> free right away.
+  // Free -> paid right away when the book already has a price; otherwise the
+  // edit form opens so the admin enters a price first (no price is invented).
+  const handleTogglePaid = async (book: Book) => {
+    if (book.isPaid) {
+      const res = await api.updateBook(book.id, {
+        isPaid: false,
+        price: null as unknown as number,
+        paymentLink: '',
+        paymentNote: '',
+      });
+      if (res.success) {
+        appState.showToast(`"${book.title}" is now free.`, 'success');
+        await appState.loadCatalog();
+      } else {
+        appState.showToast(res.error || 'Failed to make this book free.', 'error');
+      }
+      return;
+    }
+
+    if (typeof book.price === 'number' && book.price > 0) {
+      const res = await api.updateBook(book.id, { isPaid: true });
+      if (res.success) {
+        appState.showToast(`"${book.title}" is now paid — ₹${book.price.toLocaleString('en-IN')}.`, 'success');
+        await appState.loadCatalog();
+      } else {
+        appState.showToast(res.error || 'Failed to mark this book as paid.', 'error');
+      }
+      return;
+    }
+
+    setEditingBook(book);
+    setInitialBookState(book);
+    setShowAdvancedBook(false);
+    setBookModalOpen(true);
+    appState.showToast('Set a price in ₹ to make this book paid.', 'info');
   };
 
   const handleQuickRenameSave = async (newName: string) => {
@@ -881,17 +939,36 @@ export const AdminView: React.FC = () => {
 
       {/* Payment Settings (UPI) — admin only */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-5 space-y-4">
-        <div className="flex items-start gap-3">
+        <button
+          type="button"
+          onClick={() => setShowPaySettings((v) => !v)}
+          className="w-full flex items-start gap-3 text-left cursor-pointer"
+          aria-expanded={showPaySettings}
+        >
           <div className="w-10 h-10 rounded-lg bg-[var(--gold-faint)] border border-[var(--border-main)] flex items-center justify-center text-[var(--gold)] shrink-0">
             <Wallet className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
-            <h3 className="font-display font-semibold text-lg text-[var(--text-main)]">Payment Settings — UPI</h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display font-semibold text-lg text-[var(--text-main)]">Payment settings — UPI</h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-              Only you see this. Paid books show your UPI ID and QR at checkout. There is no payment gateway and no automatic check — after a visitor pays, you unlock their access manually.
+              {paySettings.upiId
+                ? `UPI set: ${paySettings.upiId} — paid books show this at checkout.`
+                : 'Not set yet — paid books will ask visitors to message @ghayb.chronicles instead.'}
             </p>
           </div>
-        </div>
+          {showPaySettings ? (
+            <ChevronUp className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-2" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-[var(--text-muted)] shrink-0 mt-2" />
+          )}
+        </button>
+
+        {showPaySettings && (
+        <>
+
+        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+          Only you see this. No payment gateway, no automatic check — after a visitor pays, you unlock their access by hand.
+        </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -969,10 +1046,12 @@ export const AdminView: React.FC = () => {
           </button>
           <p className="text-[11px] text-[var(--text-faint)]">
             {paySettings.upiId || paySettings.upiQrUrl
-              ? 'Visitors will see these details on paid books.'
-              : 'Nothing is set yet — paid books will ask visitors to message @ghayb.chronicles instead.'}
+              ? 'Saved — visitors see these details on paid books.'
+              : 'Fill in your UPI ID above, then save.'}
           </p>
         </div>
+        </>
+        )}
       </div>
 
       {/* Admin Toolbar */}
@@ -1506,6 +1585,28 @@ export const AdminView: React.FC = () => {
                       </span>
                     )}
                   </button>
+
+                  {/* Paid / Free badge — click to toggle. Paid needs a price:
+                      without one, the edit form opens so you can set it. */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTogglePaid(b);
+                    }}
+                    className="cursor-pointer"
+                    title={b.isPaid ? 'Paid — click to make this book free' : 'Free — click to mark this book as paid'}
+                  >
+                    {b.isPaid ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-[var(--gold-faint)] text-[var(--gold)] border border-[var(--gold)]/40 font-bold hover:bg-[var(--gold)]/20 transition-colors inline-flex items-center gap-1">
+                        <IndianRupee className="w-3 h-3" />
+                        Paid{typeof b.price === 'number' ? ` ₹${b.price.toLocaleString('en-IN')}` : ''}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-[var(--bg-main)] text-[var(--text-muted)] border border-[var(--border-main)] font-medium hover:border-[var(--gold)]/50 hover:text-[var(--gold)] transition-colors inline-flex items-center gap-1">
+                        Free
+                      </span>
+                    )}
+                  </button>
                 </div>
 
                 {/* Actions: Open, Quick Edit, More */}
@@ -1614,6 +1715,20 @@ export const AdminView: React.FC = () => {
                               <span>Make Public</span>
                             </>
                           )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleTogglePaid(b);
+                            setActiveMenuKey(null);
+                          }}
+                          className="w-full px-3 py-1.5 text-left hover:bg-[var(--bg-hover)] text-[var(--text-main)] flex items-center gap-2 cursor-pointer"
+                        >
+                          <IndianRupee className="w-3.5 h-3.5 text-[var(--gold)]" />
+                          <span>
+                            {b.isPaid
+                              ? 'Make free'
+                              : `Mark as paid${typeof b.price === 'number' && b.price > 0 ? ` — ₹${b.price.toLocaleString('en-IN')}` : ''}`}
+                          </span>
                         </button>
                       </div>
 
@@ -1969,6 +2084,14 @@ export const AdminView: React.FC = () => {
                 </div>
               </div>
 
+              {/* Paid or free — one toggle + price, right at the top. */}
+              <PaidBookControl
+                book={editingBook}
+                onChange={(patch) =>
+                  setEditingBook((prev) => ({ ...prev, ...patch }))
+                }
+              />
+
               <div>
                 <label className="block text-[var(--text-muted)] mb-1 font-medium">
                   Description
@@ -1999,76 +2122,6 @@ export const AdminView: React.FC = () => {
                 />
                 <p className="text-[11px] text-[var(--text-faint)] mt-1">
                   Paste the Drive share link for this book. The file stays in Drive; only the link is saved.
-                </p>
-              </div>
-
-              {/* Paid book controls (admin only) */}
-              <div className="p-3 bg-[var(--bg-main)] rounded border border-[var(--border-main)] space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingBook.isPaid)}
-                    onChange={(e) =>
-                      setEditingBook((prev) => ({ ...prev, isPaid: e.target.checked }))
-                    }
-                    className="w-4 h-4 rounded text-[var(--gold)] accent-[var(--gold)] cursor-pointer"
-                  />
-                  <span className="font-semibold text-[var(--text-main)] text-xs">
-                    Paid book — visitors pay before reading
-                  </span>
-                </label>
-                {editingBook.isPaid && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[var(--text-muted)] mb-1 font-medium">
-                        Price (INR ₹)
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={editingBook.price ?? ''}
-                        onChange={(e) =>
-                          setEditingBook((prev) => ({
-                            ...prev,
-                            price: e.target.value === '' ? undefined : Number(e.target.value),
-                          }))
-                        }
-                        className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
-                        placeholder="e.g. 99"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[var(--text-muted)] mb-1 font-medium">
-                        Payment link (optional)
-                      </label>
-                      <input
-                        type="url"
-                        value={editingBook.paymentLink || ''}
-                        onChange={(e) =>
-                          setEditingBook((prev) => ({ ...prev, paymentLink: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
-                        placeholder="https://... (your payment page, if any)"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-[var(--text-muted)] mb-1 font-medium">
-                        Payment note for readers (optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={editingBook.paymentNote || ''}
-                        onChange={(e) =>
-                          setEditingBook((prev) => ({ ...prev, paymentNote: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
-                        placeholder="e.g. Message @ghayb.chronicles after paying"
-                      />
-                    </div>
-                  </div>
-                )}
-                <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">
-                  Paid books show a Paid badge and a UPI checkout. There is no automatic payment check — after a visitor pays, you unlock their access manually.
                 </p>
               </div>
 
@@ -2312,6 +2365,12 @@ export const AdminView: React.FC = () => {
               handleToggleBookVisibility(contextMenu.item as Book);
             }
           }}
+          isPaid={contextMenu.type === 'book' ? Boolean((contextMenu.item as Book).isPaid) : false}
+          onTogglePaid={
+            contextMenu.type === 'book'
+              ? () => handleTogglePaid(contextMenu.item as Book)
+              : undefined
+          }
           onDelete={() => {
             if (contextMenu.type === 'folder') {
               openDeleteModalForFolder(contextMenu.item as Folder);

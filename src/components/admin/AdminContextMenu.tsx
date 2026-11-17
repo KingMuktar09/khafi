@@ -10,6 +10,7 @@ import {
   EyeOff,
   Trash2,
   FileText,
+  IndianRupee,
 } from 'lucide-react';
 
 interface ContextMenuOption {
@@ -25,6 +26,8 @@ interface AdminContextMenuProps {
   title: string;
   type: 'folder' | 'book';
   isVisible: boolean;
+  /** Book only: whether the book is currently paid. */
+  isPaid?: boolean;
   onClose: () => void;
   onOpen: () => void;
   onQuickEdit: () => void;
@@ -32,6 +35,9 @@ interface AdminContextMenuProps {
   onEditDescription: () => void;
   onMove: () => void;
   onToggleVisibility: () => void;
+  /** Book only: one-click paid/free toggle (opens the edit form when a
+   * price is needed first). */
+  onTogglePaid?: () => void;
   onDelete: () => void;
 }
 
@@ -41,6 +47,7 @@ export const AdminContextMenu: React.FC<AdminContextMenuProps> = ({
   title,
   type,
   isVisible,
+  isPaid,
   onClose,
   onOpen,
   onQuickEdit,
@@ -48,6 +55,7 @@ export const AdminContextMenu: React.FC<AdminContextMenuProps> = ({
   onEditDescription,
   onMove,
   onToggleVisibility,
+  onTogglePaid,
   onDelete,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -114,6 +122,15 @@ export const AdminContextMenu: React.FC<AdminContextMenuProps> = ({
       icon: isVisible ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-400" />,
       action: onToggleVisibility,
     },
+    ...(type === 'book' && onTogglePaid
+      ? [
+          {
+            label: isPaid ? 'Make free' : 'Mark as paid',
+            icon: <IndianRupee className="w-3.5 h-3.5 text-[var(--gold)]" />,
+            action: onTogglePaid,
+          },
+        ]
+      : []),
     {
       label: 'Delete',
       icon: <Trash2 className="w-3.5 h-3.5 text-rose-400" />,
