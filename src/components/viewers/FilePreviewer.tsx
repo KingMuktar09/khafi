@@ -18,6 +18,7 @@ import {
   getItemUrl,
   getFileExtension,
   getDrivePreviewUrl,
+  getDriveDownloadUrl,
   downloadBookFile,
 } from '../../utils/fileUtils';
 import { PdfCanvasViewer, FitMode } from '../pdf/PdfCanvasViewer';
@@ -219,10 +220,15 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   }
 
   // 5. DOCX DOCUMENTS
+  // Drive books cannot be fetched from the app's /api/files stream (503
+  // without a Drive service account), so pass the direct Drive download
+  // link: mammoth's fetch will fail on CORS and DocxViewer falls back to
+  // its Google Viewer iframe, which fetches the file server-side.
   if (ext === 'docx') {
+    const driveDownloadUrl = getDriveDownloadUrl(book);
     return (
       <DocxViewer
-        fileUrl={fileTarget}
+        fileUrl={driveDownloadUrl || fileTarget}
         title={book.title}
         onDownload={handleDownload}
       />

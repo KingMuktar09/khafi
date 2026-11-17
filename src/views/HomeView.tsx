@@ -17,7 +17,7 @@ import { router } from '../router/router';
 import { CompactAdvisoryBanner } from '../components/ui/CompactAdvisoryBanner';
 
 export const HomeView: React.FC = () => {
-  // The catalog has one root collection ("Islamic Library"); show its
+  // The catalog has one root collection ("All Islamic History Books"); show its
   // categories as the collections on the home page.
   const roots = appState.getChildFolders(null);
   const collections = roots.length === 1 ? appState.getChildFolders(roots[0].id) : roots;

@@ -48,7 +48,7 @@ export const LibraryView: React.FC = () => {
   const currentFolder = folderId ? appState.getFolderById(folderId) : null;
   const currentSubfolder = subfolderId ? appState.getFolderById(subfolderId) : null;
 
-  // Top level: if the catalog has a single root collection (Islamic Library),
+  // Top level: if the catalog has a single root collection (All Islamic History Books),
   // show its categories directly instead of one lone root folder.
   const roots = appState.getChildFolders(null);
   const topFolderId = !folderId && !subfolderId && roots.length === 1 ? roots[0].id : null;
@@ -87,7 +87,7 @@ export const LibraryView: React.FC = () => {
     : currentFolder
     ? currentFolder.name
     : topFolderId
-    ? 'Islamic Library'
+    ? 'All Islamic History Books'
     : 'Library';
 
   return (

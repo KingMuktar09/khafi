@@ -111,11 +111,11 @@ function getServiceAccountPrivateKey(): string {
 }
 
 export function getDriveFolderId(): string {
-  // Default root is the "Islamic Library" Drive folder ONLY.
-  // The wider "Ilm-e-Ghayb Library" folder (11XFqHOjiDj6ChlBX65XFR0p9SOqjpHX5) also
-  // holds "Hidden Wisdoms (The Truth)" and "All Islamic History Books" — those
+  // Default root is the "All Islamic History Books" Drive folder ONLY.
+  // The wider "KHAFI LIBRARY" folder (11XFqHOjiDj6ChlBX65XFR0p9SOqjpHX5) also
+  // holds "Islamic Library" and "Hidden Wisdoms (The Truth)" — those
   // are deliberately NOT linked here. Override with GOOGLE_DRIVE_FOLDER_ID.
-  const rawId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || "18gp3xoeRxCjvZlCHWTGqm2rFmyLhcWNU";
+  const rawId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || "1MAFF2F5pK1HJMoQFSZ6IXoZT9D2LpyIB";
   return extractDriveFolderId(rawId);
 }
 
