@@ -47,7 +47,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
     const folder = item as Folder;
     const itemCount = appState.getItemCountForFolder(folder.id);
     const parentFolder = folder.parentId ? appState.getFolderById(folder.parentId) : null;
-    const locationPath = parentFolder ? `KHAFI LIBRARY > ${parentFolder.name}` : 'KHAFI LIBRARY (Root)';
+    const locationPath = parentFolder ? `Ilm-e-Ghayb Library > ${parentFolder.name}` : 'Ilm-e-Ghayb Library (Root)';
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in font-sans">

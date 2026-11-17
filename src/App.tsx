@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { appState } from './state/appState';
+import { storage } from './services/storage';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ToastContainer } from './components/ui/Toast';
+import { FollowGate } from './components/ui/FollowGate';
 
 // Import Views
 import { HomeView } from './views/HomeView';
@@ -17,6 +19,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 export default function App() {
   const [, setTick] = useState(0);
+  const [followUnlocked, setFollowUnlocked] = useState(() => storage.hasFollowUnlocked());
 
   useEffect(() => {
     const unsubscribeState = appState.subscribe(() => {
@@ -27,6 +30,31 @@ export default function App() {
       unsubscribeState();
     };
   }, []);
+
+  // Instagram follow gate: first screen for new visitors. Admins and the
+  // admin sign-in page bypass it; everyone else unlocks by following
+  // @ghayb.chronicles and tapping unlock (remembered on this device).
+  const isAdmin = appState.adminAuthenticated;
+  const showGate =
+    !followUnlocked && !isAdmin && appState.route.view !== 'admin';
+
+  if (showGate) {
+    const books = appState.getVisibleBooks();
+    const roots = appState.getChildFolders(null);
+    const categories = roots.length === 1 ? appState.getChildFolders(roots[0].id).length : roots.length;
+    return (
+      <ErrorBoundary>
+        <FollowGate
+          bookCount={books.length}
+          categoryCount={categories}
+          onUnlock={() => {
+            storage.setFollowUnlocked();
+            setFollowUnlocked(true);
+          }}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   const renderView = () => {
     const currentView = appState.route.view;

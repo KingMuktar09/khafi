@@ -5,6 +5,7 @@ const RECENT_KEY = 'khafi_recently_viewed';
 const THEME_KEY = 'khafi_theme';
 const PROGRESS_KEY = 'khafi_reading_progress';
 const SETTINGS_KEY = 'khafi_user_settings';
+const FOLLOW_UNLOCK_KEY = 'ilmeghayb_follow_unlocked';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   appearance: 'dark',
@@ -173,6 +174,26 @@ export const storage = {
   saveSettings(settings: UserSettings): void {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      // ignore
+    }
+  },
+
+  // Instagram follow gate (honour unlock, remembered per browser).
+  // This is NOT a verified Instagram follow check — a free site cannot do
+  // that. The visitor follows @ghayb.chronicles, taps unlock, and the
+  // library stays unlocked on this device.
+  hasFollowUnlocked(): boolean {
+    try {
+      return localStorage.getItem(FOLLOW_UNLOCK_KEY) === '1';
+    } catch {
+      return false;
+    }
+  },
+
+  setFollowUnlocked(): void {
+    try {
+      localStorage.setItem(FOLLOW_UNLOCK_KEY, '1');
     } catch {
       // ignore
     }

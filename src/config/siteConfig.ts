@@ -1,21 +1,24 @@
 export const siteConfig = {
-  appName: 'KHAFI LIBRARY',
+  appName: 'Ilm-e-Ghayb Library',
+  brand: 'Ghayb Chronicles',
+  instagram: {
+    handle: '@ghayb.chronicles',
+    url: 'https://instagram.com/ghayb.chronicles',
+  },
   creator: {
-    name: 'Khafi',
+    name: 'Ghayb Chronicles',
     location: 'India',
-    tagline: 'Muslim • Student • Independent Learner • Creator of KHAFI LIBRARY',
+    tagline: 'Islamic esoteric knowledge • Mysticism & Sufi wisdom through art',
     about:
-      'Khafi created KHAFI LIBRARY as a personal digital space for organizing, preserving, exploring, and discovering knowledge.\n\nThe library has a particular interest in Islamic knowledge, Quran, Sunnah, spirituality, history, philosophy, and beneficial knowledge from different traditions and disciplines.',
+      'Ilm-e-Ghayb Library, by Ghayb Chronicles, is a private space for Ilm — hidden knowledge, Sufi wisdom, and the books behind it.\n\nThe library holds Islamic knowledge, Quran, Sunnah, spirituality, history and philosophy, with sources in every entry. Follow @ghayb.chronicles on Instagram to enter the library.',
     note: {
       quote:
         'Some knowledge is everywhere.\nSome knowledge is hidden.\nThis is a place to seek both.',
-      author: 'Khafi',
+      author: 'Ghayb Chronicles',
     },
-    // Optional public contact links; add your own if you publish this project.
     socials: {
-      instagram: { handle: '', url: '' },
+      instagram: { handle: '@ghayb.chronicles', url: 'https://instagram.com/ghayb.chronicles' },
       telegram: { handle: '', url: '' },
     },
   },
 };
-

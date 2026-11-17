@@ -282,7 +282,7 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
   if ((path === "/api/health" || path === "/api") && method === "GET") {
     return jsonResponse({
       status: "ok",
-      app: "KHAFI LIBRARY",
+      app: "Ilm-e-Ghayb Library",
       runtime: "cloudflare-edge",
     });
   }

@@ -1,10 +1,16 @@
-# KHAFI LIBRARY
+# Ilm-e-Ghayb Library — by Ghayb Chronicles
 
 **A Private Space for Ilm** — a self-hosted digital library for discovering, organizing, reading, and preserving knowledge. Built with a particular interest in Islamic knowledge: Quran, Sunnah, spirituality, history, and philosophy — but structured to hold any collection of books and documents.
 
 > Some knowledge is everywhere.
 > Some knowledge is hidden.
 > This is a place to seek both.
+
+**Collection:** the library serves the "Islamic Library" Google Drive folder only (65 collections, 538 books at the last catalog build). Books stay in Drive and open there; the catalog in `data/catalog.json` links to them. No other Drive folder is linked.
+
+**Entry:** new visitors see an Instagram follow gate for [@ghayb.chronicles](https://instagram.com/ghayb.chronicles) — follow, tap unlock, and the library opens on that device. The gate is a follow prompt plus an honour unlock; a free site cannot verify an Instagram follow.
+
+**Admin:** password-protected admin area (env `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `SESSION_SECRET`). The admin can add, view and delete books; deleting removes the book from the catalog only, never the Drive file. The admin can also mark a book Paid (price in INR) and set UPI payment details (UPI ID, UPI QR, display name) in Payment Settings. Paid books show a UPI checkout; there is no payment gateway and no automatic payment check — access after payment is unlocked manually.
 
 ## Features
 

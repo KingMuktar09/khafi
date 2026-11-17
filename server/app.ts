@@ -124,6 +124,7 @@ const baseDataDir = isServerless ? "/tmp" : process.cwd();
 
 export const dataDir = isServerless ? path.join(baseDataDir, "khafi-data") : path.join(process.cwd(), "data");
 export const catalogFilePath = path.join(dataDir, "catalog.json");
+export const paymentSettingsFilePath = path.join(dataDir, "payment-settings.json");
 export const uploadsDir = isServerless ? path.join(baseDataDir, "khafi-uploads") : path.join(process.cwd(), "public", "uploads");
 export const samplePdfDir = path.join(process.cwd(), "public", "sample-pdfs");
 export const uploadSessionsDir = path.join(dataDir, "upload-sessions");
@@ -168,7 +169,7 @@ stream
 BT
 /F1 24 Tf
 50 720 Td
-(KHAFI LIBRARY) Tj
+(Ilm-e-Ghayb Library) Tj
 0 -36 Td
 /F1 14 Tf
 (A Private Space for Ilm) Tj
@@ -274,6 +275,59 @@ export function writeCatalog(data: any) {
   } catch (err) {
     console.error("Error writing catalog:", err);
     return false;
+  }
+}
+
+// UPI payment settings (admin-only writes, public reads of the three fields).
+// Stored in data/payment-settings.json. All fields are empty by default; the
+// admin fills in their own UPI ID / QR. No gateway, no keys, no auto check.
+// Note: on serverless (Vercel) writes go to /tmp and do not survive a
+// redeploy, so the durable copy is the file committed in the repo.
+export const EMPTY_PAYMENT_SETTINGS = { upiId: "", upiQrUrl: "", displayName: "" };
+
+export function readPaymentSettings() {
+  const pick = (filePath: string) => {
+    try {
+      if (fs.existsSync(filePath)) {
+        const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+        if (parsed && typeof parsed === "object") return parsed;
+      }
+    } catch (err) {
+      console.error("Error reading payment settings:", err);
+    }
+    return null;
+  };
+  const fromDataDir = pick(paymentSettingsFilePath);
+  if (fromDataDir) {
+    return {
+      upiId: typeof fromDataDir.upiId === "string" ? fromDataDir.upiId.trim() : "",
+      upiQrUrl: typeof fromDataDir.upiQrUrl === "string" ? fromDataDir.upiQrUrl.trim() : "",
+      displayName: typeof fromDataDir.displayName === "string" ? fromDataDir.displayName.trim() : "",
+    };
+  }
+  const fromRoot = pick(path.join(process.cwd(), "data", "payment-settings.json"));
+  if (fromRoot) {
+    return {
+      upiId: typeof fromRoot.upiId === "string" ? fromRoot.upiId.trim() : "",
+      upiQrUrl: typeof fromRoot.upiQrUrl === "string" ? fromRoot.upiQrUrl.trim() : "",
+      displayName: typeof fromRoot.displayName === "string" ? fromRoot.displayName.trim() : "",
+    };
+  }
+  return { ...EMPTY_PAYMENT_SETTINGS };
+}
+
+export function writePaymentSettings(data: any) {
+  const clean = {
+    upiId: typeof data?.upiId === "string" ? data.upiId.trim().slice(0, 100) : "",
+    upiQrUrl: typeof data?.upiQrUrl === "string" ? data.upiQrUrl.trim().slice(0, 500) : "",
+    displayName: typeof data?.displayName === "string" ? data.displayName.trim().slice(0, 100) : "",
+  };
+  try {
+    fs.writeFileSync(paymentSettingsFilePath, JSON.stringify(clean, null, 2), "utf8");
+    return clean;
+  } catch (err) {
+    console.error("Error writing payment settings:", err);
+    return null;
   }
 }
 
@@ -414,9 +468,53 @@ app.use(["/uploads/*", "/sample-pdfs/*"], (req, res) => {
 app.get(["/api/health", "/api"], (req, res) => {
   res.json({
     status: "ok",
-    app: "KHAFI LIBRARY",
+    app: "Ilm-e-Ghayb Library",
     runtime: isServerless ? "vercel-serverless" : "node-express",
   });
+});
+
+// Public library status: honest, no secrets. Reports whether the live Drive
+// sync is configured, and that the catalog served is the Islamic Library
+// collection only (Drive links, no files stored here).
+app.get(["/api/library-status", "/library-status"], (req, res) => {
+  const catalog = readCatalog();
+  const folders = catalog.folders || [];
+  const books = catalog.books || [];
+  const driveConfigured = isGoogleDriveConfigured();
+  res.json({
+    status: "ok",
+    library: "Ilm-e-Ghayb Library",
+    brand: "Ghayb Chronicles",
+    driveFolder: "Islamic Library only",
+    driveFolderId: getDriveFolderId(),
+    driveConfigured,
+    mode: driveConfigured ? "drive-sync" : "catalog-links",
+    modeNote: driveConfigured
+      ? "Live Google Drive sync is configured."
+      : "Drive sync is not configured. The library serves its saved catalog and books open in Google Drive.",
+    categories: folders.filter((f: any) => {
+      const roots = new Set(folders.filter((r: any) => !r.parentId).map((r: any) => r.id));
+      return f.parentId && roots.has(f.parentId);
+    }).length,
+    folders: folders.length,
+    books: books.length,
+    paidBooks: books.filter((b: any) => b.isPaid).length,
+  });
+});
+
+// Public UPI payment settings (the three admin-set fields only, may be empty).
+app.get(["/api/payment-settings", "/payment-settings"], (req, res) => {
+  res.json(readPaymentSettings());
+});
+
+// Admin-only: save UPI payment settings.
+app.post(["/api/admin/payment-settings", "/admin/payment-settings"], requireAdmin, (req, res) => {
+  const saved = writePaymentSettings(req.body || {});
+  if (!saved) {
+    res.status(500).json({ error: "Failed to save payment settings." });
+    return;
+  }
+  res.json({ success: true, settings: saved });
 });
 
 // 1.1 Diagnostics endpoint
@@ -1179,36 +1277,10 @@ app.delete(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, (req, res
     return;
   }
 
-  // Clean up associated Google Drive file if present
-  const driveFileId =
-    bookToDelete.driveFileId ||
-    extractDriveFileId(bookToDelete.fileUrl) ||
-    extractDriveFileId(bookToDelete.pdfUrl) ||
-    extractDriveFileId(bookToDelete.driveUrl);
-
-  if (driveFileId && isGoogleDriveConfigured()) {
-    deleteFileFromDrive(driveFileId).catch((err) => {
-      console.warn(`Async delete from Google Drive failed for file ${driveFileId}:`, err);
-    });
-  }
-
-  // Clean up associated local upload file if present
-  const urlsToCheck = [bookToDelete.pdfUrl, bookToDelete.fileUrl, bookToDelete.coverUrl];
-  for (const fileUrl of urlsToCheck) {
-    if (fileUrl && typeof fileUrl === "string" && fileUrl.startsWith("/uploads/")) {
-      const filename = path.basename(fileUrl);
-      const filePathOnDisk = path.join(uploadsDir, filename);
-      try {
-        if (fs.existsSync(filePathOnDisk)) {
-          fs.unlinkSync(filePathOnDisk);
-          console.log(`Cleaned up uploaded file from disk: ${filename}`);
-        }
-      } catch (unlinkErr) {
-        console.error(`Failed to delete stored file ${filename}:`, unlinkErr);
-      }
-    }
-  }
-
+  // Catalog-only delete, by design. Removing a book here removes it from
+  // the library catalog ONLY. The file in Google Drive is never deleted by
+  // this endpoint, so an admin cannot wipe a Drive book by accident. To
+  // remove the Drive file itself, delete it separately in Google Drive.
   catalog.books = (catalog.books || []).filter((b: any) => b.id !== bookId);
 
   if (writeCatalog(catalog)) {
@@ -1676,7 +1748,7 @@ app.post(["/api/admin/import-url", "/admin/import-url"], requireAdmin, async (re
   if (!isSharedDriveConfigured()) {
     res.status(400).json({
       success: false,
-      error: "KHAFI LIBRARY storage is not configured with a Shared Drive.",
+      error: "Ilm-e-Ghayb Library storage is not configured with a Shared Drive.",
     });
     return;
   }
@@ -1698,7 +1770,7 @@ app.post(["/api/admin/import-url", "/admin/import-url"], requireAdmin, async (re
         mimeType,
         streamOrBuffer: streamResult.stream,
         folderId: typeof targetFolderId === "string" ? targetFolderId : undefined,
-        description: description || `Imported from remote URL via KHAFI LIBRARY`,
+        description: description || `Imported from remote URL via Ilm-e-Ghayb Library`,
       });
 
       driveFileId = driveResult.fileId;

@@ -1,5 +1,5 @@
 {
-  "name": "khafi-library",
+  "name": "ilm-e-ghayb-library",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -44,5 +44,5 @@
     "vite": "^6.2.3",
     "vitest": "^5.1.0"
   },
-  "description": "KHAFI LIBRARY - a private digital library for discovering, organizing, reading, and preserving knowledge."
+  "description": "Ilm-e-Ghayb Library by Ghayb Chronicles - a private digital library for discovering, organizing, reading, and preserving knowledge."
 }

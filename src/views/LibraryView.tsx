@@ -48,8 +48,13 @@ export const LibraryView: React.FC = () => {
   const currentFolder = folderId ? appState.getFolderById(folderId) : null;
   const currentSubfolder = subfolderId ? appState.getFolderById(subfolderId) : null;
 
+  // Top level: if the catalog has a single root collection (Islamic Library),
+  // show its categories directly instead of one lone root folder.
+  const roots = appState.getChildFolders(null);
+  const topFolderId = !folderId && !subfolderId && roots.length === 1 ? roots[0].id : null;
+
   // Active subfolders in current view
-  const childFolders = appState.getChildFolders(subfolderId || folderId || null);
+  const childFolders = appState.getChildFolders(subfolderId || folderId || topFolderId || null);
 
   // Active books in current view
   let displayedBooks: Book[] = [];
@@ -68,6 +73,8 @@ export const LibraryView: React.FC = () => {
     displayedBooks = appState.getBooksForFolder(folderId!, subfolderId);
   } else if (folderId) {
     displayedBooks = appState.getBooksForFolder(folderId);
+  } else if (topFolderId) {
+    displayedBooks = appState.getBooksForFolder(topFolderId);
   } else {
     // Top-level books with no folderId or subfolderId
     displayedBooks = appState.getVisibleBooks().filter((b) => !b.folderId && !b.subfolderId);
@@ -79,6 +86,8 @@ export const LibraryView: React.FC = () => {
     ? currentSubfolder.name
     : currentFolder
     ? currentFolder.name
+    : topFolderId
+    ? 'Islamic Library'
     : 'Library';
 
   return (

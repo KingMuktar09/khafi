@@ -12,6 +12,8 @@ export interface Folder {
   description: string;
   parentId: string | null;
   type?: 'category' | 'folder' | 'subfolder';
+  /** Google Drive folder link (webViewLink). Survives server sanitising. */
+  externalUrl?: string;
   createdAt?: string;
   updatedAt?: string;
   sortOrder?: number;
@@ -49,6 +51,14 @@ export interface Book {
   updatedAt?: string;
   featured: boolean;
   visible: boolean;
+  /** Paid-book controls (admin-only). No payment gateway: paymentLink is a link
+   * the admin fills in (e.g. UPI/payment page) and access after payment is
+   * unlocked manually by the admin. Free books have isPaid false. */
+  isPaid?: boolean;
+  price?: number;
+  priceCurrency?: string;
+  paymentLink?: string;
+  paymentNote?: string;
   sortOrder?: number;
   publisher?: string;
   year?: string;
@@ -108,6 +118,20 @@ export interface CatalogData {
   folders: Folder[];
   books: Book[];
 }
+
+/** UPI payment settings, admin-only. All fields empty by default; the admin
+ * fills them in. No gateway, no keys, no auto verification. */
+export interface PaymentSettings {
+  upiId: string;
+  upiQrUrl: string;
+  displayName: string;
+}
+
+export const EMPTY_PAYMENT_SETTINGS: PaymentSettings = {
+  upiId: '',
+  upiQrUrl: '',
+  displayName: '',
+};
 
 export interface AIOrganizationProposal {
   id: string;

@@ -895,7 +895,7 @@ export async function uploadBinaryToDriveCf(
     name: filename,
     parents: [targetParent],
     mimeType: mimeType || "application/octet-stream",
-    description: "Uploaded via KHAFI LIBRARY",
+    description: "Uploaded via Ilm-e-Ghayb Library",
   };
 
   const metadataPart = new TextEncoder().encode(

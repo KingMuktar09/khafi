@@ -35,7 +35,7 @@ export async function start() {
 
   const listenPort = Number(process.env.PORT || PORT || 3000);
   app.listen(listenPort, "0.0.0.0", () => {
-    console.log(`KHAFI LIBRARY server active on http://0.0.0.0:${listenPort}`);
+    console.log(`Ilm-e-Ghayb Library server active on http://0.0.0.0:${listenPort}`);
   });
 }
 

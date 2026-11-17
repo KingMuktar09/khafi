@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Sun, Moon, Lock, ShieldCheck, Folder, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info } from 'lucide-react';
+import { Search, Sun, Moon, Lock, ShieldCheck, Folder, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
 import { ViewName } from '../../types';
@@ -54,11 +54,11 @@ export const Navbar: React.FC = () => {
                 <Folder className="w-4 h-4 fill-[var(--gold)]/20 text-[var(--gold)]" />
               </div>
               <div>
-                <span className="font-sans font-bold text-base sm:text-lg text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors block leading-tight">
-                  KHAFI LIBRARY
+                <span className="font-display font-semibold text-base sm:text-lg text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors block leading-tight">
+                  Ilm-e-Ghayb Library
                 </span>
                 <span className="text-[11px] text-[var(--text-muted)] font-normal block">
-                  A Private Space for Ilm
+                  by Ghayb Chronicles
                 </span>
               </div>
             </button>
@@ -148,6 +148,17 @@ export const Navbar: React.FC = () => {
               <Info className="w-4 h-4 text-blue-400" />
               <span>Info</span>
             </button>
+
+            <a
+              href="https://instagram.com/ghayb.chronicles"
+              target="_blank"
+              rel="noreferrer"
+              title="Follow @ghayb.chronicles on Instagram"
+              className="px-3 py-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Instagram className="w-4 h-4 text-[var(--gold)]" />
+              <span>Instagram</span>
+            </a>
 
             <button
               onClick={() => handleNav('admin')}

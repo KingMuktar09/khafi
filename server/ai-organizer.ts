@@ -252,7 +252,7 @@ export async function runNvidiaDiagnostic(): Promise<{
       const client = getNvidiaClient("embedding")!;
       const res = await client.embeddings.create({
         model: getNvidiaEmbeddingModel(),
-        input: "test document for KHAFI LIBRARY",
+        input: "test document for Ilm-e-Ghayb Library",
         encoding_format: "float",
       });
       const elapsed = Date.now() - start;
@@ -594,7 +594,7 @@ export async function analyzeWithMuseGlimmer(
     return { id: f.id, name: f.name, path, isSubfolder: Boolean(f.parentId) };
   });
 
-  const prompt = `You are the scholarly AI Library Organizer for KHAFI LIBRARY, a prestigious private digital library for Islamic and classical knowledge, books, manuscripts, and research papers.
+  const prompt = `You are the scholarly AI Library Organizer for Ilm-e-Ghayb Library, a prestigious private digital library for Islamic and classical knowledge, books, manuscripts, and research papers.
 
 Your task is to analyze the following document metadata and text sample, and generate a precise, professional organization proposal.
 
@@ -662,7 +662,7 @@ RETURN STRICT JSON ONLY MATCHING THIS SCHEMA (No markdown wrapper text outside t
         {
           role: "system",
           content:
-            "You are a strict JSON generator for KHAFI LIBRARY. You must respond with valid JSON ONLY. Never include conversational text outside the JSON object.",
+            "You are a strict JSON generator for Ilm-e-Ghayb Library. You must respond with valid JSON ONLY. Never include conversational text outside the JSON object.",
         },
         {
           role: "user",

@@ -104,6 +104,8 @@ async function fetchWithRetry(url: string, options?: RequestInit, retries = 2, d
   throw lastError;
 }
 
+import { EMPTY_PAYMENT_SETTINGS, PaymentSettings } from '../types';
+
 let inFlightCatalogPromise: Promise<CatalogData> | null = null;
 let inFlightCheckAdminPromise: Promise<{ authenticated: boolean; username?: string }> | null = null;
 
@@ -139,6 +141,38 @@ export const api = {
     })();
 
     return inFlightCatalogPromise;
+  },
+
+  async getPaymentSettings(): Promise<PaymentSettings> {
+    try {
+      const res = await fetch('/api/payment-settings');
+      const parsed = await safeParseJson<PaymentSettings>(res);
+      if (parsed.ok && parsed.data) {
+        return {
+          upiId: parsed.data.upiId || '',
+          upiQrUrl: parsed.data.upiQrUrl || '',
+          displayName: parsed.data.displayName || '',
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load payment settings:', err);
+    }
+    return { ...EMPTY_PAYMENT_SETTINGS };
+  },
+
+  async savePaymentSettings(settings: PaymentSettings): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/payment-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(settings),
+      });
+      const parsed = await safeParseJson<{ success: boolean; error?: string }>(res);
+      if (!parsed.ok) return { success: false, error: parsed.error || 'Failed to save payment settings.' };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save payment settings.' };
+    }
   },
 
   async checkAdminAuth(): Promise<{ authenticated: boolean; username?: string }> {

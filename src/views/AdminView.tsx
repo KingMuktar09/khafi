@@ -26,11 +26,13 @@ import {
   AlignLeft,
   Globe,
   Sparkles,
+  QrCode,
+  Wallet,
 } from 'lucide-react';
 import { appState } from '../state/appState';
 import { api } from '../services/api';
 import { extractPdfCover } from '../services/pdf';
-import { Book, Folder } from '../types';
+import { Book, Folder, PaymentSettings } from '../types';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { LibraryStatsDashboard } from '../components/admin/LibraryStatsDashboard';
 import { UploadFileModal } from '../components/folders/UploadFileModal';
@@ -104,6 +106,13 @@ export const AdminView: React.FC = () => {
   const [aiOrganizerModalOpen, setAiOrganizerModalOpen] = useState(false);
   const [aiPendingCount, setAiPendingCount] = useState(0);
 
+  // UPI payment settings (admin only). Empty by default; the admin fills in
+  // their own UPI ID / QR. Nothing here is pre-filled with a real value.
+  const [paySettings, setPaySettings] = useState<PaymentSettings>({ upiId: '', upiQrUrl: '', displayName: '' });
+  const [paySaving, setPaySaving] = useState(false);
+  const [payLoaded, setPayLoaded] = useState(false);
+  const [payUploading, setPayUploading] = useState(false);
+
   // Poll AI pending proposals count on mount
   useEffect(() => {
     if (isAuthenticated) {
@@ -117,6 +126,46 @@ export const AdminView: React.FC = () => {
         .catch(() => {});
     }
   }, [isAuthenticated]);
+
+  // Load UPI payment settings when the admin signs in
+  useEffect(() => {
+    if (isAuthenticated && !payLoaded) {
+      api.getPaymentSettings()
+        .then((s) => {
+          setPaySettings(s);
+          setPayLoaded(true);
+        })
+        .catch(() => setPayLoaded(true));
+    }
+  }, [isAuthenticated, payLoaded]);
+
+  const handleSavePaymentSettings = async () => {
+    setPaySaving(true);
+    const res = await api.savePaymentSettings(paySettings);
+    setPaySaving(false);
+    if (res.success) {
+      appState.showToast('Payment settings saved.', 'success');
+    } else {
+      appState.showToast(res.error || 'Failed to save payment settings.', 'error');
+    }
+  };
+
+  const handleQrUpload = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      appState.showToast('Please choose an image file for the QR code.', 'error');
+      return;
+    }
+    setPayUploading(true);
+    const res = await api.uploadFile(file);
+    setPayUploading(false);
+    if (res.success && res.fileUrl) {
+      setPaySettings((prev) => ({ ...prev, upiQrUrl: res.fileUrl || '' }));
+      appState.showToast('QR image uploaded. Save payment settings to keep it.', 'success');
+    } else {
+      appState.showToast(res.error || 'QR upload failed. You can paste an image link instead.', 'error');
+    }
+  };
 
   // Unsaved changes warning confirmation
   const [unsavedWarning, setUnsavedWarning] = useState<{
@@ -611,8 +660,8 @@ export const AdminView: React.FC = () => {
       open: true,
       type: 'book',
       id: b.id,
-      title: 'Delete File?',
-      message: `Are you sure you want to permanently delete:\n\n"${b.title}"\n\nThis action cannot be undone.`,
+      title: 'Remove From Library?',
+      message: `Remove from the library catalog:\n\n"${b.title}"\n\nThis removes the book from the catalog only. The file in Google Drive is NOT deleted — delete it separately in Drive if you ever want it gone.`,
       isBlocked: false,
     });
   };
@@ -688,7 +737,7 @@ export const AdminView: React.FC = () => {
       } else if (deleteConfirm.type === 'book') {
         const res = await api.deleteBook(deleteConfirm.id);
         if (res.success) {
-          appState.showToast('File deleted successfully.', 'success');
+          appState.showToast('Removed from the library catalog. The Drive file was not deleted.', 'success');
           await appState.loadCatalog();
           setDeleteConfirm((prev) => ({ ...prev, open: false }));
         } else {
@@ -829,6 +878,102 @@ export const AdminView: React.FC = () => {
         onOpenAiOrganizer={() => setAiOrganizerModalOpen(true)}
         aiPendingCount={aiPendingCount}
       />
+
+      {/* Payment Settings (UPI) — admin only */}
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-[var(--gold-faint)] border border-[var(--border-main)] flex items-center justify-center text-[var(--gold)] shrink-0">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-display font-semibold text-lg text-[var(--text-main)]">Payment Settings — UPI</h3>
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+              Only you see this. Paid books show your UPI ID and QR at checkout. There is no payment gateway and no automatic check — after a visitor pays, you unlock their access manually.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[var(--text-muted)] mb-1 font-medium text-xs">Display name for payment (optional)</label>
+            <input
+              type="text"
+              value={paySettings.displayName}
+              onChange={(e) => setPaySettings((prev) => ({ ...prev, displayName: e.target.value }))}
+              className="w-full px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg focus:outline-none focus:border-[var(--gold)] text-sm"
+              placeholder="Your name, as it should appear to payers"
+            />
+          </div>
+          <div>
+            <label className="block text-[var(--text-muted)] mb-1 font-medium text-xs">UPI ID</label>
+            <input
+              type="text"
+              value={paySettings.upiId}
+              onChange={(e) => setPaySettings((prev) => ({ ...prev, upiId: e.target.value }))}
+              className="w-full px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg focus:outline-none focus:border-[var(--gold)] text-sm"
+              placeholder="Not set yet — enter your UPI ID"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[var(--text-muted)] mb-1 font-medium text-xs">UPI QR code</label>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 space-y-2">
+              <input
+                type="url"
+                value={paySettings.upiQrUrl}
+                onChange={(e) => setPaySettings((prev) => ({ ...prev, upiQrUrl: e.target.value }))}
+                className="w-full px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg focus:outline-none focus:border-[var(--gold)] text-sm"
+                placeholder="Paste an image link for your UPI QR code"
+              />
+              <label className="tap-target inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/60 text-xs font-semibold cursor-pointer">
+                <Upload className="w-4 h-4 text-[var(--gold)]" />
+                <span>{payUploading ? 'Uploading…' : 'Or upload a QR image'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    handleQrUpload(e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+            <div className="w-full sm:w-36 shrink-0 flex items-start justify-center">
+              {paySettings.upiQrUrl ? (
+                <img
+                  src={paySettings.upiQrUrl}
+                  alt="UPI QR code preview"
+                  className="w-32 h-32 object-contain rounded-xl border border-[var(--border-main)] bg-white p-2"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center justify-center gap-1 text-[var(--text-faint)]">
+                  <QrCode className="w-6 h-6" />
+                  <span className="text-[11px]">QR not set yet</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={handleSavePaymentSettings}
+            disabled={paySaving}
+            className="tap-target px-5 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black font-bold text-sm rounded-xl cursor-pointer transition-all"
+          >
+            {paySaving ? 'Saving…' : 'Save payment settings'}
+          </button>
+          <p className="text-[11px] text-[var(--text-faint)]">
+            {paySettings.upiId || paySettings.upiQrUrl
+              ? 'Visitors will see these details on paid books.'
+              : 'Nothing is set yet — paid books will ask visitors to message @ghayb.chronicles instead.'}
+          </p>
+        </div>
+      </div>
 
       {/* Admin Toolbar */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-3 space-y-3 text-xs">
@@ -1837,6 +1982,94 @@ export const AdminView: React.FC = () => {
                   className="w-full px-3 py-2 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs resize-none"
                   placeholder="Summary or note about this book..."
                 />
+              </div>
+
+              <div>
+                <label className="block text-[var(--text-muted)] mb-1 font-medium">
+                  Google Drive link
+                </label>
+                <input
+                  type="url"
+                  value={editingBook.externalUrl || ''}
+                  onChange={(e) =>
+                    setEditingBook((prev) => ({ ...prev, externalUrl: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
+                  placeholder="https://drive.google.com/file/d/... — readers open the book here"
+                />
+                <p className="text-[11px] text-[var(--text-faint)] mt-1">
+                  Paste the Drive share link for this book. The file stays in Drive; only the link is saved.
+                </p>
+              </div>
+
+              {/* Paid book controls (admin only) */}
+              <div className="p-3 bg-[var(--bg-main)] rounded border border-[var(--border-main)] space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingBook.isPaid)}
+                    onChange={(e) =>
+                      setEditingBook((prev) => ({ ...prev, isPaid: e.target.checked }))
+                    }
+                    className="w-4 h-4 rounded text-[var(--gold)] accent-[var(--gold)] cursor-pointer"
+                  />
+                  <span className="font-semibold text-[var(--text-main)] text-xs">
+                    Paid book — visitors pay before reading
+                  </span>
+                </label>
+                {editingBook.isPaid && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[var(--text-muted)] mb-1 font-medium">
+                        Price (INR ₹)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editingBook.price ?? ''}
+                        onChange={(e) =>
+                          setEditingBook((prev) => ({
+                            ...prev,
+                            price: e.target.value === '' ? undefined : Number(e.target.value),
+                          }))
+                        }
+                        className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
+                        placeholder="e.g. 99"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[var(--text-muted)] mb-1 font-medium">
+                        Payment link (optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={editingBook.paymentLink || ''}
+                        onChange={(e) =>
+                          setEditingBook((prev) => ({ ...prev, paymentLink: e.target.value }))
+                        }
+                        className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
+                        placeholder="https://... (your payment page, if any)"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-[var(--text-muted)] mb-1 font-medium">
+                        Payment note for readers (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={editingBook.paymentNote || ''}
+                        onChange={(e) =>
+                          setEditingBook((prev) => ({ ...prev, paymentNote: e.target.value }))
+                        }
+                        className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
+                        placeholder="e.g. Message @ghayb.chronicles after paying"
+                      />
+                    </div>
+                  </div>
+                )}
+                <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">
+                  Paid books show a Paid badge and a UPI checkout. There is no automatic payment check — after a visitor pays, you unlock their access manually.
+                </p>
               </div>
 
               {/* Collapsible Advanced Options */}

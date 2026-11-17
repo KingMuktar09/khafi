@@ -34,7 +34,7 @@ export const CompactAdvisoryBanner: React.FC = () => {
                 )}
               </div>
               <p className="text-[11px] sm:text-xs text-[var(--text-muted)] leading-relaxed">
-                Some texts in KHAFI LIBRARY may contain descriptions of sensitive historical, literary, or spiritual material provided for research and study only.
+                Some texts in Ilm-e-Ghayb Library may contain descriptions of sensitive historical, literary, or spiritual material provided for research and study only.
               </p>
             </div>
           </div>

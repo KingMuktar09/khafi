@@ -940,10 +940,15 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                   </div>
 
                   {/* Type Badge */}
-                  <div className="col-span-3 sm:col-span-2 text-xs">
+                  <div className="col-span-3 sm:col-span-2 text-xs flex flex-wrap items-center gap-1.5">
                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
                       {typeLabel}
                     </span>
+                    {book.isPaid && (
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border border-[var(--gold)]/60 bg-[var(--gold-faint)] text-[var(--gold)]">
+                        Paid{typeof book.price === 'number' ? ` ₹${book.price.toLocaleString('en-IN')}` : ''}
+                      </span>
+                    )}
                   </div>
 
                   {/* Size / Pages */}
@@ -1275,7 +1280,14 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                     </div>
 
                     <div className="text-[10px] text-[var(--text-faint)] flex items-center justify-between border-t border-[var(--border-subtle)] pt-1.5 font-sans">
-                      <span className={`font-bold ${badgeColor.text}`}>{typeLabel}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className={`font-bold ${badgeColor.text}`}>{typeLabel}</span>
+                        {book.isPaid && (
+                          <span className="font-bold text-[var(--gold)]">
+                            Paid{typeof book.price === 'number' ? ` ₹${book.price.toLocaleString('en-IN')}` : ''}
+                          </span>
+                        )}
+                      </span>
                       <div className="flex items-center gap-1.5">
                         <span>{formattedSize}</span>
                         <button

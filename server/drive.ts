@@ -109,7 +109,11 @@ function getServiceAccountPrivateKey(): string {
 }
 
 export function getDriveFolderId(): string {
-  const rawId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || "11XFqHOjiDj6ChlBX65XFR0p9SOqjpHX5";
+  // Default root is the "Islamic Library" Drive folder ONLY.
+  // The wider "Ilm-e-Ghayb Library" folder (11XFqHOjiDj6ChlBX65XFR0p9SOqjpHX5) also
+  // holds "Hidden Wisdoms (The Truth)" and "All Islamic History Books" — those
+  // are deliberately NOT linked here. Override with GOOGLE_DRIVE_FOLDER_ID.
+  const rawId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || "18gp3xoeRxCjvZlCHWTGqm2rFmyLhcWNU";
   return extractDriveFolderId(rawId);
 }
 
@@ -265,7 +269,7 @@ export async function runDriveDiagnostic(): Promise<DriveDiagnosticResult> {
       }
     }
   } else if (!sharedDriveConfigured) {
-    errorMsg = "KHAFI LIBRARY storage is not configured with a Shared Drive (GOOGLE_DRIVE_SHARED_DRIVE_ID).";
+    errorMsg = "Ilm-e-Ghayb Library storage is not configured with a Shared Drive (GOOGLE_DRIVE_SHARED_DRIVE_ID).";
   }
 
   // 3. Root Folder Access check
@@ -384,7 +388,7 @@ export interface DriveUploadResult {
  */
 export async function uploadFileToDrive(options: DriveUploadOptions): Promise<DriveUploadResult> {
   if (!isSharedDriveConfigured()) {
-    throw new Error("KHAFI LIBRARY storage is not configured with a Shared Drive.");
+    throw new Error("Ilm-e-Ghayb Library storage is not configured with a Shared Drive.");
   }
 
   const drive = getDriveClient();
@@ -405,7 +409,7 @@ export async function uploadFileToDrive(options: DriveUploadOptions): Promise<Dr
   const fileMetadata: any = {
     name: options.filename,
     parents: targetFolderId ? [targetFolderId] : undefined,
-    description: options.description || "Uploaded via KHAFI LIBRARY",
+    description: options.description || "Uploaded via Ilm-e-Ghayb Library",
   };
 
   const media = {
@@ -470,7 +474,7 @@ export async function createDriveFolder(
   description?: string
 ): Promise<{ id: string; name: string; parentId: string | null }> {
   if (!isSharedDriveConfigured()) {
-    throw new Error("KHAFI LIBRARY storage is not configured with a Shared Drive.");
+    throw new Error("Ilm-e-Ghayb Library storage is not configured with a Shared Drive.");
   }
 
   const drive = getDriveClient();
@@ -1012,7 +1016,7 @@ export async function syncCatalogWithDrive(catalogData: any, catalogFilePath?: s
         requestBody: {
           name: "catalog.json",
           parents: folderId ? [folderId] : undefined,
-          description: "KHAFI LIBRARY persistent catalog index",
+          description: "Ilm-e-Ghayb Library persistent catalog index",
         },
         media: media,
         supportsAllDrives: true,

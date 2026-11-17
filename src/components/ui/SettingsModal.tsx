@@ -57,7 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <h2 id="settings-modal-title" className="font-bold text-base text-[var(--text-main)] leading-tight">
                 Settings
               </h2>
-              <p className="text-xs text-[var(--text-muted)]">Personalize KHAFI LIBRARY</p>
+              <p className="text-xs text-[var(--text-muted)]">Personalize Ilm-e-Ghayb Library</p>
             </div>
           </div>
           <button

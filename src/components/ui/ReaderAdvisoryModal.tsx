@@ -70,7 +70,7 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
         {/* Exact Required Advisory Text */}
         <div className="space-y-3 text-xs sm:text-sm leading-relaxed text-[var(--text-main)]">
           <p>
-            Some materials in KHAFI LIBRARY may contain descriptions of occult or magical practices, superstition, adult/erotic themes, violence, or other sensitive historical and literary material.
+            Some materials in Ilm-e-Ghayb Library may contain descriptions of occult or magical practices, superstition, adult/erotic themes, violence, or other sensitive historical and literary material.
           </p>
 
           <p className="text-[var(--text-muted)] font-medium">

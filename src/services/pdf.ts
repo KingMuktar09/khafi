@@ -53,11 +53,11 @@ export async function extractPdfCover(pdfSource: string | File | ArrayBuffer): P
 }
 
 /**
- * Generates an elegant SVG Data URL book cover fallback with scholarly Khafi Library gold typography.
+ * Generates an elegant SVG Data URL book cover fallback with scholarly Ilm-e-Ghayb Library gold typography.
  */
 export function generateFallbackCoverSvg(title: string, author: string, category?: string): string {
   const safeTitle = (title || 'PDF DOCUMENT').substring(0, 50);
-  const safeAuthor = (author || 'KHAFI LIBRARY').substring(0, 35);
+  const safeAuthor = (author || 'Ilm-e-Ghayb Library').substring(0, 35);
   const safeCat = (category || 'ILM COLLECTION').toUpperCase();
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 440" width="300" height="440">
@@ -76,7 +76,7 @@ export function generateFallbackCoverSvg(title: string, author: string, category
   <rect x="18" y="18" width="264" height="404" fill="none" stroke="#c5a059" stroke-opacity="0.15" stroke-width="1"/>
   
   <!-- Top Header -->
-  <text x="30" y="42" font-family="monospace" font-size="9" fill="#c5a059" font-weight="bold" letter-spacing="1.5">KHAFI LIBRARY // ILM</text>
+  <text x="30" y="42" font-family="monospace" font-size="9" fill="#c5a059" font-weight="bold" letter-spacing="1.5">Ilm-e-Ghayb Library // ILM</text>
   <line x1="30" y1="50" x2="270" y2="50" stroke="#c5a059" stroke-opacity="0.2" stroke-width="1"/>
 
   <!-- Category Tag -->

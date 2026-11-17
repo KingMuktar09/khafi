@@ -3,20 +3,24 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --bg-main: #0B0F17;
-    --bg-header: #121826;
-    --bg-surface: #151B2A;
-    --bg-list: #111722;
-    --bg-hover: #1B2435;
+    /* Ilm-e-Ghayb Library palette: dark charcoal + deep navy + manuscript gold/bronze */
+    --bg-main: #08090D;
+    --bg-header: #0E1119;
+    --bg-surface: #12161F;
+    --bg-list: #0D1017;
+    --bg-hover: #181E2A;
     --bg-accent: #232E42;
-    --border-main: #293246;
-    --border-subtle: #1E2638;
+    --border-main: #262E3F;
+    --border-subtle: #1B2230;
     --text-main: #F5F7FA;
     --text-muted: #AEB8CA;
     --text-faint: #7F8BA0;
-    --gold: #D9A91A;
-    --gold-light: #EAC038;
-    --gold-faint: rgba(217, 169, 26, 0.15);
+    --gold: #C9A227;
+    --gold-light: #E3C766;
+    --gold-faint: rgba(201, 162, 39, 0.14);
+    --bronze: #A67C37;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
 
   html.light-theme {
@@ -47,8 +51,18 @@
   }
 }
 
+/* Typography: Fraunces (free, OFL) for display headings, Inter (free) for body/UI.
+   .font-display is the premium serif used for hero titles, section titles and
+   book titles. Body copy stays Inter for readability at small sizes. */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
 .font-serif {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
 }
 
 .font-mono {
@@ -56,7 +70,41 @@
 }
 
 .font-sans {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Premium polish: generous, calm surfaces */
+body {
+  overflow-x: clip;
+}
+
+.hero-glow {
+  background:
+    radial-gradient(60% 90% at 50% 0%, rgba(201, 162, 39, 0.12), transparent 70%),
+    radial-gradient(40% 60% at 85% 20%, rgba(38, 64, 120, 0.18), transparent 70%);
+}
+
+.gold-text {
+  color: var(--gold);
+}
+
+.card-lift {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Comfortable tap targets on phones */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 0;
+  }
+  .tap-target {
+    min-height: 44px;
+  }
 }
 
 /* Ensure placeholder text is always clearly visible in inputs */

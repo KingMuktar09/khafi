@@ -51,8 +51,15 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect }) => {
         />
 
         {/* Type Badge Overlay */}
-        <div className={`absolute top-2.5 left-2.5 z-10 text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border backdrop-blur-sm rounded ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
-          {typeLabel}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col items-start gap-1.5">
+          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border backdrop-blur-sm rounded ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
+            {typeLabel}
+          </span>
+          {book.isPaid && (
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-[var(--gold)]/60 bg-black/70 text-[var(--gold)] backdrop-blur-sm rounded">
+              Paid{typeof book.price === 'number' ? ` • ₹${book.price.toLocaleString('en-IN')}` : ''}
+            </span>
+          )}
         </div>
 
         {/* Reading Progress Ribbon/Badge Overlay */}
@@ -109,7 +116,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect }) => {
       {/* Book Information Section */}
       <div className="p-3.5 flex flex-col flex-1 justify-between bg-[var(--bg-surface)] border-t border-[var(--border-subtle)]">
         <div>
-          <h3 className="font-semibold text-xs sm:text-sm text-[var(--text-main)] group-hover:text-[var(--gold)] line-clamp-2 leading-snug transition-colors mb-1">
+          <h3 className="font-display font-semibold text-base sm:text-lg text-[var(--text-main)] group-hover:text-[var(--gold)] line-clamp-2 leading-snug transition-colors mb-1">
             {book.title}
           </h3>
           <p className="text-xs text-[var(--text-muted)] line-clamp-1">

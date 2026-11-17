@@ -357,26 +357,22 @@ class AppState {
     });
   }
 
-  public getItemCountForFolder(folderId: string): number {
+  public getItemCountForFolder(folderId: string, _seen: Set<string> = new Set()): number {
     const folder = this.getFolderById(folderId);
-    if (!folder) return 0;
+    if (!folder || _seen.has(folderId)) return 0;
+    _seen.add(folderId);
 
-    const childFoldersCount = this.getChildFolders(folderId).length;
-    let booksCount = 0;
-
-    if (folder.parentId) {
-      // It's a subfolder
-      booksCount = this.getVisibleBooks().filter(
-        (b) => b.subfolderId === folderId || b.folderId === folderId
-      ).length;
-    } else {
-      // It's a root category
-      booksCount = this.getVisibleBooks().filter(
-        (b) => (b.folderId === folderId && (!b.subfolderId || b.subfolderId === folderId)) || b.subfolderId === folderId
-      ).length;
+    // Books filed directly in this folder, plus books in every subfolder
+    // (recursive), so a category card shows its true total.
+    const directBooks = this.getVisibleBooks().filter(
+      (b) => b.folderId === folderId || b.subfolderId === folderId
+    ).length;
+    const childFolders = this.getChildFolders(folderId);
+    let total = directBooks + childFolders.length;
+    for (const child of childFolders) {
+      total += this.getItemCountForFolder(child.id, _seen);
     }
-
-    return childFoldersCount + booksCount;
+    return total;
   }
 
   public getBookCountForFolder(folderId: string): number {

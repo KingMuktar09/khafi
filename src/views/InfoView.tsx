@@ -15,7 +15,7 @@ export const InfoView: React.FC = () => {
           About & Creator
         </span>
         <h1 className="font-bold text-2xl sm:text-3xl text-[var(--text-main)] tracking-tight">
-          KHAFI LIBRARY
+          Ilm-e-Ghayb Library
         </h1>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl">
           A personal digital space designed for collecting, organizing, exploring, and preserving sacred, scholarly, and beneficial knowledge.
@@ -113,14 +113,14 @@ export const InfoView: React.FC = () => {
       {/* About Section */}
       <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-3">
         <h2 className="font-semibold text-lg text-[var(--text-main)]">
-          About KHAFI LIBRARY
+          About Ilm-e-Ghayb Library
         </h2>
         <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
           <p>
-            Khafi created KHAFI LIBRARY as a personal digital space for organizing, preserving, exploring, and discovering knowledge.
+            Ilm-e-Ghayb Library, by Ghayb Chronicles, is a private space for Ilm — hidden knowledge, Sufi wisdom, and the books behind it.
           </p>
           <p>
-            The library has a particular interest in Islamic knowledge, Quran, Sunnah, spirituality, history, philosophy, and beneficial knowledge from different traditions and disciplines.
+            The library has a particular interest in Islamic knowledge, Quran, Sunnah, spirituality, history, philosophy, and beneficial knowledge from different traditions and disciplines, with sources in every entry.
           </p>
         </div>
       </section>

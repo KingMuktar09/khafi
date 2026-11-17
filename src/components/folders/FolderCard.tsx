@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, Folder as FolderIcon, Layers } from 'lucide-react';
+import { ArrowUpRight, ExternalLink, Folder as FolderIcon, Layers } from 'lucide-react';
 import { Folder } from '../../types';
 import { appState } from '../../state/appState';
 import { router } from '../../router/router';
@@ -22,7 +22,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
   return (
     <div
       onClick={handleClick}
-      className="group bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 p-5 rounded-lg transition-all duration-200 cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md"
+      className="card-lift group bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 p-5 rounded-xl cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md"
     >
       <div>
         <div className="flex items-center justify-between mb-3.5">
@@ -40,7 +40,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
           </span>
         </div>
 
-        <h3 className="font-sans font-bold text-lg sm:text-xl text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors mb-1.5">
+        <h3 className="font-display font-semibold text-xl text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors mb-1.5">
           {folder.name}
         </h3>
 
@@ -51,9 +51,24 @@ export const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
         )}
       </div>
 
-      <div className="pt-3.5 mt-3 border-t border-[var(--border-main)] flex items-center justify-between text-xs font-sans text-[var(--text-muted)]">
+      <div className="pt-3.5 mt-3 border-t border-[var(--border-main)] flex items-center justify-between gap-2 text-xs font-sans text-[var(--text-muted)]">
         <span className="text-[11px]">Explore Collection</span>
-        <ArrowUpRight className="w-4 h-4 text-[var(--gold)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+        <span className="flex items-center gap-2">
+          {folder.externalUrl && (
+            <a
+              href={folder.externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title="Open this collection in Google Drive"
+              className="tap-target inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--border-main)] hover:border-[var(--gold)]/60 hover:text-[var(--gold)] transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Drive</span>
+            </a>
+          )}
+          <ArrowUpRight className="w-4 h-4 text-[var(--gold)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+        </span>
       </div>
     </div>
   );

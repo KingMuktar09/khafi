@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, ShieldCheck } from 'lucide-react';
+import { BookOpen, Instagram, ShieldCheck } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
 
@@ -16,11 +16,20 @@ export const Footer: React.FC = () => {
           >
             <BookOpen className="w-4 h-4 text-[var(--gold)]" />
             <span className="font-serif font-bold text-sm tracking-wide text-[var(--text-main)]">
-              KHAFI LIBRARY
+              Ilm-e-Ghayb Library
             </span>
           </button>
           <span className="text-[var(--text-faint)]">//</span>
-          <span className="text-[11px] text-[var(--text-faint)]">A Private Space for Ilm</span>
+          <span className="text-[11px] text-[var(--text-faint)]">by Ghayb Chronicles</span>
+          <a
+            href="https://instagram.com/ghayb.chronicles"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1 hover:text-[var(--gold)] transition-colors"
+          >
+            <Instagram className="w-3.5 h-3.5 text-[var(--gold)]" />
+            <span>@ghayb.chronicles</span>
+          </a>
         </div>
 
         {/* Links */}
