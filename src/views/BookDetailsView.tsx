@@ -337,7 +337,7 @@ export const BookDetailsView: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">
-                  Books open in Google Drive. In-app reading works once the library's Drive connection is set up by the admin.
+                  Books read in the app with Google Drive's viewer. You can also open any book in Drive or download it.
                 </p>
               </>
             )}

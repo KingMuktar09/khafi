@@ -88,6 +88,46 @@ export function extractDriveId(url?: string): string | null {
   return null;
 }
 
+export function getDriveFileId(item: Partial<Book>): string | null {
+  if (!item) return null;
+  if (item.driveFileId) return item.driveFileId;
+  return (
+    extractDriveId(item.fileUrl) ||
+    extractDriveId(item.pdfUrl) ||
+    extractDriveId(item.externalUrl) ||
+    extractDriveId((item as any).driveUrl)
+  );
+}
+
+/**
+ * Google Drive preview embed URL for in-app reading.
+ * Drive's own viewer renders the PDF, so the app never has to fetch the
+ * file bytes itself (the /api/files stream needs a Drive service account,
+ * which this free deployment does not have).
+ */
+export function getDrivePreviewUrl(item: Partial<Book>): string | null {
+  const driveId = getDriveFileId(item);
+  if (!driveId) return null;
+  return `https://drive.google.com/file/d/${driveId}/preview`;
+}
+
+/** Google Drive viewer page for the file (opens in a new tab). */
+export function getDriveViewUrl(item: Partial<Book>): string | null {
+  if (item.externalUrl && item.externalUrl.includes('drive.google.com')) {
+    return item.externalUrl;
+  }
+  const driveId = getDriveFileId(item);
+  if (!driveId) return null;
+  return `https://drive.google.com/file/d/${driveId}/view`;
+}
+
+/** Direct Drive download link for the file. */
+export function getDriveDownloadUrl(item: Partial<Book>): string | null {
+  const driveId = getDriveFileId(item);
+  if (!driveId) return null;
+  return `https://drive.google.com/uc?export=download&id=${driveId}`;
+}
+
 export function getItemUrl(item: Partial<Book>): string {
   if (!item) return '';
 
@@ -237,6 +277,16 @@ export async function downloadBookFile(
   if (!fileUrl && !book.id && !book.driveFileId) {
     alert("No file URL available for this item.");
     return false;
+  }
+
+  // Drive books: download straight from Google Drive. The /api/files
+  // stream needs a Drive service account, which this free deployment does
+  // not have, so fetching it from our own server would fail with 503.
+  const driveDownloadUrl = getDriveDownloadUrl(book);
+  if (driveDownloadUrl) {
+    window.open(driveDownloadUrl, '_blank', 'noopener,noreferrer');
+    onProgress?.('done');
+    return true;
   }
 
   // Construct target download API URL

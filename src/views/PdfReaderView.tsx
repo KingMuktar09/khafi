@@ -18,7 +18,7 @@ import {
 import { appState } from '../state/appState';
 import { router } from '../router/router';
 import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
-import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, downloadBookFile } from '../utils/fileUtils';
+import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, getDrivePreviewUrl, downloadBookFile } from '../utils/fileUtils';
 import { FilePreviewer, FitMode } from '../components/viewers/FilePreviewer';
 import { PdfZoomOverlay } from '../components/pdf/PdfZoomOverlay';
 
@@ -89,6 +89,9 @@ export const PdfReaderView: React.FC = () => {
   const badgeColor = getTypeBadgeColor(itemType);
   const fileTarget = getItemUrl(book);
   const ext = getFileExtension(fileTarget || book.title).toLowerCase();
+  // Drive books read in Google Drive's viewer (see FilePreviewer), so the
+  // pdf.js zoom controls below do not apply to them and are hidden.
+  const isDriveBook = Boolean(getDrivePreviewUrl(book));
 
   const currentProgress = appState.getReadingProgress(book.id);
   const percentage = currentProgress?.percentage || 0;
@@ -301,8 +304,8 @@ export const PdfReaderView: React.FC = () => {
       <div className="flex-1 bg-black relative overflow-hidden flex items-center justify-center">
         {renderViewerContent()}
 
-        {/* Floating Fit to Page & Zoom Overlay for PDF documents */}
-        {itemType === 'pdf' && fileTarget && (
+        {/* Floating Fit to Page & Zoom Overlay for PDF documents (in-app canvas reader only) */}
+        {itemType === 'pdf' && fileTarget && !isDriveBook && (
           <PdfZoomOverlay
             zoomLevel={zoomLevel}
             fitMode={fitMode}
@@ -350,7 +353,8 @@ export const PdfReaderView: React.FC = () => {
               />
             </div>
 
-            {/* Row 2: Mobile Zoom & Fit Controls */}
+            {/* Row 2: Mobile Zoom & Fit Controls (in-app canvas reader only) */}
+            {!isDriveBook && (
             <div className="flex items-center justify-between gap-1 pt-1 border-t border-[var(--border-main)]/50">
               <div className="grid grid-cols-5 w-full gap-1 items-center">
                 <button
@@ -413,6 +417,7 @@ export const PdfReaderView: React.FC = () => {
                 </button>
               </div>
             </div>
+            )}
           </div>
 
           {/* Desktop Bottom Toolbar (>=768px) */}
@@ -433,7 +438,8 @@ export const PdfReaderView: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* Zoom & Fit Controls */}
+              {/* Zoom & Fit Controls (in-app canvas reader only) */}
+              {!isDriveBook && (
               <div className="flex items-center gap-1 bg-[var(--bg-surface)] p-1 rounded border border-[var(--border-main)]">
                 <button
                   type="button"
@@ -494,6 +500,7 @@ export const PdfReaderView: React.FC = () => {
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
               </div>
+              )}
 
               {/* Quick Set Progress Presets */}
               <div className="flex items-center gap-1.5">

@@ -17,9 +17,11 @@ import {
   getTypeLabel,
   getItemUrl,
   getFileExtension,
+  getDrivePreviewUrl,
   downloadBookFile,
 } from '../../utils/fileUtils';
 import { PdfCanvasViewer, FitMode } from '../pdf/PdfCanvasViewer';
+import { DrivePdfViewer } from '../pdf/DrivePdfViewer';
 import { DocxViewer } from './DocxViewer';
 import { TextViewer } from './TextViewer';
 import { OfficeEmbedViewer } from './OfficeEmbedViewer';
@@ -84,6 +86,18 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
 
   // 1. PDF FILES
   if (itemType === 'pdf') {
+    // Drive books read through Google Drive's own viewer. The old path fed
+    // pdf.js the app's /api/files stream, which answers 503 when no Drive
+    // service account is configured, so every Drive book failed to open.
+    // Local / uploaded PDFs still use the in-app canvas reader below.
+    if (getDrivePreviewUrl(book)) {
+      return (
+        <div className={`w-full h-full min-h-[600px] flex flex-col bg-[var(--bg-main)] ${className}`}>
+          <DrivePdfViewer book={book} />
+        </div>
+      );
+    }
+
     return (
       <div className={`w-full h-full min-h-[600px] flex flex-col bg-[var(--bg-main)] ${className}`}>
         <PdfCanvasViewer
