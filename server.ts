@@ -1,8 +1,8 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { app, PORT, catalogFilePath } from "./server/app";
-import { isGoogleDriveConfigured, pullCatalogFromDrive } from "./server/drive";
+import { app, PORT, catalogFilePath } from "./server/app.js";
+import { isGoogleDriveConfigured, pullCatalogFromDrive } from "./server/drive.js";
 
 dotenv.config({ override: true });
 

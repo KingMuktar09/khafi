@@ -1,5 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { app } from "../server/app";
+// NOTE: the ".js" extension is required. Vercel compiles each .ts file to
+// .js individually (no bundling) and Node's ESM loader refuses extensionless
+// imports — "../server/app" throws ERR_MODULE_NOT_FOUND and 500s every
+// /api/* endpoint (FUNCTION_INVOCATION_FAILED). tsx, esbuild and tsc all
+// resolve "./x.js" back to "./x.ts", so local dev and build are unaffected.
+import { app } from "../server/app.js";
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.url) {

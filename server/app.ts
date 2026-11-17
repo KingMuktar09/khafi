@@ -1,5 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config({ override: true });
+// NOTE: do NOT import "dotenv" here. This module is bundled by Vercel into an
+// ESM serverless function, and dotenv's CommonJS code does a dynamic
+// require("fs") that throws "Dynamic require of fs is not supported" in an
+// ESM bundle, which 500s every /api/* endpoint (FUNCTION_INVOCATION_FAILED).
+// On Vercel, env vars already come from the dashboard. Local dev loads .env
+// via server.ts (the local entry point, bundled as CJS) before any env var
+// is read at request time.
 import express from "express";
 import path from "path";
 import fs from "fs";
@@ -24,15 +29,22 @@ import {
   createDriveFolder,
   renameDriveFolder,
   invalidateDriveCache,
-} from "./drive";
-import { initialCatalog } from "./initial-catalog";
+} from "./drive.js";
+import { initialCatalog } from "./initial-catalog.js";
+// Bundled copy of data/catalog.json. Vercel's serverless file tracing does
+// not reliably include data/catalog.json in the function (it is read via
+// path.join(process.cwd(), "data", "catalog.json"), which nft cannot trace),
+// so the catalog is also imported as a module and bundled into the function
+// itself. This is the catalog-links Drive connection: books open in Drive via
+// their webViewLink/externalUrl, no service account needed.
+import bundledCatalog from "../data/catalog.json" with { type: "json" };
 import {
   probeRemoteUrl,
   downloadRemoteFileStream,
   sanitizeFilename,
   detectItemTypeFromExtAndMime,
   formatBytes,
-} from "./url-importer";
+} from "./url-importer.js";
 import {
   isNvidiaConfigured,
   isNvidiaMuseConfigured,
@@ -50,7 +62,7 @@ import {
   applyApprovedProposal,
   calculateCosineSimilarity,
   runNvidiaDiagnostic,
-} from "./ai-organizer";
+} from "./ai-organizer.js";
 
 export const app = express();
 export const PORT = 3000;
@@ -252,6 +264,21 @@ export function readCatalog() {
     }
   } catch (err) {
     console.error("Error reading fallback root catalog:", err);
+  }
+
+  // Fallback: the catalog bundled into this module at build time. This is
+  // what serves the library on Vercel, where the data/catalog.json file is
+  // not guaranteed to be present in the serverless function filesystem.
+  // Books carry their Drive externalUrl, so they open in Google Drive.
+  try {
+    const bundled = bundledCatalog as unknown as { folders?: unknown; books?: unknown };
+    const folders = Array.isArray(bundled?.folders) ? bundled.folders : [];
+    const books = Array.isArray(bundled?.books) ? bundled.books : [];
+    if (folders.length > 0 || books.length > 0) {
+      return { folders, books };
+    }
+  } catch (err) {
+    console.error("Error reading bundled catalog:", err);
   }
 
   // Fallback: initialCatalog if available

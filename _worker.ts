@@ -1,4 +1,4 @@
-import { handleCloudflareApiRequest } from "./server/cf-api-handler";
+import { handleCloudflareApiRequest } from "./server/cf-api-handler.js";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {

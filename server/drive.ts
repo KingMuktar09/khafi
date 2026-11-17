@@ -1,5 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config({ override: true });
+// NOTE: no "dotenv" import here — see server/app.ts. dotenv's CommonJS
+// dynamic require("fs") crashes the Vercel ESM serverless bundle at import
+// time. Env vars come from the Vercel dashboard; local dev loads .env
+// via server.ts.
 import { google } from "googleapis";
 import { Readable } from "stream";
 import fs from "fs";
