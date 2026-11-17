@@ -1096,3 +1096,213 @@ export async function pullCatalogFromDrive(catalogFilePath: string): Promise<any
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Real-time Drive sync: rebuild the saved catalog from a live Drive listing.
+// ---------------------------------------------------------------------------
+
+const SYNC_ROOT_FOLDER_ID = "f-all-islamic-history-books";
+const SYNC_ROOT_NAME = "All Islamic History Books";
+
+/** File types the library keeps as books. Anything else (app config, canvas
+ *  files, images, audio, archives) is skipped so the catalog stays clean. */
+const SYNC_INCLUDE_EXTS = new Set(["pdf", "doc", "docx", "epub", "md", "txt", "rtf"]);
+
+function syncCleanTitle(name: string): string {
+  const base = name.replace(/\.(pdf|docx?|epub|md|txt|rtf)$/i, "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+  return base || name;
+}
+
+function syncExt(name: string): string {
+  const parts = name.split(".");
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
+}
+
+/**
+ * Convert a live Drive listing (raw Drive ids, /api/files preview URLs)
+ * into the saved-catalog schema (f-<id> folders, b-<id> books, Drive
+ * externalUrl links). Custom admin metadata (paid flag, price, custom
+ * titles, visibility) is preserved from the stored catalog, matched by
+ * driveFileId, so a sync never wipes an admin's paid-book settings.
+ * Folders whose name starts with "." (e.g. Obsidian's .obsidian config
+ * folder) and their contents are skipped.
+ */
+export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[] }, stored: any): { folders: any[]; books: any[] } {
+  const storedFolders: any[] = Array.isArray(stored?.folders) ? stored.folders : [];
+  const storedBooks: any[] = Array.isArray(stored?.books) ? stored.books : [];
+  const storedFolderById = new Map<string, any>(storedFolders.map((f: any) => [f.id, f]));
+  const storedBookByDriveId = new Map<string, any>();
+  for (const b of storedBooks) {
+    if (b?.driveFileId) storedBookByDriveId.set(b.driveFileId, b);
+  }
+
+  const rootFolder =
+    storedFolders.find((f: any) => !f.parentId) || {
+      id: SYNC_ROOT_FOLDER_ID,
+      name: SYNC_ROOT_NAME,
+      description: "Seerah, Tareekh, biographies and Islamic history, from the All Islamic History Books collection on Google Drive. Books open in Drive.",
+      parentId: null,
+      type: "category",
+      externalUrl: `https://drive.google.com/drive/folders/${getDriveFolderId()}`,
+      sortOrder: 0,
+      order: 0,
+      visible: true,
+    };
+
+  // Drop hidden folders (".obsidian" etc.) and anything below them.
+  const hiddenFolderIds = new Set<string>();
+  const liveFolders = (live.folders || []).filter((f: any) => {
+    if (typeof f?.name === "string" && f.name.trim().startsWith(".")) {
+      hiddenFolderIds.add(f.id);
+      return false;
+    }
+    return true;
+  });
+  const isInHiddenTree = (folderId: string | null | undefined, byId: Map<string, any>): boolean => {
+    let cur = folderId;
+    const seen = new Set<string>();
+    while (cur && !seen.has(cur)) {
+      seen.add(cur);
+      if (hiddenFolderIds.has(cur)) return true;
+      cur = byId.get(cur)?.parentId || null;
+    }
+    return false;
+  };
+  const liveFolderById = new Map<string, any>(liveFolders.map((f: any) => [f.id, f]));
+  const folders: any[] = [rootFolder];
+  let sortOrder = 1;
+  for (const f of liveFolders) {
+    if (isInHiddenTree(f.id, liveFolderById)) continue;
+    const saved = storedFolderById.get(`f-${f.id}`);
+    folders.push({
+      id: `f-${f.id}`,
+      name: f.name || "Untitled Folder",
+      description: saved?.description ?? f.description ?? "",
+      parentId: f.parentId ? `f-${f.parentId}` : SYNC_ROOT_FOLDER_ID,
+      type: f.parentId ? "subfolder" : "category",
+      externalUrl: `https://drive.google.com/drive/folders/${f.id}`,
+      createdAt: f.createdTime || saved?.createdAt || new Date().toISOString(),
+      updatedAt: f.modifiedTime || saved?.updatedAt || new Date().toISOString(),
+      sortOrder: saved?.sortOrder ?? saved?.order ?? sortOrder,
+      order: saved?.order ?? saved?.sortOrder ?? sortOrder,
+      visible: saved?.visible !== undefined ? saved.visible : true,
+    });
+    sortOrder++;
+  }
+
+  const books: any[] = [];
+  for (const file of live.books || []) {
+    const ext = syncExt(file.name || "");
+    if (!SYNC_INCLUDE_EXTS.has(ext)) continue;
+    const parentFolder = file.subfolderId ? liveFolderById.get(file.subfolderId) : null;
+    if (parentFolder && isInHiddenTree(parentFolder.id, liveFolderById)) continue;
+    const saved = storedBookByDriveId.get(file.id);
+    const isPdf = ext === "pdf";
+    const isMd = ext === "md";
+    books.push({
+      id: `b-${file.id}`,
+      title: saved?.title || file.title || syncCleanTitle(file.name || "Untitled"),
+      originalFilename: file.originalFilename || file.name || "",
+      author: saved?.author || file.author || "",
+      description: saved?.description || file.description || "",
+      category: saved?.category || file.category || SYNC_ROOT_NAME,
+      folderId: file.folderId ? `f-${file.folderId}` : SYNC_ROOT_FOLDER_ID,
+      subfolderId: file.subfolderId ? `f-${file.subfolderId}` : null,
+      tags: saved?.tags || file.tags || [],
+      fileType: isPdf ? "pdf" : "document",
+      mimeType: file.mimeType || (isPdf ? "application/pdf" : isMd ? "text/markdown" : "application/octet-stream"),
+      fileExtension: ext,
+      fileSize: file.fileSize || "",
+      driveFileId: file.id,
+      externalUrl: `https://drive.google.com/file/d/${file.id}/view?usp=drivesdk`,
+      isPaid: saved?.isPaid === true,
+      price: saved?.price ?? undefined,
+      addedDate: saved?.addedDate || file.addedDate || new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
+      featured: saved?.featured === true,
+      visible: saved?.visible !== undefined ? saved.visible : true,
+    });
+  }
+
+  return { folders, books };
+}
+
+export interface DriveSyncResult {
+  ok: boolean;
+  configured: boolean;
+  error?: string;
+  folders?: number;
+  books?: number;
+  categories?: number;
+  addedBooks?: number;
+  removedBooks?: number;
+  addedFolders?: number;
+  removedFolders?: number;
+  savedToDrive?: boolean;
+  syncedAt?: string;
+  /** The rebuilt catalog (only when ok is true). The caller persists it. */
+  catalog?: { folders: any[]; books: any[] };
+}
+
+/**
+ * Rebuild the saved catalog from a fresh live listing of the Drive folder.
+ * Returns a clear not-configured error (never a crash) when no service
+ * account is set. Refuses to overwrite the stored catalog with an empty
+ * live result (e.g. a Drive timeout), so a failed sync never wipes the
+ * library. The rebuilt catalog is returned; the caller persists it with
+ * writeCatalog(), which also saves a copy into the Drive folder.
+ */
+export async function syncCatalogFromDrive(storedCatalog: any): Promise<DriveSyncResult> {
+  if (!isGoogleDriveConfigured()) {
+    return {
+      ok: false,
+      configured: false,
+      error:
+        "Google Drive is not configured on this server. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY in Vercel, and share the All Islamic History Books folder with that service account, then sync again.",
+    };
+  }
+
+  invalidateDriveCache();
+  let live: { folders: any[]; books: any[] };
+  try {
+    live = await fetchLiveDriveCatalog(storedCatalog);
+  } catch (err: any) {
+    return {
+      ok: false,
+      configured: true,
+      error: `Live Drive listing failed: ${err?.message || err}`,
+    };
+  }
+
+  if ((!live.folders || live.folders.length === 0) && (!live.books || live.books.length === 0)) {
+    return {
+      ok: false,
+      configured: true,
+      error: "Live Drive listing returned nothing. The saved catalog was kept unchanged.",
+    };
+  }
+
+  const normalized = normalizeLiveCatalogToSaved(live, storedCatalog);
+  const oldBooks: any[] = Array.isArray(storedCatalog?.books) ? storedCatalog.books : [];
+  const oldFolders: any[] = Array.isArray(storedCatalog?.folders) ? storedCatalog.folders : [];
+  const oldBookIds = new Set(oldBooks.map((b: any) => b.driveFileId || b.id));
+  const newBookIds = new Set(normalized.books.map((b: any) => b.driveFileId));
+  const oldFolderIds = new Set(oldFolders.map((f: any) => f.id));
+  const newFolderIds = new Set(normalized.folders.map((f: any) => f.id));
+  const categories = normalized.folders.filter((f: any) => f.parentId === SYNC_ROOT_FOLDER_ID).length;
+
+  return {
+    ok: true,
+    configured: true,
+    folders: normalized.folders.length,
+    books: normalized.books.length,
+    categories,
+    addedBooks: normalized.books.filter((b: any) => !oldBookIds.has(b.driveFileId)).length,
+    removedBooks: oldBooks.filter((b: any) => !newBookIds.has(b.driveFileId || b.id)).length,
+    addedFolders: normalized.folders.filter((f: any) => !oldFolderIds.has(f.id)).length,
+    removedFolders: oldFolders.filter((f: any) => !newFolderIds.has(f.id)).length,
+    syncedAt: new Date().toISOString(),
+    catalog: normalized,
+  };
+}
+
+

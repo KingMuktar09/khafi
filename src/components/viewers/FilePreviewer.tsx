@@ -237,6 +237,18 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
 
   // 6. PLAIN TEXT / MARKDOWN / CODE FORMATS
   if (['txt', 'text', 'md', 'markdown', 'json', 'csv', 'xml', 'log', 'js', 'ts', 'py', 'html', 'css', 'rtf'].includes(ext)) {
+    // Drive notes cannot be fetched from the app's /api/files stream (503
+    // without a Drive service account), and Drive's download link blocks
+    // cross-origin fetch, so read them in Google Drive's own viewer
+    // (drive.google.com/file/d/<id>/preview), same as PDFs. Local /
+    // uploaded text files still use the in-app text reader below.
+    if (getDrivePreviewUrl(book)) {
+      return (
+        <div className={`w-full h-full min-h-[600px] flex flex-col bg-[var(--bg-main)] ${className}`}>
+          <DrivePdfViewer book={book} />
+        </div>
+      );
+    }
     return (
       <TextViewer
         fileUrl={fileTarget}

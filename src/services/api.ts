@@ -517,6 +517,32 @@ export const api = {
     }
   },
 
+  async syncWithDrive(): Promise<{
+    success: boolean;
+    configured?: boolean;
+    folders?: number;
+    books?: number;
+    categories?: number;
+    addedBooks?: number;
+    removedBooks?: number;
+    addedFolders?: number;
+    removedFolders?: number;
+    savedLocally?: boolean;
+    syncedAt?: string;
+    error?: string;
+  }> {
+    try {
+      const res = await fetch('/api/admin/sync', { method: 'POST', headers: getAuthHeaders() });
+      const parsed = await safeParseJson(res);
+      if (!parsed.ok || !parsed.data) {
+        return { success: false, error: parsed.error || 'Drive sync request failed.' };
+      }
+      return parsed.data;
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Drive sync network request failed.' };
+    }
+  },
+
   async getAiPendingProposals(): Promise<{ success: boolean; proposals: any[]; error?: string }> {
     try {
       const res = await fetch('/api/admin/ai/pending', { headers: getAuthHeaders() });

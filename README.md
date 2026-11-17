@@ -6,7 +6,7 @@
 > Some knowledge is hidden.
 > This is a place to seek both.
 
-**Collection:** the library serves the "All Islamic History Books" Google Drive folder only (13 collections, 97 books at the last catalog build). Books stay in Drive and open there; the catalog in `data/catalog.json` links to them. No other Drive folder is linked.
+**Collection:** the library serves the "All Islamic History Books" Google Drive folder only (13 collections, 173 books at the last catalog build). Books stay in Drive and open there; the catalog in `data/catalog.json` links to them. No other Drive folder is linked.
 
 **Entry:** new visitors see an Instagram follow gate for [@ghayb.chronicles](https://instagram.com/ghayb.chronicles) — follow, tap unlock, and the library opens on that device. The gate is a follow prompt plus an honour unlock; a free site cannot verify an Instagram follow.
 

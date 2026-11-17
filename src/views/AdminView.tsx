@@ -146,6 +146,13 @@ export const AdminView: React.FC = () => {
     }
   }, [isAuthenticated, payLoaded]);
 
+  // Drive sync (admin only): rebuild the catalog from a fresh live Drive
+  // listing. Shows the result (folders/books added) or a clear error when
+  // Drive is not configured yet.
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  const [syncOk, setSyncOk] = useState<boolean | null>(null);
+
   const handleSavePaymentSettings = async () => {
     setPaySaving(true);
     const res = await api.savePaymentSettings(paySettings);
@@ -154,6 +161,33 @@ export const AdminView: React.FC = () => {
       appState.showToast('Payment settings saved.', 'success');
     } else {
       appState.showToast(res.error || 'Failed to save payment settings.', 'error');
+    }
+  };
+
+  // Sync now: ask the server to rebuild the catalog from Google Drive
+  // (live listing, deep folders included) and reload the library.
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    setSyncMessage('');
+    setSyncOk(null);
+    try {
+      const res = await api.syncWithDrive();
+      if (res.success) {
+        setSyncOk(true);
+        setSyncMessage(
+          `Synced with Drive: ${res.folders ?? 0} folders, ${res.books ?? 0} books` +
+          ` (${res.addedBooks ?? 0} new books, ${res.removedBooks ?? 0} removed).`
+        );
+        await appState.loadCatalog();
+      } else {
+        setSyncOk(false);
+        setSyncMessage(res.error || 'Drive sync failed.');
+      }
+    } catch (err: any) {
+      setSyncOk(false);
+      setSyncMessage(err?.message || 'Drive sync failed.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -936,6 +970,38 @@ export const AdminView: React.FC = () => {
         onOpenAiOrganizer={() => setAiOrganizerModalOpen(true)}
         aiPendingCount={aiPendingCount}
       />
+
+      {/* Sync with Google Drive — admin only */}
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[var(--gold-faint)] border border-[var(--border-main)] flex items-center justify-center text-[var(--gold)] shrink-0">
+              <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-lg text-[var(--text-main)]">Sync with Google Drive</h3>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                Rebuilds the library from your Drive folder, deep folders included. New books you add to Drive show up here.
+                The library also syncs itself once a day automatically.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleSyncNow}
+            disabled={syncing}
+            className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-50 text-black font-bold text-xs uppercase tracking-wider rounded-lg flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            <span>{syncing ? 'Syncing…' : 'Sync now'}</span>
+          </button>
+        </div>
+        {syncMessage && (
+          <p className={`text-xs leading-relaxed rounded-lg px-3 py-2 border ${syncOk ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-rose-500/10 text-rose-300 border-rose-500/20'}`}>
+            {syncMessage}
+          </p>
+        )}
+      </div>
 
       {/* Payment Settings (UPI) — admin only */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-5 space-y-4">
