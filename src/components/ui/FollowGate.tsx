@@ -28,10 +28,10 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
       <div className="w-full max-w-lg">
         {/* Brand */}
         <div className="text-center space-y-3 mb-6">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-[var(--gold-faint)] border border-[var(--gold)]/40 flex items-center justify-center shadow-lg shadow-black/40">
+          <div className="motion-breathe mx-auto w-16 h-16 rounded-2xl bg-[var(--gold-faint)] border border-[var(--gold)]/40 flex items-center justify-center shadow-lg shadow-black/40">
             <BookOpen className="w-8 h-8 text-[var(--gold)]" />
           </div>
-          <p className="text-[11px] font-bold tracking-[0.3em] uppercase text-[var(--gold)]">
+          <p className="gold-shimmer text-[11px] font-bold tracking-[0.3em] uppercase">
             Ghayb Chronicles
           </p>
           <h1 className="font-display font-semibold text-3xl sm:text-4xl tracking-tight leading-tight">
@@ -44,7 +44,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
         </div>
 
         {/* Gate card */}
-        <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
+        <div className="gate-glow bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#962fbf] flex items-center justify-center shrink-0">
               <Instagram className="w-5 h-5 text-white" />
@@ -58,15 +58,15 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
+            <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 0 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">{categoryCount}</p>
               <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Collections</p>
             </div>
-            <div className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
+            <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 1 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">{bookCount}</p>
               <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Books</p>
             </div>
-            <div className="p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
+            <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 2 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">Free</p>
               <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">After follow</p>
             </div>
@@ -77,7 +77,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             target="_blank"
             rel="noreferrer"
             onClick={() => setFollowed(true)}
-            className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.99] shadow-lg"
+            className="insta-sheen w-full py-3 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.99] shadow-lg"
             style={{ background: 'linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)' }}
           >
             <Instagram className="w-5 h-5" />

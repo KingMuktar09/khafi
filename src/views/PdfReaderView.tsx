@@ -21,6 +21,7 @@ import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, getDrivePreviewUrl, downloadBookFile } from '../utils/fileUtils';
 import { FilePreviewer, FitMode } from '../components/viewers/FilePreviewer';
 import { PdfZoomOverlay } from '../components/pdf/PdfZoomOverlay';
+import { PaidLockScreen } from '../components/books/PaidLockScreen';
 
 export const PdfReaderView: React.FC = () => {
   const bookId = appState.route.bookId;
@@ -79,6 +80,24 @@ export const PdfReaderView: React.FC = () => {
         >
           Return to Library
         </button>
+      </div>
+    );
+  }
+
+  // Paid gate (closes the direct /read/<id> bypass): a paid book never
+  // opens its reader, download or Drive link for a normal user. Admins
+  // read paid books directly; everyone else gets the locked pay screen.
+  const isAdmin = appState.adminAuthenticated;
+  if (book.isPaid && !isAdmin) {
+    return (
+      <div className="animate-fade-in py-2 max-w-2xl mx-auto font-sans">
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-5 sm:p-6">
+          <PaidLockScreen
+            book={book}
+            onBack={() => router.navigate('book', { bookId: book.id })}
+            backLabel="Back to book details"
+          />
+        </div>
       </div>
     );
   }

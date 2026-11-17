@@ -147,6 +147,19 @@ export const AdminView: React.FC = () => {
     }
   }, [isAuthenticated, payLoaded]);
 
+  // Whether live Drive storage is connected. When it is not, a file
+  // uploaded from this device is stored only temporarily on the live
+  // site (Vercel serverless /tmp) and can stop opening later — the
+  // upload form warns about that and points at Drive links instead.
+  const [driveConfigured, setDriveConfigured] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (isAuthenticated) {
+      api.getLibraryStatus()
+        .then((s) => setDriveConfigured(s.driveConfigured))
+        .catch(() => setDriveConfigured(null));
+    }
+  }, [isAuthenticated]);
+
   // Drive sync (admin only): rebuild the catalog from a fresh live Drive
   // listing. Shows the result (folders/books added) or a clear error when
   // Drive is not configured yet.
@@ -2172,7 +2185,17 @@ export const AdminView: React.FC = () => {
             </div>
 
             <form onSubmit={handleSaveBook} className="space-y-3.5">
-              
+
+              {/* Local uploads are temporary while Google Drive is not
+                  connected: the live site stores them in serverless /tmp,
+                  so the book can stop opening later. Drive links always
+                  work — the file stays in Drive. */}
+              {driveConfigured === false && (
+                <p className="text-xs leading-relaxed bg-amber-400/10 border border-amber-400/40 text-amber-200 rounded-lg px-3 py-2">
+                  Google Drive is not connected yet, so a file uploaded from this device is only stored temporarily on the live site and may stop opening later. For books that must keep working, paste a Google Drive link below instead — the file stays in Drive.
+                </p>
+              )}
+
               {/* File Upload Zone */}
               <div>
                 <label className="block text-[var(--text-muted)] mb-1 font-medium">

@@ -2,7 +2,8 @@
   "version": 2,
   "functions": {
     "api/index.ts": {
-      "includeFiles": "data/catalog.json"
+      "includeFiles": "data/catalog.json",
+      "regions": ["bom1"]
     }
   },
   "headers": [

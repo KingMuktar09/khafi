@@ -87,6 +87,24 @@ export const DrivePdfViewer: React.FC<DrivePdfViewerProps> = ({ book }) => {
         </div>
       </div>
 
+      {/* Always-visible hint: Google Drive's viewer runs in a cross-origin
+          iframe, so the app cannot detect when Drive refuses the preview
+          (the file is not shared "Anyone with the link" and Drive answers
+          401 / asks to sign in — the spinner still hides, because the
+          iframe itself loaded). Keep the way out in plain sight instead
+          of hiding it behind the toggle below. */}
+      <p className="shrink-0 px-3 py-1.5 text-[11px] leading-snug text-[var(--text-muted)] bg-[var(--bg-main)] border-b border-[var(--border-main)]">
+        If the preview stays blank or asks you to sign in, the file is not shared publicly in Drive yet — use{' '}
+        <button
+          type="button"
+          onClick={() => setShowTrouble(true)}
+          className="text-[var(--gold)] font-semibold underline underline-offset-2 cursor-pointer"
+        >
+          Preview not loading?
+        </button>{' '}
+        for the Drive and download options.
+      </p>
+
       {/* Fallback panel: shown by hand when the preview stays blank or asks for sign-in */}
       {showTrouble && (
         <div className="shrink-0 mx-3 mt-3 p-4 text-center space-y-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl font-sans">

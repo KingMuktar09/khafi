@@ -160,6 +160,25 @@ export const api = {
     return { ...EMPTY_PAYMENT_SETTINGS };
   },
 
+  /** Public library status: whether live Drive sync is configured. */
+  async getLibraryStatus(): Promise<{ driveConfigured: boolean; mode: string; books: number; paidBooks: number }> {
+    try {
+      const res = await fetch('/api/library-status');
+      const parsed = await safeParseJson<{ driveConfigured?: boolean; mode?: string; books?: number; paidBooks?: number }>(res);
+      if (parsed.ok && parsed.data) {
+        return {
+          driveConfigured: Boolean(parsed.data.driveConfigured),
+          mode: parsed.data.mode || '',
+          books: parsed.data.books || 0,
+          paidBooks: parsed.data.paidBooks || 0,
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load library status:', err);
+    }
+    return { driveConfigured: false, mode: '', books: 0, paidBooks: 0 };
+  },
+
   async savePaymentSettings(settings: PaymentSettings): Promise<{ success: boolean; error?: string }> {
     try {
       const res = await fetch('/api/admin/payment-settings', {

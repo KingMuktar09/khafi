@@ -11,6 +11,7 @@ import fs from "fs";
 import cookieParser from "cookie-parser";
 import multer from "multer";
 import crypto from "crypto";
+import { pipeline } from "stream/promises";
 import {
   isGoogleDriveConfigured,
   getSharedDriveId,
@@ -672,6 +673,16 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
     );
   }
 
+  // Paid gate: a paid catalog book is never streamed to a normal user.
+  // Admins (and the admin previewing a just-uploaded file, which has no
+  // catalog book yet) are unaffected.
+  if (book?.isPaid && !verifyAdminRequest(req)) {
+    res.status(402).json({
+      error: `This book is paid${typeof book.price === 'number' ? ` (₹${book.price})` : ''}. Pay by UPI on its book page and message @ghayb.chronicles with your payment proof to unlock it.`,
+    });
+    return;
+  }
+
   if (book) {
     driveFileId = book.driveFileId || extractDriveFileId(book.fileUrl || book.pdfUrl || book.driveUrl);
     customFilename = book.originalFilename || `${book.title || "book"}.pdf`;
@@ -905,6 +916,14 @@ app.get(pdfDownloadRoutes, async (req, res) => {
     (b: any) => b.id === cleanId || b.id === rawId || b.driveFileId === cleanId
   );
 
+  // Paid gate: a paid catalog book is never downloadable by a normal user.
+  if (book?.isPaid && !verifyAdminRequest(req)) {
+    res.status(402).json({
+      error: `This book is paid${typeof book.price === 'number' ? ` (₹${book.price})` : ''}. Pay by UPI on its book page and message @ghayb.chronicles with your payment proof to unlock it.`,
+    });
+    return;
+  }
+
   // SECURITY: only a catalog book's Drive file may be downloaded by the
   // public; a caller-supplied Drive ID is only honoured for the admin.
   let driveFileId = book?.driveFileId || extractDriveFileId(book?.fileUrl || book?.pdfUrl || book?.driveUrl || "");
@@ -1109,7 +1128,7 @@ app.get(["/api/download", "/download"], async (req, res) => {
   res.sendFile(filePath);
 });
 
-export function sanitizeBook(book: any) {
+export function sanitizeBook(book: any, isAdmin = true) {
   if (!book) return book;
   const {
     driveUrl,
@@ -1124,6 +1143,22 @@ export function sanitizeBook(book: any) {
     driveFolderId,
     ...rest
   } = book;
+
+  // Paid books: a normal visitor must never be handed a working open or
+  // download link. Admins keep the links (they read paid books directly).
+  // The pay screen is the only thing a visitor sees for a paid book.
+  if (!isAdmin && rest.isPaid) {
+    const { driveFileId, externalUrl, fileUrl, pdfUrl, ...paidRest } = rest;
+    return { ...paidRest, fileUrl: '', pdfUrl: '' };
+  }
+
+  // Oversized inline covers (base64 JPEGs from PDF cover extraction, ~60 KB
+  // each) bloat the public catalog payload. Drop data-URI covers over 24 KB;
+  // the UI falls back to its generated title cover. Admin responses keep
+  // them (the admin UI shows the real cover).
+  if (!isAdmin && typeof rest.coverUrl === 'string' && rest.coverUrl.startsWith('data:') && rest.coverUrl.length > 24576) {
+    rest.coverUrl = '';
+  }
 
   let fileUrl = rest.fileUrl;
   let pdfUrl = rest.pdfUrl;
@@ -1165,10 +1200,10 @@ export function sanitizeFolder(folder: any) {
   return folderRest;
 }
 
-export function sanitizeCatalog(catalog: any) {
+export function sanitizeCatalog(catalog: any, isAdmin = true) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
-  const safeBooks = (catalog.books || []).map(sanitizeBook);
+  const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin));
   return {
     folders: safeFolders,
     books: safeBooks,
@@ -1192,12 +1227,23 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
     catalog = readCatalog();
   }
 
-  const safeCatalog = sanitizeCatalog(catalog);
+  // Non-admin catalogs have paid-book links stripped (see sanitizeBook)
+  // and oversized inline covers dropped, so the public payload stays
+  // small and a paid book can never be opened from it.
+  const safeCatalog = sanitizeCatalog(catalog, isAdmin);
 
   if (isAdmin) {
+    // Admin edits must never be served stale.
+    res.set('Cache-Control', 'no-store');
     res.json(safeCatalog);
   } else {
-    // Filter visible folders & books for normal readers
+    // Filter visible folders & books for normal readers. A short shared
+    // edge cache (60s) makes repeat loads fast and, as a side effect,
+    // serves one consistent catalog while the function instances behind
+    // it may hold different /tmp copies. Vary on the admin token so an
+    // admin response is never served to a visitor.
+    res.set('Vary', 'x-admin-token');
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
     const visibleFolders = (safeCatalog.folders || []).filter((f: any) => f.visible !== false);
     const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);
     res.json({
@@ -1783,18 +1829,17 @@ app.post(["/api/admin/upload/complete", "/admin/upload/complete"], requireAdmin,
       }
     }
 
-    const writeStream = fs.createWriteStream(destPath);
+    // Assemble by streaming each part straight to disk instead of
+    // readFileSync-ing whole 4 MB parts into memory and writing without
+    // backpressure (for a 100 MB+ book that held the entire file in RAM
+    // and stalled the function). Parts are appended in order.
     for (let i = 0; i < totalChunks; i++) {
       const partPath = path.join(sessionDir, `part-${i}`);
-      const chunkBuffer = fs.readFileSync(partPath);
-      writeStream.write(chunkBuffer);
+      await pipeline(
+        fs.createReadStream(partPath),
+        fs.createWriteStream(destPath, { flags: i === 0 ? "w" : "a" })
+      );
     }
-    writeStream.end();
-
-    await new Promise((resolve, reject) => {
-      writeStream.on("finish", () => resolve(true));
-      writeStream.on("error", reject);
-    });
 
     try {
       fs.rmSync(sessionDir, { recursive: true, force: true });

@@ -130,6 +130,17 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
     return 'Library Root';
   };
 
+  // Whether live Drive storage is connected (local uploads are only
+  // temporary on the live site while it is not — see the warning below).
+  const [driveConfigured, setDriveConfigured] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (isOpen && driveConfigured === null) {
+      api.getLibraryStatus()
+        .then((s) => setDriveConfigured(s.driveConfigured))
+        .catch(() => setDriveConfigured(null));
+    }
+  }, [isOpen, driveConfigured]);
+
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -539,7 +550,10 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
   };
 
   // Controlled Concurrent Batch Queue Worker
-  // Target: 4 simultaneous file uploads by default, adaptively scale up to 5-6 when capable
+  // 2 simultaneous files by default (each file already uploads 3 chunks
+  // in parallel, so 2 files = 6 requests in flight). 4 files x 3 parts =
+  // 12 concurrent uploads starved a phone uplink and made every file
+  // slow; scale up to 3 only when the network proves fast and error-free.
   const startUpload = async () => {
     if (queue.length === 0) return;
     if (batchPaid.isPaid && !(typeof batchPaid.price === 'number' && batchPaid.price > 0)) {
@@ -556,7 +570,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
       (q) => q.status === 'ready' || q.status === 'error'
     );
 
-    let currentConcurrency = 4;
+    let currentConcurrency = 2;
     let nextIndex = 0;
     let successCount = 0;
     let failureCount = 0;
@@ -570,14 +584,14 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
         try {
           await uploadSingleItem(currentItem, signal);
           successCount++;
-          // Scale concurrency to 5-6 if network is fast and error-free
-          if (successCount >= 4 && failureCount === 0 && currentConcurrency < 6) {
-            currentConcurrency = Math.min(6, currentConcurrency + 1);
+          // Scale concurrency to 3 if network is fast and error-free
+          if (successCount >= 2 && failureCount === 0 && currentConcurrency < 3) {
+            currentConcurrency = Math.min(3, currentConcurrency + 1);
           }
         } catch (err: any) {
           failureCount++;
-          if (currentConcurrency > 3) {
-            currentConcurrency = Math.max(3, currentConcurrency - 1);
+          if (currentConcurrency > 2) {
+            currentConcurrency = Math.max(2, currentConcurrency - 1);
           }
           if (!signal.aborted) {
             setQueue((prev) =>
@@ -749,6 +763,19 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
             <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-lg text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{generalError}</span>
+            </div>
+          )}
+
+          {/* Local uploads are temporary while Google Drive is not
+              connected: the live site stores them in serverless /tmp, so
+              the books can stop opening later. Paste Drive links below
+              instead — those always work, the file stays in Drive. */}
+          {driveConfigured === false && (
+            <div className="p-3 bg-amber-400/10 border border-amber-400/40 text-amber-200 rounded-lg text-xs leading-relaxed flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                Google Drive is not connected yet, so files uploaded from this device are only stored temporarily on the live site and may stop opening later. For books that must keep working, paste Google Drive links below instead.
+              </span>
             </div>
           )}
 

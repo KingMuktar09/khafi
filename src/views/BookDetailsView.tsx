@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, Check, Copy, Download, ExternalLink, IndianRupee, Instagram, QrCode, Star, Tag, Play, Image as ImageIcon, Music as AudioIcon, FileText, HardDrive, Folder as FolderIcon, Calendar, FileType, Hash } from 'lucide-react';
+import { ArrowLeft, BookOpen, Download, ExternalLink, IndianRupee, Instagram, Star, Tag, Play, Image as ImageIcon, Music as AudioIcon, FileText, HardDrive, Folder as FolderIcon, Calendar, FileType, Hash } from 'lucide-react';
 import { appState } from '../state/appState';
 import { router } from '../router/router';
-import { api } from '../services/api';
-import { EMPTY_PAYMENT_SETTINGS, PaymentSettings } from '../types';
 import { CoverImage } from '../components/books/CoverImage';
+import { PaidLockScreen } from '../components/books/PaidLockScreen';
 import { ReadingProgressTracker } from '../components/books/ReadingProgressTracker';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
@@ -14,31 +13,12 @@ export const BookDetailsView: React.FC = () => {
   const bookId = appState.route.bookId;
   const book = bookId ? appState.getBookById(bookId) : undefined;
   const [showAdvisoryModal, setShowAdvisoryModal] = useState(false);
-  const [paySettings, setPaySettings] = useState<PaymentSettings>(EMPTY_PAYMENT_SETTINGS);
-  const [copiedUpi, setCopiedUpi] = useState(false);
 
   useEffect(() => {
     if (bookId) {
       appState.recordViewedBook(bookId);
     }
   }, [bookId]);
-
-  useEffect(() => {
-    if (book?.isPaid) {
-      api.getPaymentSettings().then(setPaySettings).catch(() => {});
-    }
-  }, [book?.isPaid]);
-
-  const copyUpiId = async () => {
-    if (!paySettings.upiId) return;
-    try {
-      await navigator.clipboard.writeText(paySettings.upiId);
-      setCopiedUpi(true);
-      setTimeout(() => setCopiedUpi(false), 2000);
-    } catch {
-      // clipboard unavailable; the ID is shown in full for manual copying
-    }
-  };
 
   if (!book) {
     return (
@@ -223,86 +203,7 @@ export const BookDetailsView: React.FC = () => {
           {/* Actions */}
           <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl space-y-3 text-sm">
             {isPaidForVisitor ? (
-              <>
-                {/* Paid checkout (visitor): no direct read, UPI pay + manual unlock */}
-                <div className="space-y-2">
-                  <p className="font-display font-semibold text-lg text-[var(--text-main)]">
-                    This book is paid — {typeof book.price === 'number' ? `₹${book.price.toLocaleString('en-IN')}` : 'price set by the library'}
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                    Pay by UPI below. After payment, message{' '}
-                    <a href="https://instagram.com/ghayb.chronicles" target="_blank" rel="noreferrer" className="text-[var(--gold)] font-semibold underline underline-offset-2">
-                      @ghayb.chronicles on Instagram
-                    </a>{' '}
-                    with your payment proof — access is unlocked manually. There is no automatic payment check on this free site.
-                  </p>
-                </div>
-
-                {book.paymentLink ? (
-                  <a
-                    href={book.paymentLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="tap-target w-full py-3 px-4 rounded-xl font-bold bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <IndianRupee className="w-4 h-4" />
-                    <span>Pay {typeof book.price === 'number' ? `₹${book.price.toLocaleString('en-IN')}` : ''} now</span>
-                  </a>
-                ) : null}
-
-                {/* UPI checkout */}
-                <div className="p-4 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl space-y-3">
-                  <p className="font-semibold text-sm flex items-center gap-2">
-                    <QrCode className="w-4 h-4 text-[var(--gold)]" />
-                    <span>Pay by UPI</span>
-                  </p>
-                  {paySettings.upiId ? (
-                    <>
-                      {paySettings.displayName && (
-                        <p className="text-xs text-[var(--text-muted)]">
-                          Pay to: <span className="font-semibold text-[var(--text-main)]">{paySettings.displayName}</span>
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 min-w-0 break-all text-sm font-semibold bg-[var(--bg-main)] border border-[var(--border-main)] rounded-lg px-3 py-2.5">
-                          {paySettings.upiId}
-                        </code>
-                        <button
-                          type="button"
-                          onClick={copyUpiId}
-                          className="tap-target shrink-0 px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/60 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
-                        >
-                          {copiedUpi ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-[var(--gold)]" />}
-                          <span>{copiedUpi ? 'Copied' : 'Copy UPI ID'}</span>
-                        </button>
-                      </div>
-                      {paySettings.upiQrUrl && (
-                        <div className="flex flex-col items-center gap-2 pt-1">
-                          <img
-                            src={paySettings.upiQrUrl}
-                            alt="UPI QR code for payment"
-                            className="w-52 h-52 max-w-full object-contain rounded-xl border border-[var(--border-main)] bg-white p-2"
-                          />
-                          <p className="text-[11px] text-[var(--text-muted)]">Scan with any UPI app to pay</p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                      UPI payment details are not set yet. Please message{' '}
-                      <a href="https://instagram.com/ghayb.chronicles" target="_blank" rel="noreferrer" className="text-[var(--gold)] font-semibold underline underline-offset-2">
-                        @ghayb.chronicles
-                      </a>{' '}
-                      on Instagram to pay for this book.
-                    </p>
-                  )}
-                  {book.paymentNote && (
-                    <p className="text-xs text-[var(--text-muted)] leading-relaxed border-t border-[var(--border-subtle)] pt-2">
-                      {book.paymentNote}
-                    </p>
-                  )}
-                </div>
-              </>
+              <PaidLockScreen book={book} />
             ) : (
               <>
                 {isAdmin && book.isPaid && (

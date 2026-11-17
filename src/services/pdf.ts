@@ -31,21 +31,27 @@ export async function extractPdfCover(pdfSource: string | File | ArrayBuffer): P
     if (pdf.numPages < 1) return null;
 
     const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale: 1.2 });
+    // Small thumbnail on purpose: the cover is embedded in the public
+    // catalog as a data URI, and a full-page JPEG at scale 1.2 / quality
+    // 0.85 is ~60 KB per book — three such books were half of the whole
+    // 368 KB catalog payload. Cap at 480 px wide, JPEG 0.75 (~15-25 KB).
+    const viewport = page.getViewport({ scale: 1.0 });
+    const scale = Math.min(1, 480 / viewport.width);
+    const thumbViewport = page.getViewport({ scale });
 
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (!context) return null;
 
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+    canvas.height = thumbViewport.height;
+    canvas.width = thumbViewport.width;
 
     await page.render({
       canvasContext: context,
-      viewport: viewport,
+      viewport: thumbViewport,
     }).promise;
 
-    return canvas.toDataURL('image/jpeg', 0.85);
+    return canvas.toDataURL('image/jpeg', 0.75);
   } catch (err) {
     console.warn('First-page PDF cover extraction fallback:', err);
     return null;
