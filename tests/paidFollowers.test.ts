@@ -236,6 +236,33 @@ describe('PaidLockScreen (locked visitor screen)', () => {
   });
 });
 
+describe('Cloudflare stream route (/api/books/:id/stream)', () => {
+  // Regression: the stream matcher used to miss "/stream" on /api/books/
+  // paths, so a locked visitor got 401 "Admin session required" instead
+  // of the paid-book 402, and a follower got 401 too. The Manba book id
+  // below is the real bundled catalog entry (data/catalog.json).
+  it('returns 402 for a locked visitor (no gate unlock, no key)', async () => {
+    const res = await handleCloudflareApiRequest(
+      new Request('https://example.com/api/books/b-manba-usul-al-hikma/stream'),
+      {}
+    );
+    expect(res.status).toBe(402);
+    const body = (await res.json()) as any;
+    expect(body.error).toMatch(/free for followers/i);
+    expect(body.error).not.toMatch(/Rs 99|UPI/);
+  });
+
+  it('does not 402 for a gate-unlocked follower', async () => {
+    const res = await handleCloudflareApiRequest(
+      new Request('https://example.com/api/books/b-manba-usul-al-hikma/stream', {
+        headers: { 'x-follow-unlocked': '1' },
+      }),
+      {}
+    );
+    expect(res.status).not.toBe(402);
+  });
+});
+
 describe('getPaidBadgeLabel', () => {
   it('is "Paid" for a paid book with or without a price — never a price', () => {
     expect(getPaidBadgeLabel({ isPaid: true, price: 199 } as any)).toBe('Paid');

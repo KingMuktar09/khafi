@@ -971,7 +971,7 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     path.startsWith("/api/drive/file/") ||
     path.startsWith("/api/files/") ||
     path.startsWith("/api/pdf/") ||
-    (path.startsWith("/api/books/") && (path.endsWith("/file") || path.endsWith("/preview") || path.endsWith("/pdf")));
+    (path.startsWith("/api/books/") && (path.endsWith("/file") || path.endsWith("/preview") || path.endsWith("/pdf") || path.endsWith("/stream")));
 
   if (isFileStreamPath && (method === "GET" || method === "HEAD")) {
     let targetFileId = "";
