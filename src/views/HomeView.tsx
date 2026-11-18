@@ -49,7 +49,7 @@ export const HomeView: React.FC = () => {
     <div className="space-y-6 animate-fade-in py-2 font-sans">
       
       {/* Hero — Ilm-e-Ghayb Library */}
-      <div className="hero-glow hero-sheen bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-10 shadow-2xl">
+      <div className="hero-glow hero-sheen ms-panel rounded-2xl p-6 sm:p-10 shadow-2xl">
         <div aria-hidden="true" className="halftone halftone-corner" />
         <div className="max-w-2xl space-y-4">
           {/* Official logo, whole and centred in its square frame */}
@@ -67,16 +67,17 @@ export const HomeView: React.FC = () => {
             </span>
             <HijriDate />
           </div>
+          <p className="ms-eyebrow animate-fade-up" style={{ animationDelay: '40ms' }}>A free library of hidden knowledge</p>
           <h1 className="font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05] animate-fade-up" style={{ animationDelay: '70ms' }}>
             Ilm-e-Ghayb <span className="gold-shimmer">Library</span>
           </h1>
           <p className="text-sm sm:text-base text-[var(--text-muted)] leading-relaxed max-w-xl animate-fade-up" style={{ animationDelay: '140ms' }}>
             Hidden knowledge, Sufi wisdom, and the books behind it: the Quran (the Muslim holy book), Tafseer
-            (explaining the Quran), Hadith (the Prophet's sayings), Seerah (the Prophet's life), and history —
-            with sources in every entry.
+            (explaining the Quran), Hadith (the Prophet's sayings), Seerah (the Prophet's life), and history.
+            Every entry names its source.
           </p>
           <p className="text-sm sm:text-base text-[var(--text-main)] leading-relaxed max-w-xl animate-fade-up" style={{ animationDelay: '170ms' }}>
-            Everyone is welcome here — you don't need to be Muslim to read and learn.
+            Everyone is welcome here. You do not need to be Muslim to read and learn.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1 animate-fade-up" style={{ animationDelay: '210ms' }}>
@@ -125,7 +126,7 @@ export const HomeView: React.FC = () => {
               type="search"
               value={homeSearch}
               onChange={(e) => setHomeSearch(e.target.value)}
-              placeholder="Search books — try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…"
+              placeholder="Search books: try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…"
               aria-label="Search books by title, author or topic"
               className="tap-target w-full pl-11 pr-24 py-3.5 text-sm sm:text-base bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)] shadow-lg"
             />
@@ -143,7 +144,7 @@ export const HomeView: React.FC = () => {
       {booksInProgress.length > 0 && (
         <section className="space-y-3 animate-fade-up" style={{ animationDelay: '80ms' }}>
           <div className="flex items-center justify-between px-1">
-            <h2 className="font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
+            <h2 className="font-display font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                 <Clock className="w-4 h-4 text-[var(--gold)]" />
               </div>
@@ -214,22 +215,22 @@ export const HomeView: React.FC = () => {
       {/* Tools — the special things no normal library has. */}
       <section className="space-y-3 animate-fade-up">
         <div className="px-1">
-          <h2 className="font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
+          <h2 className="font-display font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
             <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
               <Sparkles className="w-4 h-4 text-[var(--gold)]" />
             </div>
             <span>Tools</span>
           </h2>
           <p className="text-xs text-[var(--text-muted)]">
-            Made for this library — your shelf, a book finder, the magic square maker, and amals from al-Buni&apos;s books.
+            Made for this library. Your shelf, a book finder, the magic square maker, and amals from al-Buni&apos;s books.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { title: 'My Shelf', blurb: 'Save books with a status — To Read, Reading, Finished.', view: 'shelf' as const },
             { title: 'Find My Next Book', blurb: 'Three quick questions, three real books for your mood.', view: 'finder' as const },
-            { title: 'Magic Square Maker', blurb: 'Build a magic number square — 3×3, 4×4, 5×5 or 7×7 — and check every row adds up.', view: 'wafq' as const },
-            { title: 'Amals from al-Buni', blurb: '25 simple practices from Shams al-Ma\u2019arif — tap one to see the full detail.', view: 'amals' as const },
+            { title: 'Magic Square Maker', blurb: 'Build a magic number square in 3×3, 4×4, 5×5 or 7×7. Then check that every row adds up.', view: 'wafq' as const },
+            { title: 'Amals from al-Buni', blurb: '25 simple practices from Shams al-Ma\u2019arif. Tap one to see the full detail.', view: 'amals' as const },
           ].map((tool) => (
             <div
               key={tool.view}
@@ -250,7 +251,7 @@ export const HomeView: React.FC = () => {
       <section className="space-y-3 animate-fade-up" style={{ animationDelay: '120ms' }}>
         <div className="flex items-center justify-between px-1">
           <div>
-            <h2 className="font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
+            <h2 className="font-display font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                 <Compass className="w-4 h-4 text-[var(--gold)]" />
               </div>
@@ -303,7 +304,7 @@ export const HomeView: React.FC = () => {
             onClick={() => router.navigate('timeline')}
             className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-medium flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <span>Or see the Knowledge Map — the masters in order of time</span>
+            <span>Or see the Knowledge Map. It lists the masters in order of time</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -313,7 +314,7 @@ export const HomeView: React.FC = () => {
       <section className="space-y-3 animate-fade-up" style={{ animationDelay: '140ms' }}>
         <div className="flex items-center justify-between px-1">
           <div>
-            <h2 className="font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
+            <h2 className="font-display font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                 <Layers className="w-4 h-4 text-[var(--gold)]" />
               </div>
@@ -354,7 +355,7 @@ export const HomeView: React.FC = () => {
                 <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--gold)] shrink-0" />
               </h3>
               <p className="text-xs text-[var(--text-muted)] line-clamp-2 mt-1 leading-relaxed">
-                Every book in the library, flat — tap a category chip to filter, tap a book to open it. No folders to dig through.
+                Every book in the library, flat. Tap a category chip to filter, tap a book to open it. No folders to dig through.
               </p>
             </div>
           </div>
@@ -406,7 +407,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* Ghayb Chronicles — the channel behind the library */}
-      <section className="hero-glow relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--gold)]/30 rounded-2xl p-6 sm:p-8 shadow-2xl animate-fade-up" style={{ animationDelay: '170ms' }}>
+      <section className="hero-glow relative overflow-hidden ms-panel rounded-2xl p-6 sm:p-8 shadow-2xl animate-fade-up" style={{ animationDelay: '170ms' }}>
         <div aria-hidden="true" className="halftone halftone-corner" />
         <div className="flex items-center gap-3">
           <img
@@ -477,7 +478,7 @@ export const HomeView: React.FC = () => {
         <section className="space-y-3 animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between px-1">
             <div>
-              <h2 className="font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
+              <h2 className="font-display font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
                 <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                   <Sparkles className="w-4 h-4 text-[var(--gold)]" />
                 </div>

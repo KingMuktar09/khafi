@@ -42,7 +42,7 @@ export const BookFinderView: React.FC = () => {
           <span>Find My Next Book</span>
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Three quick questions — then three real books from this library, picked for your mood.
+          Three quick questions. Then three real books from this library, picked for your mood.
         </p>
       </div>
 
@@ -101,7 +101,7 @@ export const BookFinderView: React.FC = () => {
       {step === 2 && mood && (
         <section className="space-y-3">
           <h2 className="font-semibold text-lg text-[var(--text-main)] px-1">
-            {mood.label} — starting out, or going deep?
+            {mood.label}. Starting out, or going deep?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
@@ -111,7 +111,7 @@ export const BookFinderView: React.FC = () => {
             >
               <span className="font-display font-semibold text-base text-[var(--text-main)]">Starting out</span>
               <span className="block text-xs text-[var(--text-muted)] leading-relaxed">
-                The first books in this category — the foundations, in the library's own order.
+                The first books in this category. The foundations, in the library's own order.
               </span>
             </button>
             <button
@@ -160,7 +160,7 @@ export const BookFinderView: React.FC = () => {
             <Sparkles className="w-5 h-5 text-[var(--gold)] shrink-0 mt-0.5" />
             <div>
               <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-                For a {mood.label.toLowerCase()} mood — {level === 'begin' ? 'starting out' : 'going deep'}
+                For a {mood.label.toLowerCase()} mood. {level === 'begin' ? 'starting out' : 'going deep'}
               </h2>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
                 Three books from this library, in the order the library arranges them. Tap one to open it.

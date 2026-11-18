@@ -27,7 +27,7 @@ export const ReadingStats: React.FC = () => {
           <span>Your Reading Stats</span>
         </h2>
         <p className="text-xs text-[var(--text-muted)]">
-          Only on this device — your shelf, your progress, your streak.
+          Only on this device. Your shelf, your progress, your streak.
         </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

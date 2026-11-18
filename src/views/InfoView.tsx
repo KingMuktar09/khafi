@@ -10,24 +10,24 @@ export const InfoView: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in py-2 font-sans">
       
       {/* Header Banner */}
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-2">
+      <div className="ms-panel rounded-2xl p-6 space-y-2">
         <span className="text-xs px-2.5 py-0.5 bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)] font-semibold rounded">
           About & Creator
         </span>
-        <h1 className="font-bold text-2xl sm:text-3xl text-[var(--text-main)] tracking-tight">
+        <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)] tracking-tight">
           Ilm-e-Ghayb Library
         </h1>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl">
-          A free library of old and important books — on the Quran, the Prophet's life, Sufism, history and
+          A free library of old and important books. It covers the Quran, the Prophet's life, Sufism, history and
           more. Everyone is welcome to read.
         </p>
       </div>
 
       {/* Creator Profile Section */}
-      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-5">
+      <section className="ms-panel rounded-2xl p-6 space-y-5">
         <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-3">
           <User className="w-5 h-5 text-[var(--gold)]" />
-          <h2 className="font-semibold text-lg text-[var(--text-main)]">
+          <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
             Creator Identity
           </h2>
         </div>
@@ -112,31 +112,31 @@ export const InfoView: React.FC = () => {
       </section>
 
       {/* About Section */}
-      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-3">
-        <h2 className="font-semibold text-lg text-[var(--text-main)]">
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
           About Ilm-e-Ghayb Library
         </h2>
         <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
           <p>
-            Ilm-e-Ghayb Library, by Ghayb Chronicles, is a free library of hidden knowledge and Sufi wisdom —
-            Sufism is the spiritual side of Islam — and the books behind it.
+            Ilm-e-Ghayb Library, by Ghayb Chronicles, is a free library of hidden knowledge and Sufi wisdom
+            (Sufism is the spiritual side of Islam), and the books behind it.
           </p>
           <p>
-            It covers Islamic knowledge — the Quran, the Sunnah (the Prophet's way of life), spirituality,
-            history and philosophy — with the source named in every entry, so you can check it yourself.
+            It covers Islamic knowledge: the Quran, the Sunnah (the Prophet's way of life), spirituality,
+            history and philosophy. Every entry names its source, so you can check it yourself.
           </p>
         </div>
       </section>
 
       {/* What "Authentic" means */}
-      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-3">
-        <h2 className="font-semibold text-lg text-[var(--text-main)]">
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
           What does “Authentic” mean here?
         </h2>
         <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
           <p>
             A book marked Authentic was checked by the library admin and found to be the genuine,
-            unaltered text of the named work — not a fake, altered or mislabelled copy.
+            unaltered text of the named work. Not a fake, altered or mislabelled copy.
           </p>
           <p>
             It is the admin's own check, not a scholarly certificate. A book without the mark has
@@ -144,8 +144,8 @@ export const InfoView: React.FC = () => {
             Authentic books only from the Library page.
           </p>
           <p>
-            Books with the same title are shown as versions — Version 1 is the oldest copy,
-            Version 2 the next — each with its real date, so you can tell which copy you are
+            Books with the same title are shown as versions. Version 1 is the oldest copy,
+            Version 2 the next. Each has its real date, so you can tell which copy you are
             opening. If two copies share a title, check the date, author and edition before
             choosing.
           </p>
@@ -153,7 +153,7 @@ export const InfoView: React.FC = () => {
       </section>
 
       {/* Creator Note Quote Block */}
-      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-3">
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
         <div className="flex items-center gap-2 text-[var(--gold)]">
           <Quote className="w-5 h-5 rotate-180" />
           <h2 className="font-semibold text-base text-[var(--text-main)]">
@@ -171,8 +171,8 @@ export const InfoView: React.FC = () => {
       </section>
 
       {/* Connect Section */}
-      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-4">
-        <h2 className="font-semibold text-lg text-[var(--text-main)]">
+      <section className="ms-panel rounded-2xl p-6 space-y-4">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
           Connect
         </h2>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">

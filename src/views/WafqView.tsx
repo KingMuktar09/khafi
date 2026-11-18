@@ -43,7 +43,7 @@ export const WafqView: React.FC = () => {
   const downloadSquare = () => {
     if (!grid || !check) return;
     const lines = [
-      `Magic Square (Wafq) — ${grid.length}x${grid.length}`,
+      `Magic Square (Wafq) ${grid.length}x${grid.length}`,
       `Source: ${SHAMS_SOURCE}`,
       `Magic constant: ${check.constant}`,
       '',
@@ -86,7 +86,7 @@ export const WafqView: React.FC = () => {
           <span>Magic Square Maker</span>
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Wafq — a square where every row, column and diagonal adds up to the same number.
+          Wafq. A square where every row, column and diagonal adds up to the same number.
         </p>
       </div>
 
@@ -94,19 +94,19 @@ export const WafqView: React.FC = () => {
       <div className="p-4 bg-amber-500/10 border-2 border-amber-500/60 rounded-xl flex items-start gap-3" role="alert">
         <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
         <p className="text-sm font-semibold text-[var(--text-main)] leading-relaxed">
-          Warning — use this at your own risk. Using any magic square on this page is fully your own choice
+          Warning. Use this at your own risk. Using any magic square on this page is fully your own choice
           and your own risk. Ghayb Chronicles and the Ilm-e-Ghayb Library are NOT responsible for any
-          problems, harm, or consequences that follow — now or in the future.
+          problems, harm, or consequences that follow, now or in the future.
         </p>
       </div>
 
-      <div className="p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl space-y-4">
+      <div className="p-5 ms-panel rounded-xl space-y-4">
         <div>
-          <h2 className="font-semibold text-sm text-[var(--text-main)]">What is a wafq?</h2>
+          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">What is a wafq?</h2>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1">
             A <span className="text-[var(--text-main)] font-semibold">wafq</span> (also called a magic square) is a
             square of numbers where every row, every column and both diagonals add up to the same total. That
-            total is called the magic constant. It is a maths pattern — nothing more, nothing less.
+            total is called the magic constant. It is a maths pattern. Nothing more, nothing less.
           </p>
         </div>
         <div>
@@ -125,16 +125,16 @@ export const WafqView: React.FC = () => {
           </p>
         </div>
         <div>
-          <h2 className="font-semibold text-sm text-[var(--text-main)]">How are the numbers arranged?</h2>
+          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">How are the numbers arranged?</h2>
           <ol className="text-sm text-[var(--text-muted)] leading-relaxed mt-1 list-decimal list-inside space-y-1">
-            <li>Pick a size below — 3 × 3, 4 × 4, 5 × 5 or 7 × 7.</li>
-            <li>The square uses the numbers 1, 2, 3… up to the number of boxes — each number once, no repeats. (For 3 × 3 that is 1 to 9.)</li>
+            <li>Pick a size below: 3 × 3, 4 × 4, 5 × 5 or 7 × 7.</li>
+            <li>The square uses the numbers 1, 2, 3… up to the number of boxes. Each number once, no repeats. (For 3 × 3 that is 1 to 9.)</li>
             <li>Every row, column and diagonal adds up to the same total (the magic constant).</li>
-            <li>Check the sums in the green box below the square — every line must match.</li>
+            <li>Check the sums in the green box below the square. Every line must match.</li>
           </ol>
         </div>
         <div>
-          <h2 className="font-semibold text-sm text-[var(--text-main)]">Worked example — the Lo Shu 3 × 3</h2>
+          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">Worked example: the Lo Shu 3 × 3</h2>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1">
             The oldest known magic square is the Lo Shu, from China, over 4,000 years old:
           </p>
@@ -152,7 +152,7 @@ export const WafqView: React.FC = () => {
             <br />
             Diagonals: 4 + 5 + 6 = 15, 2 + 5 + 8 = 15.
             <br />
-            Every line adds to 15 — that is the magic constant for 3 × 3. Tap "Lo Shu 3 × 3 (classic)" below
+            Every line adds to 15. That is the magic constant for 3 × 3. Tap "Lo Shu 3 × 3 (classic)" below
             to see it in the big square and check the sums yourself.
           </p>
         </div>
@@ -208,7 +208,7 @@ export const WafqView: React.FC = () => {
       <div className="p-5 sm:p-6 bg-[var(--bg-surface)] border border-[var(--gold)]/30 rounded-2xl space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-            {showLoShu ? 'Lo Shu — the classic 3 × 3' : `${grid.length} × ${grid.length} magic square`}
+            {showLoShu ? 'Lo Shu, the classic 3 × 3' : `${grid.length} × ${grid.length} magic square`}
           </h2>
           <span className="text-xs px-3 py-1.5 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-bold rounded-full">
             Magic constant: {check.constant}
@@ -236,14 +236,14 @@ export const WafqView: React.FC = () => {
         <div className={`p-4 rounded-xl border ${check.allOk ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-red-500/40 bg-red-500/5'}`}>
           <p className="font-semibold text-sm flex items-center gap-2 text-[var(--text-main)]">
             <CheckCircle2 className={`w-4 h-4 ${check.allOk ? 'text-emerald-400' : 'text-red-400'}`} />
-            <span>{check.allOk ? 'Verified — this is a true magic square' : 'Not a magic square — the sums do not match'}</span>
+            <span>{check.allOk ? 'Verified. This is a true magic square' : 'Not a magic square — the sums do not match'}</span>
           </p>
           <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-2">
-            Rows: {check.rowSums.join(' + ')} = {check.constant} each — {check.rowsOk ? 'all match' : 'do not match'}.
+            Rows: {check.rowSums.join(' + ')} = {check.constant} each. {check.rowsOk ? 'all match' : 'do not match'}.
             <br />
-            Columns: {check.colSums.join(', ')} — {check.colsOk ? 'all match' : 'do not match'}.
+            Columns: {check.colSums.join(', ')}. {check.colsOk ? 'all match' : 'do not match'}.
             <br />
-            Diagonals: {check.diagSums.join(', ')} — {check.diagsOk ? 'both match' : 'do not match'}.
+            Diagonals: {check.diagSums.join(', ')}. {check.diagsOk ? 'both match' : 'do not match'}.
             <br />
             Numbers 1 to {grid.length * grid.length}, each used exactly once: {check.usesAllNumbers ? 'yes' : 'no'}.
           </p>

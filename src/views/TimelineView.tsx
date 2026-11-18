@@ -48,7 +48,7 @@ export const TimelineView: React.FC = () => {
                   <span className="text-[8px] sm:text-[10px] text-[var(--text-muted)] font-sans">century</span>
                 </span>
               </div>
-              <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs min-w-0">
+              <div className="flex-1 ms-panel rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs min-w-0">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">{master.name}</h2>
                   <span className="text-xs text-[var(--gold)] font-semibold">{master.era}</span>

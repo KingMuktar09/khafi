@@ -51,7 +51,7 @@ export const DrivePdfViewer: React.FC<DrivePdfViewerProps> = ({ book }) => {
   }
 
   return (
-    <div className="w-full h-full min-h-[480px] flex flex-col bg-black">
+    <div className="w-full h-full min-h-[480px] flex flex-col bg-[#0a0806]">
       {/* Action bar: always visible, so the reader is never stuck */}
       <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2 bg-[var(--bg-main)] border-b border-[var(--border-main)]">
         <p className="text-[11px] text-[var(--text-muted)] leading-tight min-w-0 truncate">
@@ -149,7 +149,7 @@ export const DrivePdfViewer: React.FC<DrivePdfViewerProps> = ({ book }) => {
       {/* Drive preview iframe */}
       <div className="relative flex-1 min-h-0">
         {isLoading && !showTrouble && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0d1117] font-mono text-xs text-[var(--text-muted)] z-10">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0a0806] font-mono text-xs text-[var(--text-muted)] z-10">
             <RefreshCw className="w-8 h-8 text-[var(--gold)] animate-spin" />
             <p className="text-[var(--gold)] font-semibold tracking-wider uppercase text-sm">
               Loading preview...

@@ -35,7 +35,7 @@ export const WisdomOfTheDay: React.FC = () => {
       </p>
       <p className="text-xs text-[var(--text-muted)] mt-3">
         A teaching of <span className="text-[var(--gold)] font-semibold">{wisdom.master}</span>
-        {' — '}{wisdom.about}
+        . {wisdom.about}
       </p>
       {sourceBook && (
         <button

@@ -36,7 +36,7 @@ export const ShelfView: React.FC = () => {
           <span>My Shelf</span>
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Your saved books, with a reading status. Saved on this device only — nothing leaves your phone or laptop.
+          Your saved books, with a reading status. Saved on this device only. Nothing leaves your phone or laptop.
         </p>
       </div>
 

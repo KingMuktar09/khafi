@@ -6,7 +6,7 @@ import { siteConfig } from '../../config/siteConfig';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="animate-fade-in mt-auto border-t border-[var(--border-main)] bg-[var(--bg-surface)] py-8 px-4 sm:px-8 text-xs font-mono text-[var(--text-muted)] transition-colors duration-200">
+    <footer className="animate-fade-in mt-auto border-t border-[var(--border-main)] bg-[var(--bg-header)] py-8 px-4 sm:px-8 text-xs font-mono text-[var(--text-muted)] transition-colors duration-200">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         
         {/* Brand */}
@@ -21,7 +21,7 @@ export const Footer: React.FC = () => {
               className="w-6 h-6 rounded-md object-cover border border-[var(--gold)]/30 shrink-0"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
-            <span className="font-serif font-bold text-sm tracking-wide text-[var(--text-main)]">
+            <span className="font-display font-bold text-sm tracking-wide text-[var(--text-main)]">
               Ilm-e-Ghayb Library
             </span>
           </button>
@@ -76,7 +76,7 @@ export const Footer: React.FC = () => {
         {/* Copyright */}
         <div className="text-[10px] text-[var(--text-faint)] text-center sm:text-right space-y-1">
           <p>Free books on Islamic history and wisdom &bull; Open to everyone</p>
-          <p>Amals and magic squares are at your own risk — Ghayb Chronicles and this library are not responsible for any consequences.</p>
+          <p>Amals and magic squares are at your own risk. Ghayb Chronicles and this library are not responsible for any consequences.</p>
         </div>
 
       </div>

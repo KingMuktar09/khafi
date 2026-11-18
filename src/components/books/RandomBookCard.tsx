@@ -41,7 +41,7 @@ export const RandomBookCard: React.FC = () => {
       <div className="flex items-center justify-between gap-3">
         <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full flex items-center gap-1.5 tracking-wide">
           <Shuffle className="w-3.5 h-3.5" />
-          <span>Surprise Me — a random book</span>
+          <span>Surprise Me. A random book</span>
         </span>
         <button
           type="button"

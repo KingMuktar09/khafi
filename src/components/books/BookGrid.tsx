@@ -18,7 +18,7 @@ export const BookGrid: React.FC<BookGridProps> = ({
 }) => {
   if (books.length === 0) {
     return (
-      <div className="py-12 px-4 text-center bg-[#121826]/40 border border-white/5 rounded-2xl max-w-lg mx-auto my-6">
+      <div className="py-12 px-4 text-center bg-[var(--bg-surface)]/60 border border-[var(--border-main)] rounded-2xl max-w-lg mx-auto my-6">
         <p className="font-serif text-[#f4f1ea] text-base mb-2">{emptyMessage}</p>
         <p className="text-xs text-gray-500">
           Try expanding your search parameters or explore other categories in the library.

@@ -848,7 +848,7 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-[#0d1117] space-y-4 font-mono text-xs text-[var(--text-muted)] p-6">
+      <div className="w-full h-full flex flex-col items-center justify-center bg-[#0a0806] space-y-4 font-mono text-xs text-[var(--text-muted)] p-6">
         <RefreshCw className="w-8 h-8 text-[var(--gold)] animate-spin" />
         <p className="text-[var(--gold)] font-semibold tracking-wider uppercase text-sm">
           {isSlowLoading ? 'Loading PDF... Please wait.' : 'Loading document...'}
@@ -902,7 +902,7 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
 
   return (
     <div
-      className="pdf-viewer-outer relative w-full h-full overflow-hidden flex flex-col bg-[#0d1117]"
+      className="pdf-viewer-outer relative w-full h-full overflow-hidden flex flex-col bg-[#0a0806]"
       style={{ overscrollBehavior: 'contain' }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -930,7 +930,7 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="pdf-viewport w-full h-full overflow-y-auto overflow-x-hidden relative flex flex-col items-center bg-[#0d1117] select-none"
+        className="pdf-viewport w-full h-full overflow-y-auto overflow-x-hidden relative flex flex-col items-center bg-[#0a0806] select-none"
         style={{
           touchAction: isZoomedIn ? 'none' : 'pan-y',
           WebkitOverflowScrolling: 'touch',

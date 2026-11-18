@@ -134,7 +134,7 @@ export const CoverImage: React.FC<CoverImageProps> = ({
   const fallbackSrc = generateFallbackCoverSvg(itemTitle, itemAuthor, itemCategory);
 
   return (
-    <div className="relative w-full h-full bg-[#0e1320] overflow-hidden group/cover">
+    <div className="relative w-full h-full bg-[#110e0a] overflow-hidden group/cover">
       <img
         src={fallbackSrc}
         alt={`Cover for ${itemTitle}`}

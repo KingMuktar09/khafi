@@ -18,7 +18,7 @@ export const HijriDate: React.FC = () => {
   return (
     <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full flex items-center gap-1.5 tracking-wide">
       <MoonStar className="w-3.5 h-3.5" />
-      <span title={`${gregorian} — tabular Islamic date, approximate, may differ from the sighted date by a day or two.`}>
+      <span title={`${gregorian}. Tabular Islamic date, approximate, may differ from the sighted date by a day or two.`}>
         {formatHijri(hijri)} (approx.)
       </span>
     </span>

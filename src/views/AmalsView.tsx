@@ -49,25 +49,25 @@ export const AmalsView: React.FC = () => {
       <div className="p-4 bg-amber-500/10 border-2 border-amber-500/60 rounded-xl flex items-start gap-3" role="alert">
         <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
         <p className="text-sm font-semibold text-[var(--text-main)] leading-relaxed">
-          Warning — do this at your own risk. Doing any amal on this page is fully your own choice and
+          Warning. Do this at your own risk. Doing any amal on this page is fully your own choice and
           your own risk. Ghayb Chronicles and the Ilm-e-Ghayb Library are NOT responsible for any
-          problems, harm, or consequences that follow — now or in the future.
+          problems, harm, or consequences that follow, now or in the future.
         </p>
       </div>
 
       {/* How this page works */}
-      <div className="p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl space-y-3">
-        <h2 className="font-semibold text-base text-[var(--text-main)]">How this page works</h2>
+      <div className="p-5 ms-panel rounded-xl space-y-3">
+        <h2 className="font-display font-semibold text-base text-[var(--text-main)]">How this page works</h2>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed">
           Each card below is one amal from the book. Tap its title to open it: you will see what it is
           for, the exact words to say, how to do it step by step, and the chapter and page in the book
           so you can check it yourself.
         </p>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-          These 25 amals come from the English translation of Shams al-Ma&apos;arif in this library —
+          These 25 amals come from the English translation of Shams al-Ma&apos;arif in this library:
           The Sun of Knowledge, translated by Amina Inloes (Revelore Press, 2021). The library holds
           only two books by al-Buni: this translation and an Arabic manuscript, so this section is
-          from the translation. Only simple, beginner-friendly practices are here — recitations, short
+          from the translation. Only simple, beginner-friendly practices are here: recitations, short
           prayers, or two rak&apos;ahs. Nothing that needs writing, amulets, fasting, seclusion, or
           contact with spirits.
         </p>

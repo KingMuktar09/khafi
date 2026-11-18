@@ -218,7 +218,7 @@ export const PdfReaderView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5.5rem)] md:h-[calc(100vh-8rem)] min-h-[480px] bg-[var(--bg-surface)] border border-[var(--border-main)] rounded overflow-hidden animate-fade-in my-1 sm:my-2">
+    <div className="flex flex-col h-[calc(100vh-5.5rem)] md:h-[calc(100vh-8rem)] min-h-[480px] ms-panel rounded overflow-hidden animate-fade-in my-1 sm:my-2">
       
       {/* Reader Advisory Modal before viewing */}
       <ReaderAdvisoryModal
@@ -349,7 +349,7 @@ export const PdfReaderView: React.FC = () => {
       </div>
 
       {/* Main Reader/Viewer Frame */}
-      <div className="flex-1 bg-black relative overflow-hidden flex items-center justify-center">
+      <div className="flex-1 bg-[#0a0806] relative overflow-hidden flex items-center justify-center">
         {renderViewerContent()}
 
         {/* Floating Fit to Page & Zoom Overlay for PDF documents (in-app canvas reader only) */}

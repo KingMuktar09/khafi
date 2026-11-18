@@ -43,7 +43,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0, o
     <div
       onClick={handleCardClick}
       style={{ '--motion-i': Math.min(index, 11) } as React.CSSProperties}
-      className="motion-card motion-item group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex flex-col h-full rounded-lg overflow-hidden"
+      className="motion-card motion-item group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex flex-col h-full rounded-[14px] overflow-hidden"
     >
       {/* Cover Image Container — fixed 2:3 book ratio so the grid never jumps while covers load */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-[var(--bg-main)]">

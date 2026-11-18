@@ -46,7 +46,7 @@ export const JourneysView: React.FC = () => {
           return (
             <div
               key={journey.id}
-              className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xs"
+              className="ms-panel rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xs"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -78,7 +78,7 @@ export const JourneysView: React.FC = () => {
                   </p>
                 )}
                 {pct === 100 && (
-                  <p className="text-[11px] text-emerald-400 font-semibold pt-1">Journey complete — well done.</p>
+                  <p className="text-[11px] text-emerald-400 font-semibold pt-1">Journey complete. Well done.</p>
                 )}
               </div>
 

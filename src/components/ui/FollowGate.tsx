@@ -75,13 +75,13 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             Ilm-e-Ghayb Library
           </h1>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-md mx-auto">
-            Books on the Quran, the Prophet's life, Sufi wisdom and Islamic history — with the source named in
-            every entry. Everyone is welcome, no account needed.
+            Books on the Quran, the Prophet's life, Sufi wisdom and Islamic history. Every entry names its source.
+            Everyone is welcome, no account needed.
           </p>
         </div>
 
         {/* Gate card */}
-        <div className="gate-glow bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
+        <div className="gate-glow ms-panel rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#962fbf] flex items-center justify-center shrink-0">
               <Instagram className="w-5 h-5 text-white" />
@@ -133,7 +133,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             {followed ? <Check className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-            <span>I followed — unlock the library</span>
+            <span>I followed, unlock the library</span>
           </button>
 
           {isGateKeySet(gateStatus) && (
@@ -182,7 +182,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
           <p className="text-[11px] text-[var(--text-faint)] leading-relaxed text-center flex items-start justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-px text-[var(--gold)]" />
             <span>
-              This is a free library, so unlocking works on trust — it does not
+              This is a free library, so unlocking works on trust. It does not
               check your Instagram account. Follow first, then tap unlock.
             </span>
           </p>

@@ -3,57 +3,92 @@
 @layer base {
   :root {
     color-scheme: dark;
-    /* Ilm-e-Ghayb Library palette: dark charcoal + deep navy + manuscript gold/bronze */
-    --bg-main: #08090D;
-    --bg-header: #0E1119;
-    --bg-surface: #12161F;
-    --bg-list: #0D1017;
-    --bg-hover: #181E2A;
-    --bg-accent: #232E42;
-    --border-main: #262E3F;
-    --border-subtle: #1B2230;
-    --text-main: #F5F7FA;
-    --text-muted: #AEB8CA;
-    --text-faint: #7F8BA0;
-    --gold: #C9A227;
-    --gold-light: #E3C766;
-    --gold-faint: rgba(201, 162, 39, 0.14);
-    --bronze: #A67C37;
-    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Ilm-e-Ghayb Library palette: the manuscript look, site-wide.
+       Warm dark brown-black, parchment text, manuscript gold. This is
+       the same language the study tools already use (the .ms-* tokens
+       below), so the whole site now reads as one book. */
+    --bg-main: #0a0806;
+    --bg-header: #0d0a07;
+    --bg-surface: #16120d;
+    --bg-list: #110e0a;
+    --bg-hover: #1d1710;
+    --bg-accent: #241c11;
+    --border-main: rgba(255, 255, 255, 0.11);
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --text-main: #ece6d8;
+    --text-muted: rgba(236, 230, 216, 0.66);
+    --text-faint: rgba(236, 230, 216, 0.42);
+    --gold: #e8b84f;
+    --gold-light: #e8c96a;
+    --gold-faint: rgba(232, 184, 79, 0.14);
+    --bronze: #e8a25c;
+    --font-display: 'Cormorant Garamond', 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Spectral', Georgia, 'Times New Roman', serif;
+    /* Manuscript tokens, shared by the tools (.ms-tools) and the
+       whole site (.ms-panel, .ms-eyebrow, .ms-title and friends). */
+    --ms-bg: #0a0806;
+    --ms-card-top: #16120d;
+    --ms-card-bottom: #110e0a;
+    --ms-field: #0b0907;
+    --ms-parchment: #ece6d8;
+    --ms-cream: #f3ecdc;
+    --ms-muted: rgba(236, 230, 216, 0.66);
+    --ms-faint: rgba(236, 230, 216, 0.42);
+    --ms-gold: #e8b84f;
+    --ms-gold-pale: #e8c96a;
+    --ms-amber: #e8a25c;
+    --ms-green: #8fce7f;
+    --ms-red: #e86a52;
+    --ms-border: rgba(255, 255, 255, 0.07);
+    --ms-border-strong: rgba(255, 255, 255, 0.11);
+    --ms-display: 'Cormorant Garamond', 'Fraunces', Georgia, serif;
+    --ms-body: 'Spectral', Georgia, 'Times New Roman', serif;
+    --ms-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   html.light-theme {
     color-scheme: light;
-    --bg-main: #F7F8FA;
-    --bg-header: #FFFFFF;
-    --bg-surface: #FFFFFF;
-    --bg-list: #F1F3F6;
-    --bg-hover: #E8ECF2;
-    --bg-accent: #E1E6F0;
-    --border-main: #D9DEE7;
-    --border-subtle: #EAEFF5;
-    --text-main: #172033;
-    --text-muted: #536176;
-    --text-faint: #6B7688;
-    --gold: #B88700;
-    --gold-light: #946B00;
-    --gold-faint: rgba(184, 135, 0, 0.12);
+    /* Light manuscript: warm parchment page, dark brown ink. */
+    --bg-main: #f5efe1;
+    --bg-header: #fffaf0;
+    --bg-surface: #fffaf0;
+    --bg-list: #f3ead6;
+    --bg-hover: #efe4cb;
+    --bg-accent: #e9dcc0;
+    --border-main: rgba(60, 45, 20, 0.2);
+    --border-subtle: rgba(60, 45, 20, 0.12);
+    --text-main: #2b2115;
+    --text-muted: rgba(43, 33, 21, 0.68);
+    --text-faint: rgba(43, 33, 21, 0.45);
+    --gold: #8a6d1f;
+    --gold-light: #6e5613;
+    --gold-faint: rgba(138, 109, 31, 0.12);
+    /* Manuscript tokens used OUTSIDE the tools room (eyebrows, panels)
+       go dark ink here, so they stay readable on parchment. Inside
+       .ms-tools the wrapper re-declares these same tokens dark, so the
+       tools room is untouched by this. */
+    --ms-parchment: #2b2115;
+    --ms-cream: #2b2115;
+    --ms-muted: rgba(43, 33, 21, 0.68);
+    --ms-faint: rgba(43, 33, 21, 0.45);
+    --ms-gold: #8a6d1f;
+    --ms-gold-pale: #6e5613;
   }
 
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Spectral', Georgia, 'Times New Roman', serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 }
 
-/* Typography: Fraunces (free, OFL) for display headings, Inter (free) for body/UI.
-   .font-display is the premium serif used for hero titles, section titles and
-   book titles. Body copy stays Inter for readability at small sizes. */
+/* Typography: Cormorant Garamond (free, OFL) for display headings,
+   Spectral (free, OFL) for body/UI, IBM Plex Mono for small labels.
+   .font-display is the serif used for hero titles, section titles and
+   book titles. Body copy stays Spectral for readability at small sizes. */
 .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
@@ -66,7 +101,7 @@
 }
 
 .font-mono {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .font-sans {
@@ -86,12 +121,12 @@ body {
 
 .hero-glow {
   background:
-    radial-gradient(60% 90% at 50% 0%, rgba(201, 162, 39, 0.12), transparent 70%),
-    radial-gradient(40% 60% at 85% 20%, rgba(38, 64, 120, 0.18), transparent 70%);
+    radial-gradient(60% 90% at 50% 0%, rgba(232, 184, 79, 0.12), transparent 70%),
+    radial-gradient(40% 60% at 85% 20%, rgba(232, 162, 92, 0.12), transparent 70%);
 }
 
 /* ---- Halftone dot texture, matching the official logo ----
-   The logo is a halftone print: gold dots on dark navy. The same dot
+   The logo is a halftone print: gold dots on warm dark brown. The same dot
    pattern, drawn in pure CSS (one radial-gradient tile, no image, no
    extra download, no layout cost), is used as decoration in a few
    places only: the home hero corner, the Ghayb Chronicles section
@@ -99,7 +134,7 @@ body {
    always masked to fade out, so text stays readable and phones stay
    smooth. In light theme the dots use the darker gold. */
 .halftone {
-  background-image: radial-gradient(circle, rgba(201, 162, 39, 0.14) 1px, transparent 1.5px);
+  background-image: radial-gradient(circle, rgba(232, 184, 79, 0.14) 1px, transparent 1.5px);
   background-size: 9px 9px;
   pointer-events: none;
 }
@@ -154,7 +189,7 @@ body {
 }
 @keyframes motion-gate-glow {
   0%, 100% { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-  50% { box-shadow: 0 25px 60px -12px rgba(201, 162, 39, 0.3), 0 0 0 1px rgba(201, 162, 39, 0.14); }
+  50% { box-shadow: 0 25px 60px -12px rgba(232, 184, 79, 0.3), 0 0 0 1px rgba(232, 184, 79, 0.14); }
 }
 @keyframes motion-breathe {
   0%, 100% { transform: scale(1); }
@@ -184,8 +219,8 @@ body {
 }
 .motion-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(201, 162, 39, 0.55);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(201, 162, 39, 0.18);
+  border-color: rgba(232, 184, 79, 0.55);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 184, 79, 0.18);
 }
 
 /* Slow gold light sweep across the hero card (transform-only, GPU-friendly). */
@@ -194,7 +229,7 @@ body {
   content: "";
   position: absolute;
   top: 0; bottom: 0; left: 0; width: 45%;
-  background: linear-gradient(100deg, transparent, rgba(201, 162, 39, 0.09), transparent);
+  background: linear-gradient(100deg, transparent, rgba(232, 184, 79, 0.09), transparent);
   transform: translateX(-160%) skewX(-12deg);
   animation: motion-sheen-sweep 7s ease-in-out infinite;
   pointer-events: none;
@@ -257,7 +292,7 @@ html {
 
 .card-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(201, 162, 39, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(232, 184, 79, 0.15);
 }
 
 /* Comfortable tap targets on phones */
@@ -326,19 +361,36 @@ html.reduced-motion *, html.reduced-motion ::before, html.reduced-motion ::after
 }
 
 /* ================================================================
-   MANUSCRIPT DESIGN SYSTEM — STUDY TOOLS ONLY
-   Everything in this block is scoped under .ms-tools, which is
-   applied only by ToolsLayout (the shared wrapper of the tools hub,
-   the 7 tool pages and the Ctrl+K overlay). The library, Home,
-   gate, navbar, footer and admin never see these rules.
-   Language: the reference site's warm manuscript look (warm dark
-   #0a0806, parchment #ece6d8, gold #e8b84f, Cormorant Garamond /
-   Spectral / IBM Plex Mono / Amiri), made cleaner: more air,
-   stronger contrast, consistent spacing, better mobile layout.
-   The tools panel stays dark in both app themes on purpose — it is
-   a dark study room. Only the look is copied; no prose, tables,
-   figures or code from the reference site are used anywhere.
+   MANUSCRIPT DESIGN SYSTEM — SITE-WIDE
+   The --ms-* tokens live on :root now, so the manuscript classes
+   (.ms-eyebrow, .ms-title, .ms-card, .ms-note-box and friends) work
+   everywhere, not only inside .ms-tools. The tools keep their own
+   .ms-tools wrapper (a dark study room, dark in both app themes).
+   The rest of the site uses the same tokens through the --bg-* /
+   --text-* / --gold variables above, plus .ms-panel for the warm
+   gradient card used on the hero, the gate card, book details and
+   the reader. Language: warm dark #0a0806, parchment #ece6d8,
+   gold #e8b84f, Cormorant Garamond / Spectral / IBM Plex Mono /
+   Amiri. Only the look is shared; no prose, tables, figures or
+   code from any other site is used anywhere.
    ================================================================ */
+
+/* Site-wide manuscript panel: warm gradient card. No padding and no
+   radius here on purpose — the element's own Tailwind classes set
+   those, so this class only adds the manuscript surface. */
+.ms-panel {
+  background: linear-gradient(180deg, var(--ms-card-top) 0%, var(--ms-card-bottom) 100%);
+  border: 1px solid var(--ms-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+/* In the light theme the site panels go light parchment, while the
+   tools room (.ms-tools) stays dark on purpose. */
+html.light-theme .ms-panel {
+  background: linear-gradient(180deg, #fffaf0 0%, #f3ead6 100%);
+  border-color: rgba(60, 45, 20, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 28px rgba(60, 45, 20, 0.12);
+}
+
 .ms-tools {
   --ms-bg: #0a0806;
   --ms-card-top: #16120d;

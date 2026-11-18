@@ -219,7 +219,7 @@ export const BookDetailsView: React.FC = () => {
       </div>
 
       {/* Details Panel */}
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="ms-panel rounded-2xl p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* Cover Preview */}
         <div className="md:col-span-4 flex flex-col items-center space-y-3">
@@ -355,7 +355,7 @@ export const BookDetailsView: React.FC = () => {
           {itemType === 'pdf' && <ReadingProgressTracker book={book} />}
 
           {/* Actions */}
-          <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl space-y-3 text-sm">
+          <div className="p-4 ms-panel rounded-xl space-y-3 text-sm">
             {isPaidForVisitor ? (
               <PaidLockScreen book={book} />
             ) : (
@@ -369,7 +369,7 @@ export const BookDetailsView: React.FC = () => {
                 {!isAdmin && book.isPaid && paidLinksMissing && (
                   <div className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2 space-y-2">
                     <p>
-                      Free for followers — this book is free for you. The live catalog didn’t load just now, so its Drive link is missing.
+                      Free for followers. This book is free for you. The live catalog did not load just now, so its Drive link is missing.
                     </p>
                     <button
                       type="button"
@@ -388,7 +388,7 @@ export const BookDetailsView: React.FC = () => {
                 )}
                 {!isAdmin && book.isPaid && !paidLinksMissing && (
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
-                    Free for followers — no payment needed.
+                    Free for followers. No payment needed.
                   </p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

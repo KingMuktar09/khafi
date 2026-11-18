@@ -204,7 +204,7 @@ export const LibraryView: React.FC = () => {
 
   if (appState.loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-8 text-center space-y-3 font-sans max-w-md mx-auto my-12 shadow-2xs animate-fade-in">
+      <div className="ms-panel rounded-xl p-8 text-center space-y-3 font-sans max-w-md mx-auto my-12 shadow-2xs animate-fade-in">
         <div className="w-10 h-10 border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--gold)] flex items-center justify-center rounded-lg mx-auto animate-spin">
           <RefreshCw className="w-5 h-5 text-[var(--gold)]" />
         </div>
@@ -220,7 +220,7 @@ export const LibraryView: React.FC = () => {
 
   if (appState.loadError) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-8 text-center space-y-4 font-sans max-w-md mx-auto my-12 shadow-2xs animate-fade-in">
+      <div className="ms-panel rounded-xl p-8 text-center space-y-4 font-sans max-w-md mx-auto my-12 shadow-2xs animate-fade-in">
         <div className="w-10 h-10 border border-amber-500/30 bg-amber-500/10 text-amber-500 flex items-center justify-center rounded-lg mx-auto">
           <AlertTriangle className="w-5 h-5 text-amber-500" />
         </div>
@@ -253,10 +253,11 @@ export const LibraryView: React.FC = () => {
       {/* Heading */}
       <div className="flex flex-wrap items-end justify-between gap-2 px-1">
         <div>
+          <span className="ms-eyebrow block">The Library</span>
           <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)]">{title}</h1>
           <p className="text-xs text-[var(--text-muted)] mt-1">
             {displayedBooks.length} {displayedBooks.length === 1 ? 'book' : 'books'}
-            {' — '}grouped by topic and category, no folders to open.
+            . Grouped by topic and category. No folders to open.
           </p>
         </div>
         <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full">
@@ -271,7 +272,7 @@ export const LibraryView: React.FC = () => {
           type="search"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="Search books — try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…"
+          placeholder="Search books: try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…"
           aria-label="Search books by title, author or topic"
           className="tap-target w-full pl-11 pr-4 py-3.5 text-sm sm:text-base bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)] shadow-lg"
         />
@@ -447,7 +448,7 @@ export const LibraryView: React.FC = () => {
 
       {/* Books — grouped by category and topic, as book cards. */}
       {displayedBooks.length === 0 ? (
-        <div className="py-12 px-4 text-center bg-[var(--bg-surface)] border border-dashed border-[var(--border-main)] rounded-xl">
+        <div className="py-12 px-4 text-center ms-panel rounded-xl">
           <p className="font-semibold text-sm text-[var(--text-main)]">
             {q ? `No books found for "${q}".` : 'No books match these filters.'}
           </p>
