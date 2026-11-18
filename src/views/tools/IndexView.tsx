@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -7,6 +9,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const IndexView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -18,21 +21,22 @@ export const IndexView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['index']}
-      title="Index"
-      eyebrow="Index"
-      subtitle="How the old books map themselves."
+      title={tTools('tools.index.title', lang)}
+      eyebrow={tTools('tools.index.eyebrow', lang)}
+      subtitle={tTools('tools.index.subtitle', lang)}
+      toolId="index"
       filter={filter}
     >
-      <div className="space-y-1.5" aria-label="Index results">
+      <div className="space-y-1.5" aria-label={tTools('tools.shell.aria.indexResults', lang)}>
         <label className="ms-label" htmlFor="index-search">
-          Search the index
+          {tTools('tools.index.searchLabel', lang)}
         </label>
         <input
           id="index-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or topic"
+          placeholder={tTools('tools.index.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

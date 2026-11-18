@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -7,6 +9,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const DurusView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -18,21 +21,22 @@ export const DurusView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['durus']}
-      title="Durus (Lessons)"
-      eyebrow="Lessons"
-      subtitle="Lessons on learning, from the old masters."
+      title={tTools('tools.durus.title', lang)}
+      eyebrow={tTools('tools.durus.eyebrow', lang)}
+      subtitle={tTools('tools.durus.subtitle', lang)}
+      toolId="durus"
       filter={filter}
     >
-      <div className="space-y-1.5" aria-label="Course entries">
+      <div className="space-y-1.5" aria-label={tTools('tools.shell.aria.courseEntries', lang)}>
         <label className="ms-label" htmlFor="durus-search">
-          Search lessons
+          {tTools('tools.durus.searchLabel', lang)}
         </label>
         <input
           id="durus-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by lesson or course"
+          placeholder={tTools('tools.durus.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

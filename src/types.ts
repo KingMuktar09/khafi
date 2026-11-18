@@ -115,7 +115,21 @@ export interface UserSettings {
   sortField: SortFieldSetting;
   sortDirection: SortDirectionSetting;
   filterType: FilterTypeSetting;
+  /**
+   * Site language. English is the primary language and the default for
+   * every visitor. Hinglish (Roman-script Hindi/Urdu, his reel voice)
+   * and Bengali (easy familiar words) are options in Settings only.
+   * Book titles, Arabic text, transliteration, names and the
+   * @ghayb.chronicles handle stay as they are in every language.
+   */
+  language: SiteLanguage;
 }
+
+/**
+ * The three site languages. 'hi' is Hinglish: Hindi/Urdu in Roman
+ * script, the way the channel's reels are narrated. 'bn' is Bengali.
+ */
+export type SiteLanguage = 'en' | 'hi' | 'bn';
 
 export interface Toast {
   id: string;

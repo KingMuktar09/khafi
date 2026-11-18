@@ -17,6 +17,7 @@ import {
   Bookmark,
 } from 'lucide-react';
 import { appState } from '../state/appState';
+import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
 import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, getDrivePreviewUrl, downloadBookFile } from '../utils/fileUtils';
@@ -27,6 +28,15 @@ import { storage } from '../services/storage';
 
 export const PdfReaderView: React.FC = () => {
   const bookId = appState.route.bookId;
+  const lang = appState.settings.language;
+  const typeLabelText = (label: string): string =>
+    label === 'Document' ? t('book.typeDocument', lang)
+    : label === 'Image' ? t('book.typeImage', lang)
+    : label === 'Video' ? t('book.typeVideo', lang)
+    : label === 'Audio' ? t('book.typeAudio', lang)
+    : label === 'Archive' ? t('book.typeArchive', lang)
+    : label === 'File' ? t('book.typeFile', lang)
+    : label;
   const book = bookId ? appState.getBookById(bookId) : undefined;
   const [showAdvisoryModal, setShowAdvisoryModal] = useState(!appState.hasAcknowledgedAdvisory());
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -99,13 +109,13 @@ export const PdfReaderView: React.FC = () => {
     return (
       <div className="py-20 text-center space-y-4 font-mono text-xs text-[var(--text-muted)]">
         <h2 className="font-serif font-bold text-2xl text-[var(--text-main)]">
-          Item Not Found
+          {t('book.notFound', lang)}
         </h2>
         <button
           onClick={() => router.navigate('library')}
           className="px-4 py-2 bg-[var(--gold)] text-black font-bold uppercase rounded"
         >
-          Return to Library
+          {t('book.returnToLibrary', lang)}
         </button>
       </div>
     );
@@ -124,7 +134,7 @@ export const PdfReaderView: React.FC = () => {
           <PaidLockScreen
             book={book}
             onBack={() => router.navigate('book', { bookId: book.id })}
-            backLabel="Back to book details"
+            backLabel={t('reader.backToDetails', lang)}
             onUnlocked={() => router.navigate('book', { bookId: book.id })}
           />
         </div>
@@ -155,7 +165,7 @@ export const PdfReaderView: React.FC = () => {
     const calcPage = totalPages ? Math.round((pct / 100) * totalPages) : undefined;
     appState.setReadingProgress(book.id, pct, calcPage, totalPages);
     appState.showToast(
-      pct === 100 ? `Marked "${book.title}" as completed!` : `Progress updated to ${pct}%`,
+      pct === 100 ? tf('reader.markedCompleted', lang, { title: book.title }) : tf('reader.progressUpdated', lang, { n: pct }),
       'success'
     );
   };
@@ -178,9 +188,9 @@ export const PdfReaderView: React.FC = () => {
           <div className="p-3 bg-[var(--gold-faint)] text-[var(--gold)] border border-[var(--border-main)] rounded inline-block">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <h3 className="font-serif font-bold text-lg text-[var(--text-main)]">No File Available</h3>
+          <h3 className="font-serif font-bold text-lg text-[var(--text-main)]">{t('reader.noFile', lang)}</h3>
           <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-            There is no direct file attached to this record.
+            {t('reader.noFileText', lang)}
           </p>
         </div>
       );
@@ -237,14 +247,14 @@ export const PdfReaderView: React.FC = () => {
           <button
             onClick={handleBack}
             className="px-2 py-1 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--gold)] border border-[var(--border-main)] rounded transition-colors shrink-0 flex items-center gap-1 font-bold text-xs cursor-pointer"
-            title="Return to Details"
+            title={t('reader.returnDetailsTitle', lang)}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="text-[11px]">Back</span>
+            <span className="text-[11px]">{t('book.back', lang)}</span>
           </button>
 
           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border uppercase shrink-0 ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
-            {typeLabel}
+            {typeLabelText(typeLabel)}
           </span>
 
           <h1
@@ -265,7 +275,7 @@ export const PdfReaderView: React.FC = () => {
                 ? 'bg-amber-400/15 border-amber-400/50 text-amber-400'
                 : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] border-[var(--border-main)]'
             }`}
-            title={isFav ? 'Unfavorite item' : 'Favorite item'}
+            title={isFav ? t('book.unfavoriteAria', lang) : t('book.favoriteAria', lang)}
           >
             <Star className={`w-3.5 h-3.5 ${isFav ? 'fill-amber-400 text-amber-400' : ''}`} />
           </button>
@@ -275,7 +285,7 @@ export const PdfReaderView: React.FC = () => {
               type="button"
               onClick={() => downloadBookFile(book)}
               className="p-1.5 text-xs bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded transition-colors flex items-center justify-center cursor-pointer"
-              title="Download File"
+              title={t('reader.downloadTitle', lang)}
             >
               <Download className="w-3.5 h-3.5 text-[var(--gold)]" />
             </button>
@@ -289,16 +299,16 @@ export const PdfReaderView: React.FC = () => {
           <button
             onClick={handleBack}
             className="p-1.5 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--gold)] border border-[var(--border-main)] rounded transition-colors shrink-0 flex items-center gap-1 font-bold text-xs cursor-pointer"
-            title="Return to Details"
+            title={t('reader.returnDetailsTitle', lang)}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span>{t('book.back', lang)}</span>
           </button>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold border uppercase ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
-                {typeLabel}
+                {typeLabelText(typeLabel)}
               </span>
               <h1 className="font-serif font-bold text-sm sm:text-base text-[var(--text-main)] truncate">
                 {book.title}
@@ -306,7 +316,7 @@ export const PdfReaderView: React.FC = () => {
             </div>
             {book.author && (
               <p className="text-[10px] text-[var(--text-muted)] truncate">
-                AUTHOR / CREATOR // {book.author.toUpperCase()}
+                {tf('reader.authorLine', lang, { author: book.author.toUpperCase() })}
               </p>
             )}
           </div>
@@ -322,17 +332,17 @@ export const PdfReaderView: React.FC = () => {
                 ? 'bg-amber-400/15 border-amber-400/50 text-amber-400 hover:bg-amber-400/25'
                 : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] border-[var(--border-main)]'
             }`}
-            title={isFav ? 'Unfavorite item' : 'Favorite item'}
+            title={isFav ? t('book.unfavoriteAria', lang) : t('book.favoriteAria', lang)}
           >
             {isFav ? (
               <>
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span>Favorited</span>
+                <span>{t('book.favorited', lang)}</span>
               </>
             ) : (
               <>
                 <Star className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                <span>Favorite</span>
+                <span>{t('book.favoriteLabel', lang)}</span>
               </>
             )}
           </button>
@@ -344,7 +354,7 @@ export const PdfReaderView: React.FC = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded uppercase transition-colors cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-[var(--gold)]" />
-              <span>Download</span>
+              <span>{t('reader.download', lang)}</span>
             </button>
           )}
         </div>
@@ -379,7 +389,7 @@ export const PdfReaderView: React.FC = () => {
             onClick={() => {
               appState.toggleBookmark(book.id, currentPage);
               appState.showToast(
-                isBookmarked ? `Removed bookmark on page ${currentPage}` : `Bookmarked page ${currentPage}`,
+                isBookmarked ? tf('reader.bookmarkRemoved', lang, { n: currentPage }) : tf('reader.bookmarkAdded', lang, { n: currentPage }),
                 'success'
               );
             }}
@@ -388,10 +398,10 @@ export const PdfReaderView: React.FC = () => {
                 ? 'bg-[var(--gold)] text-black border-[var(--gold)] font-bold'
                 : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border-[var(--border-main)]'
             }`}
-            title={isBookmarked ? 'Remove this bookmark' : 'Bookmark this page'}
+            title={isBookmarked ? t('reader.removeBookmark', lang) : t('reader.bookmarkThis', lang)}
           >
             <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-black' : ''}`} />
-            <span>{isBookmarked ? `Bookmarked p.${currentPage}` : `Bookmark p.${currentPage}`}</span>
+            <span>{isBookmarked ? tf('reader.bookmarked', lang, { n: currentPage }) : tf('reader.bookmark', lang, { n: currentPage })}</span>
           </button>
 
           <form
@@ -403,7 +413,7 @@ export const PdfReaderView: React.FC = () => {
             className="flex items-center gap-1.5"
           >
             <label className="text-[10px] text-[var(--text-muted)] uppercase font-bold" htmlFor="reader-jump-page">
-              Go to page:
+              {t('reader.goToPage', lang)}
             </label>
             <input
               id="reader-jump-page"
@@ -418,34 +428,34 @@ export const PdfReaderView: React.FC = () => {
               type="submit"
               className="px-2.5 py-1 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded text-xs font-bold cursor-pointer"
             >
-              Go
+              {t('reader.go', lang)}
             </button>
           </form>
 
           {bookmarks.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold">Bookmarks:</span>
+              <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold">{t('reader.bookmarksLabel', lang)}</span>
               {bookmarks.map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => jumpToPage(p)}
                   className="px-2 py-1 bg-[var(--gold-faint)] text-[var(--gold)] border border-[var(--gold)]/40 rounded text-xs font-bold cursor-pointer hover:bg-[var(--gold)] hover:text-black transition-colors"
-                  title={`Jump to page ${p}`}
+                  title={tf('reader.jumpToPage', lang, { n: p })}
                 >
                   p.{p}
                 </button>
               ))}
               {isDriveBook && (
                 <span className="text-[10px] text-[var(--text-muted)]">
-                  Drive book — jump to the page in the Drive viewer.
+                  {t('reader.driveJumpNote', lang)}
                 </span>
               )}
             </div>
           )}
           {bookmarks.length === 0 && isDriveBook && (
             <span className="text-[10px] text-[var(--text-muted)]">
-              This book opens in Drive — your last page is saved, bookmark a page to come back to it.
+              {t('reader.driveSavedNote', lang)}
             </span>
           )}
         </div>
@@ -460,9 +470,9 @@ export const PdfReaderView: React.FC = () => {
             <div className="flex items-center justify-between gap-2 text-[11px]">
               <div className="flex items-center gap-1.5 min-w-0">
                 <BookOpen className="w-3.5 h-3.5 text-[var(--gold)] shrink-0" />
-                <span className="text-[var(--text-muted)] uppercase font-bold text-[10px]">Progress:</span>
+                <span className="text-[var(--text-muted)] uppercase font-bold text-[10px]">{t('reader.progress', lang)}</span>
                 <span className={`font-bold ${isCompleted ? 'text-emerald-400' : 'text-[var(--gold)]'}`}>
-                  {percentage}% {isCompleted ? 'Completed' : 'Read'}
+                  {percentage}% {isCompleted ? t('reader.completed', lang) : t('reader.read', lang)}
                 </span>
               </div>
 
@@ -472,7 +482,7 @@ export const PdfReaderView: React.FC = () => {
                   onClick={() => handleUpdateProgress(100)}
                   className="text-[10px] text-[var(--gold)] hover:underline cursor-pointer font-bold"
                 >
-                  Mark Done ✔
+                  {t('reader.markDone', lang)}
                 </button>
               )}
             </div>
@@ -493,7 +503,7 @@ export const PdfReaderView: React.FC = () => {
                   type="button"
                   onClick={handleZoomOut}
                   className="py-1 bg-[var(--bg-surface)] active:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded cursor-pointer font-bold text-xs flex items-center justify-center"
-                  title="Zoom Out"
+                  title={t('reader.zoomOut', lang)}
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
@@ -506,10 +516,10 @@ export const PdfReaderView: React.FC = () => {
                       ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
                       : 'bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)]'
                   }`}
-                  title="Fit to Page"
+                  title={t('reader.fitPage', lang)}
                 >
                   <Minimize2 className="w-3 h-3" />
-                  <span className="text-[10px]">Page</span>
+                  <span className="text-[10px]">{t('reader.page', lang)}</span>
                 </button>
 
                 <button
@@ -520,17 +530,17 @@ export const PdfReaderView: React.FC = () => {
                       ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
                       : 'bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)]'
                   }`}
-                  title="Fit to Width"
+                  title={t('reader.fitWidth', lang)}
                 >
                   <Maximize2 className="w-3 h-3" />
-                  <span className="text-[10px]">Width</span>
+                  <span className="text-[10px]">{t('reader.width', lang)}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleZoomIn}
                   className="py-1 bg-[var(--bg-surface)] active:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded cursor-pointer font-bold text-xs flex items-center justify-center"
-                  title="Zoom In"
+                  title={t('reader.zoomIn', lang)}
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
@@ -543,9 +553,9 @@ export const PdfReaderView: React.FC = () => {
                       ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
                       : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-main)]'
                   }`}
-                  title="Toggle 100% Zoom"
+                  title={t('reader.resetZoom', lang)}
                 >
-                  {fitMode === 'page' ? 'Page' : fitMode === 'width' ? 'Width' : `${zoomLevel}%`}
+                  {fitMode === 'page' ? t('reader.page', lang) : fitMode === 'width' ? t('reader.width', lang) : `${zoomLevel}%`}
                 </button>
               </div>
             </div>
@@ -556,9 +566,9 @@ export const PdfReaderView: React.FC = () => {
           <div className="hidden md:flex bg-[var(--bg-main)] border-t border-[var(--border-main)] px-4 py-2 items-center justify-between gap-3 shrink-0 font-mono text-xs">
             <div className="flex items-center gap-3">
               <BookOpen className="w-4 h-4 text-[var(--gold)]" />
-              <span className="text-[var(--text-muted)] uppercase text-[11px] font-bold">Progress:</span>
+              <span className="text-[var(--text-muted)] uppercase text-[11px] font-bold">{t('reader.progress', lang)}</span>
               <span className={`font-bold ${isCompleted ? 'text-emerald-400' : 'text-[var(--gold)]'}`}>
-                {percentage}% {isCompleted ? 'Completed' : 'Read'}
+                {percentage}% {isCompleted ? t('reader.completed', lang) : t('reader.read', lang)}
               </span>
 
               <div className="w-32 bg-[var(--bg-surface)] h-2 border border-[var(--border-main)] rounded relative overflow-hidden">
@@ -577,7 +587,7 @@ export const PdfReaderView: React.FC = () => {
                   type="button"
                   onClick={handleZoomOut}
                   className="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded cursor-pointer transition-colors"
-                  title="Zoom Out"
+                  title={t('reader.zoomOut', lang)}
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
@@ -590,10 +600,10 @@ export const PdfReaderView: React.FC = () => {
                       ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-main)] border-[var(--border-main)]'
                   }`}
-                  title="Fit Whole Page"
+                  title={t('reader.fitWholePage', lang)}
                 >
                   <Minimize2 className="w-3 h-3" />
-                  <span>Fit Page</span>
+                  <span>{t('reader.fitPage', lang)}</span>
                 </button>
 
                 <button
@@ -604,21 +614,21 @@ export const PdfReaderView: React.FC = () => {
                       ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-main)] border-[var(--border-main)]'
                   }`}
-                  title="Fit Page Width"
+                  title={t('reader.fitPageWidth', lang)}
                 >
                   <Maximize2 className="w-3 h-3" />
-                  <span>Fit Width</span>
+                  <span>{t('reader.fitWidth', lang)}</span>
                 </button>
 
                 <span className="text-[10px] font-bold text-[var(--gold)] px-1 font-mono min-w-[38px] text-center">
-                  {fitMode === 'page' ? 'Page' : fitMode === 'width' ? 'Width' : `${zoomLevel}%`}
+                  {fitMode === 'page' ? t('reader.page', lang) : fitMode === 'width' ? t('reader.width', lang) : `${zoomLevel}%`}
                 </span>
 
                 <button
                   type="button"
                   onClick={handleZoomIn}
                   className="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded cursor-pointer transition-colors"
-                  title="Zoom In"
+                  title={t('reader.zoomIn', lang)}
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
@@ -627,7 +637,7 @@ export const PdfReaderView: React.FC = () => {
                   type="button"
                   onClick={handleResetZoom100}
                   className="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded cursor-pointer transition-colors"
-                  title="Reset Zoom (100%)"
+                  title={t('reader.resetZoom', lang)}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
@@ -636,7 +646,7 @@ export const PdfReaderView: React.FC = () => {
 
               {/* Quick Set Progress Presets */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-[var(--text-muted)] uppercase mr-1">Set:</span>
+                <span className="text-[10px] text-[var(--text-muted)] uppercase mr-1">{t('reader.setLabel', lang)}</span>
                 {[25, 50, 75, 100].map((p) => (
                   <button
                     key={p}

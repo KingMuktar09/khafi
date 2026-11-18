@@ -1,9 +1,13 @@
 import React from 'react';
 import { ToolsLayout } from './ToolsLayout';
+import { appState } from '../../state/appState';
+import { localizeAlAsrarIntro, tTools, tfTools } from '../../data/i18n-tools';
 import type { AlAsrarEntry, FilledToolContent } from '../../data/alAsrarContent';
 
 interface FilledToolPageProps {
   content: FilledToolContent;
+  /** Stable key of the tool in AL_ASRAR_TOOLS, for its localized intro. */
+  toolId?: string;
   title: string;
   eyebrow?: string;
   subtitle?: string;
@@ -21,20 +25,25 @@ interface FilledToolPageProps {
  */
 export const FilledToolPage: React.FC<FilledToolPageProps> = ({
   content,
+  toolId,
   title,
   eyebrow,
   subtitle,
   children,
   filter,
 }) => {
+  const lang = appState.settings.language;
   const entries = filter ? content.entries.filter(filter) : content.entries;
+  const intro = toolId ? localizeAlAsrarIntro(toolId, content.intro, lang) : content.intro;
 
   return (
     <ToolsLayout title={title} eyebrow={eyebrow} subtitle={subtitle}>
-      <section className="ms-card space-y-3" aria-label="About this section">
-        <p className="ms-body">{content.intro}</p>
+      <section className="ms-card space-y-3" aria-label={tTools('tools.shell.aboutSection', lang)}>
+        <p className="ms-body">{intro}</p>
         <p className="ms-body ms-muted">
-          {content.entries.length} {content.entries.length === 1 ? 'entry' : 'entries'}, each with its source named.
+          {content.entries.length === 1
+            ? tTools('tools.shell.entriesOne', lang)
+            : tfTools('tools.shell.entriesMany', lang, { n: content.entries.length })}
         </p>
       </section>
 
@@ -54,12 +63,12 @@ export const FilledToolPage: React.FC<FilledToolPageProps> = ({
                 {entry.meaning ? <p className="ms-body">{entry.meaning}</p> : null}
               </div>
             ) : null}
-            <p className="ms-body ms-muted text-sm">Source: {entry.source}</p>
+            <p className="ms-body ms-muted text-sm">{tTools('tools.common.source', lang)}: {entry.source}</p>
           </article>
         ))}
         {entries.length === 0 ? (
           <p className="ms-body text-center py-6" role="status">
-            No entries match this filter.
+            {tTools('tools.shell.noEntriesMatch', lang)}
           </p>
         ) : null}
       </div>

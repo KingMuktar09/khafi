@@ -1,4 +1,5 @@
-import { ReadingProgress, ThemeMode, UserSettings } from '../types';
+import { ReadingProgress, ThemeMode, UserSettings, SiteLanguage } from '../types';
+import { resolveLanguage } from '../data/i18n';
 import type { ShelfMap, ShelfStatus } from '../data/tools';
 import { toISODateLocal } from '../data/tools';
 
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   sortField: 'name',
   sortDirection: 'asc',
   filterType: 'all',
+  language: 'en',
 };
 
 export const storage = {
@@ -170,6 +172,8 @@ export const storage = {
           filterType: 'all',
           sortField: parsed.sortField || 'name',
           sortDirection: parsed.sortDirection || 'asc',
+          // Unknown stored language falls back to English (the default).
+          language: resolveLanguage(parsed.language),
         };
       }
     } catch {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Compass, BookOpen, ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
 import { appState } from '../state/appState';
+import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
 import { BookGrid } from '../components/books/BookGrid';
 import { FINDER_MOODS, recommendBooks } from '../data/tools';
@@ -14,6 +15,7 @@ import type { FinderAnswers, FinderFormat, FinderLevel, FinderPick } from '../da
  * order, with reasons from each book's own topic and category.
  */
 export const BookFinderView: React.FC = () => {
+  const lang = appState.settings.language;
   const [moodId, setMoodId] = useState<string | null>(null);
   const [level, setLevel] = useState<FinderLevel | null>(null);
   const [format, setFormat] = useState<FinderFormat | null>(null);
@@ -39,10 +41,10 @@ export const BookFinderView: React.FC = () => {
       <div className="px-1">
         <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)] flex items-center gap-2">
           <Compass className="w-6 h-6 text-[var(--gold)]" />
-          <span>Find My Next Book</span>
+          <span>{t('finder.title', lang)}</span>
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Three quick questions. Then three real books from this library, picked for your mood.
+          {t('finder.subtitle', lang)}
         </p>
       </div>
 
@@ -61,7 +63,7 @@ export const BookFinderView: React.FC = () => {
           </span>
         ))}
         <span className="text-xs text-[var(--text-muted)] ml-1">
-          {step === 4 ? 'Your books' : `Question ${step} of 3`}
+          {step === 4 ? t('finder.yourBooks', lang) : tf('finder.questionOf', lang, { n: step })}
         </span>
         {picks && (
           <button
@@ -70,14 +72,14 @@ export const BookFinderView: React.FC = () => {
             className="ml-auto text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-semibold flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Start again</span>
+            <span>{t('finder.startAgain', lang)}</span>
           </button>
         )}
       </div>
 
       {step === 1 && (
         <section className="space-y-3">
-          <h2 className="font-semibold text-lg text-[var(--text-main)] px-1">What are you in the mood for?</h2>
+          <h2 className="font-semibold text-lg text-[var(--text-main)] px-1">{t('finder.q1', lang)}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {FINDER_MOODS.map((m) => {
               const count = appState.getVisibleBooks().filter((b) => b.category === m.category).length;
@@ -88,9 +90,9 @@ export const BookFinderView: React.FC = () => {
                   onClick={() => setMoodId(m.id)}
                   className="tap-target text-left p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-1"
                 >
-                  <span className="font-display font-semibold text-base text-[var(--text-main)]">{m.label}</span>
-                  <span className="block text-xs text-[var(--text-muted)] leading-relaxed">{m.blurb}</span>
-                  <span className="block text-[11px] text-[var(--gold)] font-semibold">{count} books</span>
+                  <span className="font-display font-semibold text-base text-[var(--text-main)]">{t(`finder.mood.${m.id}.label`, lang)}</span>
+                  <span className="block text-xs text-[var(--text-muted)] leading-relaxed">{t(`finder.mood.${m.id}.blurb`, lang)}</span>
+                  <span className="block text-[11px] text-[var(--gold)] font-semibold">{tf(count === 1 ? 'library.countOne' : 'library.countMany', lang, { n: count })}</span>
                 </button>
               );
             })}
@@ -101,7 +103,7 @@ export const BookFinderView: React.FC = () => {
       {step === 2 && mood && (
         <section className="space-y-3">
           <h2 className="font-semibold text-lg text-[var(--text-main)] px-1">
-            {mood.label}. Starting out, or going deep?
+            {tf('finder.q2', lang, { mood: t(`finder.mood.${mood.id}.label`, lang) })}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
@@ -109,9 +111,9 @@ export const BookFinderView: React.FC = () => {
               onClick={() => setLevel('begin')}
               className="tap-target text-left p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-1"
             >
-              <span className="font-display font-semibold text-base text-[var(--text-main)]">Starting out</span>
+              <span className="font-display font-semibold text-base text-[var(--text-main)]">{t('finder.begin', lang)}</span>
               <span className="block text-xs text-[var(--text-muted)] leading-relaxed">
-                The first books in this category. The foundations, in the library's own order.
+                {t('finder.beginBlurb', lang)}
               </span>
             </button>
             <button
@@ -119,9 +121,9 @@ export const BookFinderView: React.FC = () => {
               onClick={() => setLevel('deep')}
               className="tap-target text-left p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-1"
             >
-              <span className="font-display font-semibold text-base text-[var(--text-main)]">Going deep</span>
+              <span className="font-display font-semibold text-base text-[var(--text-main)]">{t('finder.deep', lang)}</span>
               <span className="block text-xs text-[var(--text-muted)] leading-relaxed">
-                Deeper books in this category, for when the basics are already familiar.
+                {t('finder.deepBlurb', lang)}
               </span>
             </button>
           </div>
@@ -130,12 +132,12 @@ export const BookFinderView: React.FC = () => {
 
       {step === 3 && mood && level && (
         <section className="space-y-3">
-          <h2 className="font-semibold text-lg text-[var(--text-main)] px-1">Any kind of book, or one kind only?</h2>
+          <h2 className="font-semibold text-lg text-[var(--text-main)] px-1">{t('finder.q3', lang)}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {([
-              { key: 'any', label: 'Any book', blurb: 'PDF books and notes together.' },
-              { key: 'pdf', label: 'PDF books', blurb: 'Full books in PDF only.' },
-              { key: 'notes', label: 'Notes', blurb: 'Short notes and manuscripts only.' },
+              { key: 'any', label: t('finder.formatAny', lang), blurb: t('finder.formatAnyBlurb', lang) },
+              { key: 'pdf', label: t('finder.formatPdf', lang), blurb: t('finder.formatPdfBlurb', lang) },
+              { key: 'notes', label: t('finder.formatNotes', lang), blurb: t('finder.formatNotesBlurb', lang) },
             ] as const).map((opt) => (
               <button
                 key={opt.key}
@@ -160,17 +162,17 @@ export const BookFinderView: React.FC = () => {
             <Sparkles className="w-5 h-5 text-[var(--gold)] shrink-0 mt-0.5" />
             <div>
               <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-                For a {mood.label.toLowerCase()} mood. {level === 'begin' ? 'starting out' : 'going deep'}
+                {tf('finder.resultTitle', lang, { mood: t(`finder.mood.${mood.id}.label`, lang).toLowerCase(), level: t(level === 'begin' ? 'finder.levelBegin' : 'finder.levelDeep', lang) })}
               </h2>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
-                Three books from this library, in the order the library arranges them. Tap one to open it.
+                {t('finder.resultText', lang)}
               </p>
             </div>
           </div>
           {picks.length === 0 ? (
             <div className="py-10 px-4 text-center bg-[var(--bg-surface)] border border-dashed border-[var(--border-main)] rounded-xl">
-              <p className="font-semibold text-sm text-[var(--text-main)]">No books match that combination.</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">Try a different format, or any book.</p>
+              <p className="font-semibold text-sm text-[var(--text-main)]">{t('finder.noMatch', lang)}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">{t('finder.tryDifferent', lang)}</p>
             </div>
           ) : (
             <>
@@ -192,7 +194,7 @@ export const BookFinderView: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <BookGrid books={picks.map((p) => p.book)} emptyMessage="No books found." />
+              <BookGrid books={picks.map((p) => p.book)} emptyMessage={t('finder.noBooks', lang)} />
             </>
           )}
           <div className="flex flex-wrap gap-2">
@@ -201,7 +203,7 @@ export const BookFinderView: React.FC = () => {
               onClick={reset}
               className="tap-target px-4 py-2.5 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-xs rounded-lg cursor-pointer"
             >
-              Find another book
+              {t('finder.findAnother', lang)}
             </button>
             <button
               type="button"
@@ -209,7 +211,7 @@ export const BookFinderView: React.FC = () => {
               className="tap-target px-4 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs rounded-lg cursor-pointer flex items-center gap-1.5"
             >
               <BookOpen className="w-4 h-4" />
-              <span>Browse all books</span>
+              <span>{t('finder.browseAll', lang)}</span>
             </button>
           </div>
         </section>

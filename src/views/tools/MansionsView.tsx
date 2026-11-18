@@ -6,6 +6,8 @@ import {
   MANSION_SIZE_DEG,
   MANSION_SOURCE,
 } from '../../data/mansions';
+import { appState } from '../../state/appState';
+import { tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -15,6 +17,7 @@ import { ToolsLayout } from './ToolsLayout';
  * moved here: the offset control shifts every mansion's range.
  */
 export const MansionsView: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
   const [offsetInput, setOffsetInput] = useState('0');
 
@@ -30,25 +33,25 @@ export const MansionsView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Lunar Mansions"
-      eyebrow="Time & Heavens"
-      subtitle="The 28 stations of the Moon (manazil al-qamar). Today's mansion is highlighted; the start point below is a convention you can move."
+      title={tTools('tools.mansions.title', lang)}
+      eyebrow={tTools('tools.mansions.eyebrow', lang)}
+      subtitle={tTools('tools.mansions.subtitle', lang)}
     >
       <section className="ms-card space-y-4">
-        <h2 className="ms-h2">Today&apos;s mansion</h2>
+        <h2 className="ms-h2">{tTools('tools.mansions.todayTitle', lang)}</h2>
         <p className="ms-body">
-          The Moon is at {formatDeg(moonLongitude)} ecliptic longitude, in{' '}
+          {tfTools('tools.mansions.todayBodyA', lang, { deg: formatDeg(moonLongitude) })}{' '}
           <span className="ms-ink font-medium">
             {todayMansion.index + 1}. {todayMansion.name}
           </span>{' '}
           <span className="ms-arabic-sm" dir="rtl" lang="ar">
             {todayMansion.arabic}
           </span>
-          {offset !== 0 ? ` (with a start offset of ${offset}°)` : ''}.
+          {offset !== 0 ? tfTools('tools.mansions.todayOffset', lang, { offset }) : ''}.
         </p>
         <div className="space-y-1.5">
           <label className="ms-label" htmlFor="mansions-offset">
-            Start offset (degrees) — a convention, not a fixed fact
+            {tTools('tools.mansions.offsetLabel', lang)}
           </label>
           <input
             id="mansions-offset"
@@ -59,10 +62,7 @@ export const MansionsView: React.FC = () => {
             onChange={(event) => setOffsetInput(event.target.value)}
           />
           <p className="ms-note">
-            The table below starts at 0° with al-Sharatayn by convention. Setting an offset of, say,
-            5° moves the start point to 5°, so every mansion&apos;s range shifts by 5°. Other
-            traditions start the count elsewhere — this control lets you use their start point
-            instead. The Moon&apos;s position itself comes from the Astronomy Engine.
+            {tTools('tools.mansions.offsetNote', lang)}
           </p>
         </div>
       </section>
@@ -71,10 +71,10 @@ export const MansionsView: React.FC = () => {
         <table className="ms-table">
           <thead>
             <tr className="text-left">
-              <th scope="col" className="px-4 py-3 font-medium">#</th>
-              <th scope="col" className="px-4 py-3 font-medium">Mansion</th>
-              <th scope="col" className="px-4 py-3 font-medium">Arabic</th>
-              <th scope="col" className="px-4 py-3 font-medium text-right">Degrees</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.mansions.thHash', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.mansions.thMansion', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.mansions.thArabic', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.mansions.thDegrees', lang)}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,12 +89,12 @@ export const MansionsView: React.FC = () => {
                 >
                   <td className="px-4 py-2.5 ms-num">
                     {mansion.index + 1}
-                    {isToday ? ' — today' : ''}
+                    {isToday ? tTools('tools.mansions.todaySuffix', lang) : ''}
                   </td>
                   <td className="px-4 py-2.5">
                     <span className="ms-ink">{mansion.name}</span>
                     {mansion.alternateName ? (
-                      <span className="ms-muted block text-sm">also {mansion.alternateName}</span>
+                      <span className="ms-muted block text-sm">{tTools('tools.mansions.alsoPrefix', lang)}{mansion.alternateName}</span>
                     ) : null}
                   </td>
                   <td className="px-4 py-2.5">
@@ -113,8 +113,7 @@ export const MansionsView: React.FC = () => {
       </section>
 
       <p className="ms-note">
-        {MANSION_CONVENTION} Source: {MANSION_SOURCE}. Each mansion covers 360 / 28 = about
-        12.857°. The list is a traditional table, not a modern astronomical fact.
+        {tTools('tools.data.mansionConvention', lang)} {tTools('tools.common.source', lang)}: {MANSION_SOURCE}. {tTools('tools.mansions.footerTail', lang)}
       </p>
     </ToolsLayout>
   );

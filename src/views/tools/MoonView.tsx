@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { getMansion, getMoonInfo, getMoonLongitude } from '../../utils/astronomy';
 import { MANSION_CONVENTION, MANSION_SOURCE } from '../../data/mansions';
+import { appState } from '../../state/appState';
+import { localizeMoonMethod, localizePhaseName, tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -8,6 +10,7 @@ import { ToolsLayout } from './ToolsLayout';
  * lunar mansion, worked out with the Astronomy Engine. Facts only.
  */
 export const MoonView: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
 
   const moon = useMemo(() => getMoonInfo(now), [now]);
@@ -16,37 +19,37 @@ export const MoonView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Moon"
-      eyebrow="Time & Heavens"
-      subtitle="The Moon's phase, how much of it is lit, the lunar day, and the mansion it sits in."
+      title={tTools('tools.moon.title', lang)}
+      eyebrow={tTools('tools.moon.eyebrow', lang)}
+      subtitle={tTools('tools.moon.subtitle', lang)}
     >
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">{moon.phaseName}</h2>
+        <h2 className="ms-h2">{localizePhaseName(moon.phaseName, lang)}</h2>
         <dl className="space-y-2">
           <div className="flex justify-between gap-4">
-            <dt className="ms-body">Phase angle</dt>
+            <dt className="ms-body">{tTools('tools.moon.phaseAngle', lang)}</dt>
             <dd className="ms-num ms-ink">{moon.phaseAngle.toFixed(1)}°</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="ms-body">Illumination</dt>
+            <dt className="ms-body">{tTools('tools.moon.illumination', lang)}</dt>
             <dd className="ms-num ms-ink">{(moon.illumination * 100).toFixed(1)}%</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="ms-body">Lunar day</dt>
+            <dt className="ms-body">{tTools('tools.moon.lunarDay', lang)}</dt>
             <dd className="ms-num ms-ink">
-              Day {moon.lunarDay} of 30
+              {tfTools('tools.moon.lunarDayValue', lang, { n: moon.lunarDay })}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="ms-body">Moon&apos;s ecliptic longitude</dt>
+            <dt className="ms-body">{tTools('tools.moon.longitude', lang)}</dt>
             <dd className="ms-num ms-ink">{longitude.toFixed(2)}°</dd>
           </div>
         </dl>
-        <p className="ms-note">Method: {moon.method}. Phase angle 0° is new moon, 180° is full moon.</p>
+        <p className="ms-note">{tfTools('tools.moon.methodNote', lang, { method: localizeMoonMethod(moon.method, lang) })}</p>
       </section>
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">Current mansion</h2>
+        <h2 className="ms-h2">{tTools('tools.moon.currentMansion', lang)}</h2>
         <p className="ms-body">
           <span className="ms-ink font-medium">
             {mansion.index + 1}. {mansion.name}
@@ -57,7 +60,7 @@ export const MoonView: React.FC = () => {
           {mansion.alternateName ? (
             <>
               {' '}
-              <span className="ms-muted">(also called {mansion.alternateName})</span>
+              <span className="ms-muted">{tfTools('tools.moon.alsoCalled', lang, { name: mansion.alternateName })}</span>
             </>
           ) : null}
         </p>
@@ -65,13 +68,12 @@ export const MoonView: React.FC = () => {
           {mansion.startDeg.toFixed(2)}° – {mansion.endDeg.toFixed(2)}°
         </p>
         <p className="ms-note">
-          {MANSION_CONVENTION} Source: {MANSION_SOURCE}.
+          {tTools('tools.data.mansionConvention', lang)} {tTools('tools.common.source', lang)}: {MANSION_SOURCE}.
         </p>
       </section>
 
       <p className="ms-note">
-        These are calculated facts only. They say where the Moon is and how lit it is — nothing
-        here says what that means for any day or any person.
+        {tTools('tools.moon.footer', lang)}
       </p>
     </ToolsLayout>
   );

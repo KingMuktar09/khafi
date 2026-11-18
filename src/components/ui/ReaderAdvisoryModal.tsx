@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { ShieldAlert, X, BookOpen, AlertTriangle } from 'lucide-react';
+import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 interface ReaderAdvisoryModalProps {
   isOpen: boolean;
@@ -28,6 +30,10 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
 
   if (!isOpen) return null;
 
+  // The book title stays exactly as it is; only the words around it
+  // are translated.
+  const lang = appState.settings.language;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in font-sans">
       <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg max-w-lg w-full p-5 sm:p-6 text-[var(--text-main)] space-y-4 text-xs sm:text-sm shadow-2xl relative">
@@ -40,10 +46,10 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
             </div>
             <div>
               <h2 className="font-bold text-base sm:text-lg text-[var(--text-main)] leading-tight">
-                Reader Advisory
+                {t('ui.advisory.title', lang)}
               </h2>
               <p className="text-[11px] text-[var(--text-muted)] font-medium">
-                Important Library Guidance & Notice
+                {t('ui.advisory.subtitle', lang)}
               </p>
             </div>
           </div>
@@ -51,7 +57,7 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
           <button
             onClick={onCancel}
             className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 rounded transition-colors"
-            title="Close"
+            title={t('ui.details.close', lang)}
           >
             <X className="w-4 h-4" />
           </button>
@@ -62,30 +68,31 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
           <div className="bg-[var(--bg-main)] p-2.5 rounded border border-[var(--border-main)] flex items-center gap-2 text-xs">
             <BookOpen className="w-4 h-4 text-[var(--gold)] shrink-0" />
             <span className="text-[var(--text-muted)] truncate">
-              Opening: <strong className="text-[var(--text-main)] font-semibold">{bookTitle}</strong>
+              {t('ui.advisory.openingLabel', lang)}{' '}
+              <strong className="text-[var(--text-main)] font-semibold">{bookTitle}</strong>
             </span>
           </div>
         )}
 
-        {/* Exact Required Advisory Text */}
+        {/* Advisory text — translated word for word, same meaning. */}
         <div className="space-y-3 text-xs sm:text-sm leading-relaxed text-[var(--text-main)]">
           <p>
-            Some materials in Ilm-e-Ghayb Library may contain descriptions of occult or magical practices, superstition, adult/erotic themes, violence, or other sensitive historical and literary material.
+            {t('ui.advisory.body1', lang)}
           </p>
 
           <p className="text-[var(--text-muted)] font-medium">
-            These materials are provided for reading, study, research, and historical understanding only.
+            {t('ui.advisory.body2', lang)}
           </p>
 
           <div className="p-3 bg-[var(--gold-faint)] border border-[var(--border-main)] rounded-md text-[var(--text-main)] font-medium text-xs leading-relaxed flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-[var(--gold)] shrink-0 mt-0.5" />
             <span>
-              Please do not practice, perform, imitate, or reproduce any harmful, occult, magical, erotic, or otherwise dangerous practices described in a text.
+              {t('ui.advisory.warning', lang)}
             </span>
           </div>
 
           <p className="text-[var(--text-muted)] italic">
-            Read responsibly, use your judgment, and leave the material if it makes you uncomfortable.
+            {t('ui.advisory.body3', lang)}
           </p>
         </div>
 
@@ -96,7 +103,7 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
             onClick={onCancel}
             className="px-4 py-2 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-main)] font-medium rounded transition-colors text-xs text-center cursor-pointer"
           >
-            {isInformationalOnly ? 'Close' : 'Cancel'}
+            {isInformationalOnly ? t('ui.details.close', lang) : t('ui.confirm.cancelDefault', lang)}
           </button>
 
           <button
@@ -104,7 +111,7 @@ export const ReaderAdvisoryModal: React.FC<ReaderAdvisoryModalProps> = ({
             onClick={onConfirm}
             className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-semibold rounded transition-colors text-xs text-center cursor-pointer shadow-xs"
           >
-            {isInformationalOnly ? 'I Understand' : 'I Understand, Open File'}
+            {isInformationalOnly ? t('ui.advisory.understand', lang) : t('ui.advisory.understandOpen', lang)}
           </button>
         </div>
 

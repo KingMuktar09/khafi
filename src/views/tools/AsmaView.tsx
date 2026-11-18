@@ -4,6 +4,7 @@ import { ASMA_NAMES, ASMA_SOURCE, nameValues } from '../../data/asmaNames';
 import { valueOfText } from '../../utils/abjad';
 import type { AbjadSchool, AbjadSystem } from '../../utils/abjad';
 import { appState } from '../../state/appState';
+import { localizeAsmaMeaning, tTools, tfTools } from '../../data/i18n-tools';
 import { addGrimoireItem } from '../../utils/toolsStorage';
 import { ToolsLayout } from './ToolsLayout';
 
@@ -13,6 +14,7 @@ import { ToolsLayout } from './ToolsLayout';
  * that keeps a name in the Grimoire on this device.
  */
 export const AsmaView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const [system, setSystem] = useState<AbjadSystem>('kabir');
   const [school, setSchool] = useState<AbjadSchool>('mashriqi');
@@ -39,53 +41,53 @@ export const AsmaView: React.FC = () => {
       title: `${entry.transliteration} — ${entry.arabic}`,
       detail: `${entry.meaning}. Value bare: ${values.bare}; with "al-": ${values.withAl} (${system}, ${school}).`,
     });
-    appState.showToast('Saved to Grimoire', 'success');
+    appState.showToast(tTools('tools.common.savedToGrimoire', lang), 'success');
   };
 
 
 
   return (
     <ToolsLayout
-      title="Asma — The 99 Names"
-      eyebrow="The 99 Names"
-      subtitle="Search the Names by Arabic, transliteration or meaning. Values use Kabir Mashriqi by default — change the system or school below and they recompute."
+      title={tTools('tools.asma.title', lang)}
+      eyebrow={tTools('tools.asma.eyebrow', lang)}
+      subtitle={tTools('tools.asma.subtitle', lang)}
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <span className="ms-label">System</span>
-          <div className="flex gap-2" role="group" aria-label="System">
+          <span className="ms-label">{tTools('tools.common.system', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.system', lang)}>
             <button type="button" aria-pressed={system === 'kabir'} onClick={() => setSystem('kabir')} className="ms-toggle">
-              Kabir (large)
+              {tTools('tools.common.kabir', lang)}
             </button>
             <button type="button" aria-pressed={system === 'saghir'} onClick={() => setSystem('saghir')} className="ms-toggle">
-              Saghir (small)
+              {tTools('tools.common.saghir', lang)}
             </button>
           </div>
         </div>
         <div className="space-y-1.5">
-          <span className="ms-label">School</span>
-          <div className="flex gap-2" role="group" aria-label="School">
+          <span className="ms-label">{tTools('tools.common.school', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.school', lang)}>
             <button type="button" aria-pressed={school === 'mashriqi'} onClick={() => setSchool('mashriqi')} className="ms-toggle">
-              Mashriqi (eastern)
+              {tTools('tools.common.mashriqi', lang)}
             </button>
             <button type="button" aria-pressed={school === 'maghribi'} onClick={() => setSchool('maghribi')} className="ms-toggle">
-              Maghribi (western)
+              {tTools('tools.common.maghribi', lang)}
             </button>
           </div>
         </div>
       </div>
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">Reckon a name</h2>
+        <h2 className="ms-h2">{tTools('tools.asma.reckonTitle', lang)}</h2>
         <label className="ms-label block" htmlFor="reckon-input">
-          Type any name or text
+          {tTools('tools.asma.reckonLabel', lang)}
         </label>
         <input
           id="reckon-input"
           type="text"
           value={reckonText}
           onChange={(event) => setReckonText(event.target.value)}
-          placeholder="e.g. Rahman"
+          placeholder={tTools('tools.asma.reckonPlaceholder', lang)}
           dir="auto"
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
@@ -105,12 +107,12 @@ export const AsmaView: React.FC = () => {
               ))}
             </div>
             <p className="ms-body">
-              Total: <span className="font-semibold ms-gold ms-num">{reckoned.total}</span>
+              {tTools('tools.common.total', lang)}: <span className="font-semibold ms-gold ms-num">{reckoned.total}</span>
               <span className="ms-muted"> ({system}, {school})</span>
             </p>
           </div>
         ) : reckonText.trim() ? (
-          <p className="ms-body">No Arabic letters found in that text.</p>
+          <p className="ms-body">{tTools('tools.asma.noArabic', lang)}</p>
         ) : null}
       </section>
 
@@ -120,15 +122,15 @@ export const AsmaView: React.FC = () => {
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by Arabic, transliteration or meaning…"
-          aria-label="Search the 99 Names"
+          placeholder={tTools('tools.asma.searchPlaceholder', lang)}
+          aria-label={tTools('tools.asma.searchAria', lang)}
           className="ms-field w-full min-h-12 pl-10 pr-3.5 text-base"
         />
       </div>
 
       {filtered.length === 0 ? (
         <p className="ms-body ms-surface px-4 py-5 text-center">
-          No names match “{query.trim()}”.
+          {tfTools('tools.asma.noNames', lang, { q: query.trim() })}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -144,20 +146,20 @@ export const AsmaView: React.FC = () => {
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-medium ms-ink">{entry.transliteration}</span>
-                  <span className="block text-xs ms-muted truncate">{entry.meaning}</span>
+                  <span className="block text-xs ms-muted truncate">{localizeAsmaMeaning(entry.bare, entry.meaning, lang)}</span>
                   <span className="block text-xs ms-muted ms-num mt-0.5">
-                    Bare: <span className="ms-gold font-semibold">{values.bare}</span>
-                    {' · '}with “al-”: <span className="ms-gold font-semibold">{values.withAl}</span>
+                    {tTools('tools.asma.bare', lang)}: <span className="ms-gold font-semibold">{values.bare}</span>
+                    {' · '}{tTools('tools.asma.withAl', lang)}: <span className="ms-gold font-semibold">{values.withAl}</span>
                   </span>
                 </span>
                 <button
                   type="button"
                   onClick={() => saveName(entry)}
-                  aria-label={`Save ${entry.transliteration} to Grimoire`}
+                  aria-label={tfTools('tools.asma.saveAria', lang, { name: entry.transliteration })}
                   className="ms-btn shrink-0"
                 >
                   <BookmarkPlus className="w-4 h-4" aria-hidden="true" />
-                  Save
+                  {tTools('tools.common.save', lang)}
                 </button>
               </li>
             );
@@ -166,8 +168,7 @@ export const AsmaView: React.FC = () => {
       )}
 
       <p className="ms-note">
-        Source: {ASMA_SOURCE}. The list runs from Ar-Rahman to As-Sabur; Allah’s own name is not counted
-        among the ninety-nine here.
+        {tTools('tools.common.source', lang)}: {ASMA_SOURCE}. {tTools('tools.asma.sourceNote', lang)}
       </p>
     </ToolsLayout>
   );

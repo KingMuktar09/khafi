@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { ShieldAlert, Info, ArrowRight } from 'lucide-react';
 import { ReaderAdvisoryModal } from './ReaderAdvisoryModal';
 import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 export const CompactAdvisoryBanner: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const lang = appState.settings.language;
   const isAcknowledged = appState.hasAcknowledgedAdvisory();
 
   const handleConfirm = () => {
@@ -25,16 +27,16 @@ export const CompactAdvisoryBanner: React.FC = () => {
             <div className="space-y-0.5 min-w-0">
               <div className="flex items-center gap-2">
                 <h4 className="font-semibold text-xs sm:text-sm text-[var(--text-main)]">
-                  Reader Advisory
+                  {t('ui.advisory.title', lang)}
                 </h4>
                 {isAcknowledged && (
                   <span className="text-[10px] px-1.5 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded font-medium">
-                    Session Acknowledged
+                    {t('ui.advisory.acknowledged', lang)}
                   </span>
                 )}
               </div>
               <p className="text-[11px] sm:text-xs text-[var(--text-muted)] leading-relaxed">
-                Some texts in Ilm-e-Ghayb Library may contain descriptions of sensitive historical, literary, or spiritual material provided for research and study only.
+                {t('ui.advisory.bannerBody', lang)}
               </p>
             </div>
           </div>
@@ -45,7 +47,7 @@ export const CompactAdvisoryBanner: React.FC = () => {
               className="px-3 py-1.5 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] font-medium rounded text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
               <Info className="w-3.5 h-3.5 text-[var(--gold)]" />
-              <span>Read Full Advisory</span>
+              <span>{t('ui.advisory.readFull', lang)}</span>
               <ArrowRight className="w-3 h-3 text-[var(--text-muted)]" />
             </button>
           </div>

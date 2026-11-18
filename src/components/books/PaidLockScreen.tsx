@@ -3,6 +3,7 @@ import { Instagram, Lock, KeyRound, Check } from 'lucide-react';
 import { Book } from '../../types';
 import { api } from '../../services/api';
 import { storage } from '../../services/storage';
+import { t } from '../../data/i18n';
 
 interface PaidLockScreenProps {
   book: Book;
@@ -30,6 +31,11 @@ interface PaidLockScreenProps {
  * Free books need no key at all.
  */
 export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, backLabel, onUnlocked }) => {
+  // Language read from storage at render time (not via appState):
+  // appState pulls in the browser-only router, and this screen is
+  // rendered in node tests. updateSettings always persists + notifies,
+  // and the app re-renders the whole tree, so this stays fresh.
+  const lang = storage.getSettings().language;
   const [keyInput, setKeyInput] = useState('');
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +44,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
   const handleVerify = async () => {
     const key = keyInput.trim();
     if (!key) {
-      setError('Enter the key shared with you for this book.');
+      setError(t('paid.enterKeyError', lang));
       return;
     }
     setChecking(true);
@@ -46,7 +52,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
     const res = await api.verifyBookKey(book.id, key);
     setChecking(false);
     if (!res.ok) {
-      setError(res.error || 'Wrong key. Check the key and try again.');
+      setError(res.error || t('paid.wrongKey', lang));
       return;
     }
     storage.saveBookKey(book.id, key);
@@ -62,10 +68,10 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
       <div className="space-y-3">
         <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] bg-[var(--gold-faint)] border border-[var(--gold)]/40 rounded-full px-3 py-1 w-fit">
           <Check className="w-3.5 h-3.5" />
-          <span>Unlocked — this book is yours to read</span>
+          <span>{t('paid.unlockedBadge', lang)}</span>
         </p>
         <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-          Your key worked. The book is now open on this device. Use the button below to go back and open it.
+          {t('paid.unlockedText', lang)}
         </p>
         {onBack && (
           <button
@@ -73,7 +79,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
             onClick={onBack}
             className="tap-target w-full py-3 px-4 rounded-xl font-bold bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black flex items-center justify-center gap-2 transition-all cursor-pointer text-sm"
           >
-            Back to book details
+            {t('paid.backDefault', lang)}
           </button>
         )}
       </div>
@@ -85,13 +91,13 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
       <div className="space-y-2">
         <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] bg-[var(--gold-faint)] border border-[var(--gold)]/40 rounded-full px-3 py-1 w-fit">
           <Lock className="w-3.5 h-3.5" />
-          <span>Paid book — followers only</span>
+          <span>{t('paid.lockBadge', lang)}</span>
         </p>
         <p className="font-display font-semibold text-lg text-[var(--text-main)]">
-          Free for followers
+          {t('paid.freeTitle', lang)}
         </p>
         <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-          This book is free for followers. Follow @ghayb.chronicles to open it, or enter the book&apos;s key below. One key unlocks only this book, on this device.
+          {t('paid.freeText', lang)}
         </p>
       </div>
 
@@ -99,7 +105,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
       <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface)] p-4 space-y-3">
         <p className="text-xs font-bold text-[var(--text-main)] flex items-center gap-1.5">
           <KeyRound className="w-4 h-4 text-[var(--gold)]" />
-          <span>Enter your key for this book</span>
+          <span>{t('paid.keyTitle', lang)}</span>
         </p>
         <div className="flex gap-2">
           <input
@@ -124,14 +130,14 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
             disabled={checking}
             className="tap-target shrink-0 px-4 py-2.5 rounded-xl font-bold bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black transition-all cursor-pointer text-sm disabled:opacity-50"
           >
-            {checking ? 'Checking…' : 'Unlock'}
+            {checking ? t('paid.checking', lang) : t('paid.unlock', lang)}
           </button>
         </div>
         {error && (
           <p className="text-xs text-red-400 leading-relaxed">{error}</p>
         )}
         <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-          The key works only for this book, and only up to its use limit. Do not share your key — anyone with it can open this book.
+          {t('paid.keyNote', lang)}
         </p>
       </div>
 
@@ -142,7 +148,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
         className="tap-target w-full py-3 px-4 rounded-xl font-bold bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] transition-colors flex items-center justify-center gap-2 cursor-pointer text-sm"
       >
         <Instagram className="w-4 h-4" />
-        <span>Message @ghayb.chronicles to get a key</span>
+        <span>{t('paid.messageForKey', lang)}</span>
       </a>
 
       {onBack && (
@@ -151,7 +157,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
           onClick={onBack}
           className="tap-target w-full py-2.5 px-4 rounded-xl font-semibold bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] transition-colors cursor-pointer text-sm"
         >
-          {backLabel || 'Back to book details'}
+          {backLabel || t('paid.backDefault', lang)}
         </button>
       )}
     </div>

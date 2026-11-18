@@ -3,6 +3,7 @@ import { BookmarkPlus } from 'lucide-react';
 import { QURAN_TEXT_SOURCE, SHIELD_TEXTS, SHIELD_TRANSLITERATION, TRANSLITERATION_SOURCE, shieldTransliterationWords, shieldWordTotals } from '../../data/quranTexts';
 import type { AbjadSchool, AbjadSystem } from '../../utils/abjad';
 import { appState } from '../../state/appState';
+import { tTools, tfTools } from '../../data/i18n-tools';
 import { addGrimoireItem } from '../../utils/toolsStorage';
 import { ToolsLayout } from './ToolsLayout';
 
@@ -14,6 +15,7 @@ import { ToolsLayout } from './ToolsLayout';
  * in src/data/quranTexts.ts). They are not typed in.
  */
 export const ShieldsView: React.FC = () => {
+  const lang = appState.settings.language;
   const [system, setSystem] = useState<AbjadSystem>('kabir');
   const [school, setSchool] = useState<AbjadSchool>('mashriqi');
 
@@ -33,55 +35,44 @@ export const ShieldsView: React.FC = () => {
       title: `${title} (running total)`,
       detail: `${reference}: total ${total} (${system}, ${school}).`,
     });
-    appState.showToast('Saved to Grimoire', 'success');
+    appState.showToast(tTools('tools.common.savedToGrimoire', lang), 'success');
   };
 
   return (
     <ToolsLayout
-      title="Shields (Running Letter Sums)"
-      eyebrow="Letters & Numbers"
-      subtitle="Five short texts, counted word by word. Each row shows a word, its value, and the running total, so you can follow the arithmetic to the grand total."
+      title={tTools('tools.shields.title', lang)}
+      eyebrow={tTools('tools.shields.eyebrow', lang)}
+      subtitle={tTools('tools.shields.subtitle', lang)}
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <span className="ms-label">System</span>
-          <div className="flex gap-2" role="group" aria-label="System">
+          <span className="ms-label">{tTools('tools.common.system', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.system', lang)}>
             <button type="button" aria-pressed={system === 'kabir'} onClick={() => setSystem('kabir')} className="ms-toggle">
-              Kabir (large)
+              {tTools('tools.common.kabir', lang)}
             </button>
             <button type="button" aria-pressed={system === 'saghir'} onClick={() => setSystem('saghir')} className="ms-toggle">
-              Saghir (small)
+              {tTools('tools.common.saghir', lang)}
             </button>
           </div>
         </div>
         <div className="space-y-1.5">
-          <span className="ms-label">School</span>
-          <div className="flex gap-2" role="group" aria-label="School">
+          <span className="ms-label">{tTools('tools.common.school', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.school', lang)}>
             <button type="button" aria-pressed={school === 'mashriqi'} onClick={() => setSchool('mashriqi')} className="ms-toggle">
-              Mashriqi (eastern)
+              {tTools('tools.common.mashriqi', lang)}
             </button>
             <button type="button" aria-pressed={school === 'maghribi'} onClick={() => setSchool('maghribi')} className="ms-toggle">
-              Maghribi (western)
+              {tTools('tools.common.maghribi', lang)}
             </button>
           </div>
         </div>
       </div>
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">A note on the spelling</h2>
-        <p className="ms-body">
-          The totals count the Uthmani text as written, including the shadda: a shadda doubles its
-          letter, so al-Rahman counts <span className="font-semibold ms-ink">529</span> here, while
-          the plain spelling without the shadda counts 329 on the Asma page. Both use the same
-          counting rules. The difference is the spelling of the text, not a different rule. The
-          Basmalah is verse 1 of al-Fatiha, so it is counted in the Fatiha. For al-Ikhlas, al-Falaq
-          and al-Nas the Basmalah is not a verse of those surahs, so it is not counted in them.
-        </p>
-        <p className="ms-body">
-          The Latin lines read each text out, so you can follow it without knowing Arabic. In this
-          reading, AA is the letter ayn, and th is the letter tha. The l of “al” stays written
-          before sun letters, so ar-Rahman reads alrrahman.
-        </p>
+        <h2 className="ms-h2">{tTools('tools.shields.spellingTitle', lang)}</h2>
+        <p className="ms-body">{tTools('tools.shields.spellingBody1', lang)}</p>
+        <p className="ms-body">{tTools('tools.shields.spellingBody2', lang)}</p>
       </section>
 
       {shields.map((shield) => (
@@ -106,11 +97,11 @@ export const ShieldsView: React.FC = () => {
             <table className="ms-table">
               <thead>
                 <tr className="text-left">
-                  <th scope="col" className="px-4 py-3 font-medium">#</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Word</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Say it</th>
-                  <th scope="col" className="px-4 py-3 font-medium text-right">Value</th>
-                  <th scope="col" className="px-4 py-3 font-medium text-right">Running total</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.shields.thHash', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.shields.thWord', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.shields.thSayIt', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.shields.thValue', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.shields.thRunning', lang)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -131,7 +122,7 @@ export const ShieldsView: React.FC = () => {
               <tfoot>
                 <tr>
                   <td colSpan={4} className="px-4 py-3 font-medium ms-ink">
-                    Grand total ({shield.words.length} words)
+                    {tfTools('tools.shields.grandTotalWords', lang, { n: shield.words.length })}
                   </td>
                   <td className="px-4 py-3 text-right font-bold ms-gold ms-num">{shield.total}</td>
                 </tr>
@@ -144,7 +135,7 @@ export const ShieldsView: React.FC = () => {
                 className="ms-btn-gold"
               >
                 <BookmarkPlus className="w-4 h-4" aria-hidden="true" />
-                Save this total to Grimoire
+                {tTools('tools.shields.saveTotal', lang)}
               </button>
             </div>
           </div>
@@ -152,8 +143,7 @@ export const ShieldsView: React.FC = () => {
       ))}
 
       <p className="ms-note">
-        {QURAN_TEXT_SOURCE}. {TRANSLITERATION_SOURCE}. The totals are computed from that text at run
-        time; the test suite checks all five totals in both systems and both schools.
+        {QURAN_TEXT_SOURCE}. {TRANSLITERATION_SOURCE}. {tTools('tools.shields.sourceTail', lang)}
       </p>
     </ToolsLayout>
   );

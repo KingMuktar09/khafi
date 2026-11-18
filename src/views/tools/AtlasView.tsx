@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -7,6 +9,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const AtlasView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -18,21 +21,22 @@ export const AtlasView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['atlas']}
-      title="Atlas"
-      eyebrow="Atlas"
-      subtitle="A map of the heavens, the spheres, and the letters."
+      title={tTools('tools.atlas.title', lang)}
+      eyebrow={tTools('tools.atlas.eyebrow', lang)}
+      subtitle={tTools('tools.atlas.subtitle', lang)}
+      toolId="atlas"
       filter={filter}
     >
-      <div className="space-y-1.5" aria-label="Atlas entries">
+      <div className="space-y-1.5" aria-label={tTools('tools.shell.aria.atlasEntries', lang)}>
         <label className="ms-label" htmlFor="atlas-search">
-          Search the atlas
+          {tTools('tools.atlas.searchLabel', lang)}
         </label>
         <input
           id="atlas-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.atlas.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

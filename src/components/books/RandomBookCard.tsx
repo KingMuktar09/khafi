@@ -5,6 +5,7 @@ import { appState } from '../../state/appState';
 import { router } from '../../router/router';
 import { CoverImage } from './CoverImage';
 import { cleanLabel } from '../../utils/bookOrder';
+import { t } from '../../data/i18n';
 
 /**
  * Surprise Me — one-tap random real book from the library.
@@ -12,6 +13,7 @@ import { cleanLabel } from '../../utils/bookOrder';
  * straight away). The book is always a real book from the catalog.
  */
 export const RandomBookCard: React.FC = () => {
+  const lang = appState.settings.language;
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
 
   const selectNewRandomBook = () => {
@@ -27,7 +29,7 @@ export const RandomBookCard: React.FC = () => {
   if (!currentBook) {
     return (
       <div className="p-8 text-center bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl text-xs text-[var(--text-muted)]">
-        No books in the library yet.
+        {t('home.random.empty', lang)}
       </div>
     );
   }
@@ -41,7 +43,7 @@ export const RandomBookCard: React.FC = () => {
       <div className="flex items-center justify-between gap-3">
         <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full flex items-center gap-1.5 tracking-wide">
           <Shuffle className="w-3.5 h-3.5" />
-          <span>Surprise Me. A random book</span>
+          <span>{t('home.random.tag', lang)}</span>
         </span>
         <button
           type="button"
@@ -49,7 +51,7 @@ export const RandomBookCard: React.FC = () => {
           className="tap-target px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs rounded-lg cursor-pointer transition-colors flex items-center gap-1.5 shrink-0"
         >
           <Shuffle className="w-3.5 h-3.5" />
-          <span>Another one</span>
+          <span>{t('home.random.another', lang)}</span>
         </button>
       </div>
 
@@ -82,7 +84,7 @@ export const RandomBookCard: React.FC = () => {
             <p className="text-xs text-[var(--text-muted)] mt-1">{currentBook.author}</p>
           )}
           <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed line-clamp-3 mt-2">
-            {currentBook.description || 'A book from the library, picked at random.'}
+            {currentBook.description || t('home.random.fallbackDesc', lang)}
           </p>
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
             <button
@@ -91,7 +93,7 @@ export const RandomBookCard: React.FC = () => {
               className="tap-target px-4 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs rounded-lg cursor-pointer transition-colors flex items-center gap-1.5"
             >
               <BookOpen className="w-4 h-4" />
-              <span>Open this book</span>
+              <span>{t('home.random.open', lang)}</span>
             </button>
             <button
               type="button"
@@ -103,7 +105,7 @@ export const RandomBookCard: React.FC = () => {
               }`}
             >
               <Bookmark className="w-4 h-4" />
-              <span>{shelfStatus ? 'On My Shelf' : 'Save to My Shelf'}</span>
+              <span>{shelfStatus ? t('home.random.onShelf', lang) : t('home.random.saveShelf', lang)}</span>
             </button>
             <button
               type="button"
@@ -115,7 +117,7 @@ export const RandomBookCard: React.FC = () => {
               }`}
             >
               <Star className={`w-4 h-4 ${isFav ? 'fill-amber-400 text-amber-400' : ''}`} />
-              <span>{isFav ? 'Favorited' : 'Favorite'}</span>
+              <span>{isFav ? t('home.random.favorited', lang) : t('home.random.favorite', lang)}</span>
             </button>
           </div>
         </div>

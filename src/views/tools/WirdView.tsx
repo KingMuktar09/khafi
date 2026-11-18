@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, RotateCcw } from 'lucide-react';
 import { appState } from '../../state/appState';
+import { tTools, tfTools } from '../../data/i18n-tools';
 import { loadWird, saveWird } from '../../utils/toolsStorage';
 import type { WirdData } from '../../utils/toolsStorage';
 import { ToolsLayout } from './ToolsLayout';
 
-const DEVICE_NOTE = 'Everything you count here stays on this device. Nothing is sent anywhere.';
+
 
 const PRESETS: { arabic: string; label: string }[] = [
   { arabic: 'سُبْحَانَ اللهِ', label: 'SubhanAllah' },
@@ -23,6 +24,7 @@ const DEFAULT_TARGET = 33;
  * anything — it is only a counter.
  */
 export const WirdView: React.FC = () => {
+  const lang = appState.settings.language;
   const [data, setData] = useState<WirdData>(() => loadWird());
   const [selected, setSelected] = useState<string>(PRESETS[0].label);
   const [custom, setCustom] = useState('');
@@ -48,12 +50,12 @@ export const WirdView: React.FC = () => {
 
   const resetPhrase = () => {
     setData((prev) => ({ ...prev, counts: { ...prev.counts, [selected]: 0 } }));
-    appState.showToast(`Reset ${selected}`, 'info');
+    appState.showToast(tfTools('tools.wird.resetPhraseToast', lang, { phrase: selected }), 'info');
   };
 
   const resetAll = () => {
     setData((prev) => ({ ...prev, counts: {} }));
-    appState.showToast('All counts reset', 'info');
+    appState.showToast(tTools('tools.wird.resetAllToast', lang), 'info');
   };
 
   const setTarget = (value: number) => {
@@ -71,22 +73,22 @@ export const WirdView: React.FC = () => {
     }));
     setSelected(phrase);
     setCustom('');
-    appState.showToast('Phrase added', 'success');
+    appState.showToast(tTools('tools.wird.phraseAdded', lang), 'success');
   };
 
   const selectedPreset = PRESETS.find((preset) => preset.label === selected);
 
   return (
     <ToolsLayout
-      title="Wird — Remembrance Counter"
-      eyebrow="Remembrance Counter"
-      subtitle="A simple counter. Pick a phrase, tap the big button, and set a target if you like."
+      title={tTools('tools.wird.title', lang)}
+      eyebrow={tTools('tools.wird.eyebrow', lang)}
+      subtitle={tTools('tools.wird.subtitle', lang)}
     >
       <p className="ms-note-box">
-        {DEVICE_NOTE}
+        {tTools('tools.wird.deviceNote', lang)}
       </p>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Choose a phrase">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={tTools('tools.wird.choosePhrase', lang)}>
         {phrases.map((phrase) => (
           <button
             key={phrase}
@@ -101,22 +103,22 @@ export const WirdView: React.FC = () => {
       </div>
 
       <form onSubmit={addCustom} className="flex gap-2">
-        <label htmlFor="wird-custom" className="sr-only">Add your own phrase</label>
+        <label htmlFor="wird-custom" className="sr-only">{tTools('tools.wird.addPhraseLabel', lang)}</label>
         <input
           id="wird-custom"
           type="text"
           value={custom}
           onChange={(event) => setCustom(event.target.value)}
-          placeholder="Add your own phrase…"
+          placeholder={tTools('tools.wird.addPhrasePlaceholder', lang)}
           className="ms-field flex-1 min-w-0 min-h-11 px-3.5 text-base"
         />
         <button
           type="submit"
-          aria-label="Add phrase"
+          aria-label={tTools('tools.wird.addAria', lang)}
           className="ms-btn shrink-0"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
-          Add
+          {tTools('tools.common.add', lang)}
         </button>
       </form>
 
@@ -129,7 +131,7 @@ export const WirdView: React.FC = () => {
           {count}
         </p>
         <p className="ms-body ms-num">
-          {count} of {target} · {progress}%
+          {tfTools('tools.wird.ofTarget', lang, { count, target, progress })}
         </p>
         <div
           className="ms-progress"
@@ -137,21 +139,21 @@ export const WirdView: React.FC = () => {
           aria-valuenow={count}
           aria-valuemin={0}
           aria-valuemax={target}
-          aria-label={`Progress towards ${target}`}
+          aria-label={tfTools('tools.wird.progressAria', lang, { target })}
         >
           <div style={{ width: `${progress}%` }} />
         </div>
         <button
           type="button"
           onClick={tap}
-          aria-label={`Count one for ${selected}`}
+          aria-label={tfTools('tools.wird.countAria', lang, { phrase: selected })}
           className="ms-btn-solid"
         >
-          Tap to count
+          {tTools('tools.wird.tapBtn', lang)}
         </button>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <label className="inline-flex items-center gap-2 ms-body" htmlFor="wird-target">
-            Target
+            {tTools('tools.wird.targetLabel', lang)}
             <input
               id="wird-target"
               type="number"
@@ -168,7 +170,7 @@ export const WirdView: React.FC = () => {
             className="ms-btn"
           >
             <RotateCcw className="w-4 h-4" aria-hidden="true" />
-            Reset this phrase
+            {tTools('tools.wird.resetPhrase', lang)}
           </button>
           <button
             type="button"
@@ -176,7 +178,7 @@ export const WirdView: React.FC = () => {
             className="ms-btn"
           >
             <RotateCcw className="w-4 h-4" aria-hidden="true" />
-            Reset all
+            {tTools('tools.wird.resetAll', lang)}
           </button>
         </div>
       </section>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -7,6 +9,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const SirrJalilView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -18,21 +21,22 @@ export const SirrJalilView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['sirr-al-jalil']}
-      title="al-Sirr al-Jalil"
-      eyebrow="Monograph"
-      subtitle="The Great Secret, and the Name that opens it."
+      title={tTools('tools.sirr.title', lang)}
+      eyebrow={tTools('tools.sirr.eyebrow', lang)}
+      subtitle={tTools('tools.sirr.subtitle', lang)}
+      toolId="sirr-al-jalil"
       filter={filter}
     >
-      <div className="space-y-1.5" aria-label="Monograph">
+      <div className="space-y-1.5" aria-label={tTools('tools.shell.aria.monograph', lang)}>
         <label className="ms-label" htmlFor="sirr-jalil-search">
-          Search the monograph
+          {tTools('tools.sirr.searchLabel', lang)}
         </label>
         <input
           id="sirr-jalil-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by heading or page"
+          placeholder={tTools('tools.sirr.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

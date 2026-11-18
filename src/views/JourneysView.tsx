@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Check, ChevronRight, Compass, BookOpen, Map as MapIcon } from 'lucide-react';
 import { resolveJourneys, journeyProgress } from '../data/specialFeatures';
 import { appState } from '../state/appState';
+import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
 
 /**
@@ -12,6 +13,7 @@ import { router } from '../router/router';
  * where you left off. No invented titles, no account.
  */
 export const JourneysView: React.FC = () => {
+  const lang = appState.settings.language;
   const [openId, setOpenId] = useState<string | null>(null);
   const books = appState.getVisibleBooks();
   const resolved = resolveJourneys(books);
@@ -24,16 +26,13 @@ export const JourneysView: React.FC = () => {
           className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] flex items-center gap-1 font-medium cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home</span>
+          <span>{t('journeys.backHome', lang)}</span>
         </button>
         <h1 className="font-display font-semibold text-3xl sm:text-4xl text-[var(--text-main)] mt-3">
-          Guided Reading <span className="gold-shimmer">Paths</span>
+          {t('journeys.titleStart', lang)} <span className="gold-shimmer">{t('journeys.titleEnd', lang)}</span>
         </h1>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl mt-2">
-          A normal library hands you a shelf. This one walks with you. Pick a
-          path, read the books in order, tick each one done — your progress is
-          saved on this device, so you can resume any time. Every book below
-          is already in this library.
+          {t('journeys.intro', lang)}
         </p>
       </div>
 
@@ -51,7 +50,7 @@ export const JourneysView: React.FC = () => {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full">
-                    {journey.level} • {journey.steps.length} books
+                    {tf('journeys.levelBooks', lang, { level: journey.level, n: journey.steps.length })}
                   </span>
                   <h2 className="font-display font-semibold text-xl text-[var(--text-main)] mt-3">
                     {journey.title}
@@ -66,7 +65,7 @@ export const JourneysView: React.FC = () => {
 
               <div className="space-y-1">
                 <div className="flex justify-between text-[11px] text-[var(--text-muted)] font-medium">
-                  <span>{done.length} of {journey.steps.length} read</span>
+                  <span>{tf('journeys.ofRead', lang, { done: done.length, total: journey.steps.length })}</span>
                   <span className="font-bold text-[var(--gold)]">{pct}%</span>
                 </div>
                 <div className="w-full h-2 bg-[var(--bg-main)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
@@ -74,11 +73,11 @@ export const JourneysView: React.FC = () => {
                 </div>
                 {nextStep && pct < 100 && (
                   <p className="text-[11px] text-[var(--text-muted)] pt-1">
-                    Next: <span className="text-[var(--text-main)] font-medium">{nextStep.title}</span>
+                    {t('journeys.next', lang).split('{title}')[0]}<span className="text-[var(--text-main)] font-medium">{nextStep.title}</span>
                   </p>
                 )}
                 {pct === 100 && (
-                  <p className="text-[11px] text-emerald-400 font-semibold pt-1">Journey complete. Well done.</p>
+                  <p className="text-[11px] text-emerald-400 font-semibold pt-1">{t('journeys.complete', lang)}</p>
                 )}
               </div>
 
@@ -87,7 +86,7 @@ export const JourneysView: React.FC = () => {
                 className="tap-target w-full px-4 py-2.5 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <BookOpen className="w-4 h-4 text-[var(--gold)]" />
-                <span>{open ? 'Hide the path' : 'See the path'}</span>
+                <span>{open ? t('journeys.hidePath', lang) : t('journeys.seePath', lang)}</span>
                 <ChevronRight className={`w-4 h-4 text-[var(--gold)] transition-transform ${open ? 'rotate-90' : ''}`} />
               </button>
 
@@ -107,7 +106,7 @@ export const JourneysView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => appState.toggleJourneyStep(journey.id, step.title)}
-                          aria-label={isDone ? `Mark ${step.title} as not read` : `Mark ${step.title} as read`}
+                          aria-label={isDone ? tf('journeys.markNotRead', lang, { title: step.title }) : tf('journeys.markRead', lang, { title: step.title })}
                           className={`mt-0.5 w-6 h-6 rounded-full border flex items-center justify-center shrink-0 cursor-pointer transition-colors ${
                             isDone
                               ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -127,7 +126,7 @@ export const JourneysView: React.FC = () => {
                               onClick={() => router.navigate('book', { bookId: step.book!.id })}
                               className="text-xs text-[var(--gold)] hover:underline font-medium mt-1 cursor-pointer"
                             >
-                              Open this book →
+                              {t('journeys.openBook', lang)}
                             </button>
                           )}
                         </div>
@@ -143,14 +142,14 @@ export const JourneysView: React.FC = () => {
 
       <div className="p-4 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <span className="text-[var(--text-muted)] text-center sm:text-left">
-          Want to see the masters behind these books, in order of time?
+          {t('journeys.timelinePrompt', lang)}
         </span>
         <button
           onClick={() => router.navigate('timeline')}
           className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold rounded-lg cursor-pointer flex items-center gap-1.5 shrink-0"
         >
           <MapIcon className="w-4 h-4" />
-          <span>Open the Knowledge Map</span>
+          <span>{t('journeys.openMap', lang)}</span>
         </button>
       </div>
     </div>

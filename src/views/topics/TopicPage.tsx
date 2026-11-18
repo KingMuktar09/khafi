@@ -3,6 +3,9 @@ import { ArrowLeft } from 'lucide-react';
 import { router } from '../../router/router';
 import type { TopicContent } from '../../data/topicsContent';
 import { formatTopicDate } from '../../data/topicsContent';
+import { localizeTopic } from '../../data/topicsI18n';
+import { tt } from '../../data/i18n-topics';
+import { appState } from '../../state/appState';
 import { fetchVisibleTopicRequests, type TopicRequestRow } from '../../services/topicRequests';
 import { InstagramSendBox } from './InstagramSendBox';
 
@@ -12,8 +15,14 @@ import { InstagramSendBox } from './InstagramSendBox';
  * sections with headings, quote blocks with Arabic, transliteration
  * and English, a terms glossary, sources, and the continues note
  * shown clearly where the discussion is not complete yet.
+ *
+ * The topic is localised through localizeTopic: Hinglish and Bengali
+ * change every explanation word, while Arabic, transliteration,
+ * sources, facts and numbers stay exactly as they are.
  */
 export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
+  const lang = appState.settings.language;
+  const display = localizeTopic(topic, lang);
   const [comments, setComments] = useState<TopicRequestRow[]>([]);
 
   useEffect(() => {
@@ -34,31 +43,28 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
         className="inline-flex items-center gap-1.5 text-sm ms-muted hover:text-[var(--ms-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)] rounded px-1 py-1"
       >
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-        Topics
+        {tt('topics.back', lang)}
       </button>
 
       <div className="space-y-1.5">
-        <span className="ms-eyebrow block">{topic.eyebrow}</span>
-        <h1 className="ms-title">{topic.title}</h1>
-        <p className="ms-subtitle">{topic.subtitle}</p>
+        <span className="ms-eyebrow block">{display.eyebrow}</span>
+        <h1 className="ms-title">{display.title}</h1>
+        <p className="ms-subtitle">{display.subtitle}</p>
       </div>
 
-      <p className="ms-note-box">
-        These discussions are for study only. They do not promise any outcome, and they give no religious
-        ruling. Read them slowly, and check the sources named at the end.
-      </p>
+      <p className="ms-note-box">{tt('topics.studyNote', lang)}</p>
 
-      <section className="ms-card space-y-3" aria-label="Introduction">
-        <p className="ms-body">{topic.intro}</p>
+      <section className="ms-card space-y-3" aria-label={tt('topics.intro', lang)}>
+        <p className="ms-body">{display.intro}</p>
       </section>
 
-      {topic.continuesNote ? (
+      {display.continuesNote ? (
         <p className="ms-note-box" role="note">
-          {topic.continuesNote}
+          {display.continuesNote}
         </p>
       ) : null}
 
-      {topic.sections.map((section) => (
+      {display.sections.map((section) => (
         <section key={section.heading} className="ms-card space-y-3">
           <h2 className="ms-h2">{section.heading}</h2>
           {section.paragraphs.map((paragraph, index) => (
@@ -77,17 +83,20 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
                 <p className="ms-body italic">{section.quote.transliteration}</p>
               ) : null}
               <p className="ms-body">&ldquo;{section.quote.text}&rdquo;</p>
-              <p className="ms-body ms-muted text-sm">Source: {section.quote.source}</p>
+              <p className="ms-body ms-muted text-sm">
+                {tt('topics.sourceLabel', lang)}
+                {section.quote.source}
+              </p>
             </blockquote>
           ) : null}
         </section>
       ))}
 
-      {topic.terms.length > 0 ? (
-        <section className="ms-card space-y-3" aria-label="Words used here">
-          <h2 className="ms-h2">Words used here</h2>
+      {display.terms.length > 0 ? (
+        <section className="ms-card space-y-3" aria-label={tt('topics.wordsUsed', lang)}>
+          <h2 className="ms-h2">{tt('topics.wordsUsed', lang)}</h2>
           <ul className="space-y-3">
-            {topic.terms.map((term) => (
+            {display.terms.map((term) => (
               <li key={term.transliteration} className="space-y-1">
                 <p className="ms-arabic-sm ms-gold" dir="rtl" lang="ar">
                   {term.arabic}
@@ -101,14 +110,14 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
         </section>
       ) : null}
 
-      <section className="ms-card space-y-3" aria-label="Closing">
-        <p className="ms-body">{topic.closing}</p>
+      <section className="ms-card space-y-3" aria-label={tt('topics.closing', lang)}>
+        <p className="ms-body">{display.closing}</p>
       </section>
 
-      <section className="ms-card space-y-3" aria-label="Sources">
-        <h2 className="ms-h2">Sources</h2>
+      <section className="ms-card space-y-3" aria-label={tt('topics.sources', lang)}>
+        <h2 className="ms-h2">{tt('topics.sources', lang)}</h2>
         <ul className="space-y-2">
-          {topic.sources.map((source, index) => (
+          {display.sources.map((source, index) => (
             <li key={index} className="ms-body">
               {source}
             </li>
@@ -117,15 +126,15 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
       </section>
 
       {comments.length > 0 ? (
-        <section className="ms-card space-y-3" aria-label="What others said">
-          <h2 className="ms-h2">What others said</h2>
+        <section className="ms-card space-y-3" aria-label={tt('topics.whatOthersSaid', lang)}>
+          <h2 className="ms-h2">{tt('topics.whatOthersSaid', lang)}</h2>
           <ul className="space-y-3">
             {comments.map((comment) => (
               <li key={comment.id} className="space-y-1">
                 <p className="ms-body">
                   <span className="font-semibold">
                     {comment.instagram_name.toLowerCase() === 'anonymous'
-                      ? 'Anonymous'
+                      ? tt('topics.anonymous', lang)
                       : `@${comment.instagram_name}`}
                   </span>
                   {' · '}
@@ -141,12 +150,12 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
       <InstagramSendBox
         kind="comment"
         topic={topic.id}
-        topicLabel={topic.title}
-        title="Comments and wants"
-        messageLabel="Your comment, or a topic you need"
-        messagePlaceholder="Share a thought on this topic, or write a topic you need."
-        note="Good comments and answered wants get added to this page."
-        doneMessage="Thanks. Your note is saved. Good comments and answered wants get added to this page."
+        topicLabel={display.title}
+        title={tt('sendbox.commentTitle', lang)}
+        messageLabel={tt('sendbox.commentLabel', lang)}
+        messagePlaceholder={tt('sendbox.commentPlaceholder', lang)}
+        note={tt('sendbox.commentNote', lang)}
+        doneMessage={tt('sendbox.commentDone', lang)}
       />
     </div>
   );

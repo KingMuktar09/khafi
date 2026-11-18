@@ -1,4 +1,5 @@
-import type { Book } from '../types';
+import type { Book, SiteLanguage } from '../types';
+import { t } from './i18n';
 
 /**
  * The library's special features — what no normal library has.
@@ -139,6 +140,23 @@ export function journeyProgress(done: string[], journey: Journey): number {
   return Math.round((n / journey.steps.length) * 100);
 }
 
+/**
+ * A journey with its title, subtitle, description and level in the
+ * given language. Step notes stay as written: they are shown on the
+ * Journeys page, not on Home. Generic so a resolved journey keeps
+ * its matched books. Missing keys fall back to English via t().
+ */
+export function localizeJourney<T extends Journey>(journey: T, lang: SiteLanguage): T {
+  const base = `specials.journey.${journey.id}`;
+  return {
+    ...journey,
+    title: t(`${base}.title`, lang),
+    subtitle: t(`${base}.subtitle`, lang),
+    description: t(`${base}.description`, lang),
+    level: t(`${base}.level`, lang),
+  };
+}
+
 // --- Wisdom of the Day -------------------------------------------------------
 
 export interface Wisdom {
@@ -201,6 +219,22 @@ export function getWisdomForDate(date: Date): Wisdom {
   const start = new Date(date.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((date.getTime() - start.getTime()) / 86400000);
   return WISDOMS[dayOfYear % WISDOMS.length];
+}
+
+/**
+ * One wisdom entry with its teaching and about lines in the given
+ * language. The master name and the source book title never change.
+ */
+export function localizeWisdom(wisdom: Wisdom, lang: SiteLanguage): Wisdom {
+  const index = WISDOMS.indexOf(wisdom);
+  if (index < 0) return wisdom;
+  const base = `specials.wisdom.${index}`;
+  return { ...wisdom, teaching: t(`${base}.teaching`, lang), about: t(`${base}.about`, lang) };
+}
+
+/** The wisdom for a date, already in the given language. */
+export function getLocalizedWisdomForDate(date: Date, lang: SiteLanguage): Wisdom {
+  return localizeWisdom(getWisdomForDate(date), lang);
 }
 
 // --- Knowledge Map / Timeline -----------------------------------------------

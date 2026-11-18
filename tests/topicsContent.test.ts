@@ -16,6 +16,9 @@ import { TOPIC_QUESTIONS } from '../src/data/topicsQuestions';
 import { STUDY_GUIDES } from '../src/data/studyGuides';
 import { isSupabaseConfigured, SUPABASE_URL, SUPABASE_ANON_KEY } from '../src/config/supabase';
 import { submitTopicRequest, fetchVisibleTopicRequests } from '../src/services/topicRequests';
+import { I18N_TOPICS } from '../src/data/i18n-topics';
+import { I18N_TOOLS } from '../src/data/i18n-tools';
+import { I18N_HOME } from '../src/data/i18n-home';
 
 /**
  * Topics follow-ups: fixed-order daily rotation, the Questions part,
@@ -238,8 +241,12 @@ describe('Topic requests use the public Supabase fallback', () => {
 describe('Posting as anonymous', () => {
   it('the send box offers "Post as anonymous" and an optional name, never "Post as guest"', () => {
     const box = readSource('src/views/topics/InstagramSendBox.tsx');
-    expect(box).toContain('Post as anonymous');
-    expect(box).toContain('Your Instagram name (optional)');
+    // The words live in the topics chunk now (translated in hi/bn);
+    // the box renders them through the sendbox.* keys.
+    expect(I18N_TOPICS.en['sendbox.postAnonymous']).toBe('Post as anonymous');
+    expect(I18N_TOPICS.en['sendbox.instagramName']).toBe('Your Instagram name (optional)');
+    expect(box).toContain("tt('sendbox.postAnonymous'");
+    expect(box).toContain("tt('sendbox.instagramName'");
     expect(box).not.toContain('Post as guest');
     expect(box).toContain(`'Anonymous'`);
   });
@@ -247,14 +254,18 @@ describe('Posting as anonymous', () => {
   it('anonymous comments show as "Anonymous" with no @ on the Topic page', () => {
     const page = readSource('src/views/topics/TopicPage.tsx');
     expect(page).toContain(`toLowerCase() === 'anonymous'`);
-    expect(page).toContain(`'Anonymous'`);
+    // The display name lives in the topics chunk now; the page renders it through the key.
+    expect(I18N_TOPICS.en['topics.anonymous']).toBe('Anonymous');
+    expect(page).toContain("tt('topics.anonymous'");
   });
 
   it('the Questions note says a visitor may post as anonymous', () => {
     const questions = readSource('src/views/topics/QuestionsView.tsx');
-    expect(questions).toContain('post as anonymous');
+    expect(I18N_TOPICS.en['sendbox.askNote']).toContain('post as anonymous');
+    expect(questions).toContain("tt('sendbox.askNote'");
     const hub = readSource('src/views/topics/TopicsHubView.tsx');
-    expect(hub).toContain('post as anonymous');
+    expect(I18N_TOPICS.en['sendbox.requestNote']).toContain('post as anonymous');
+    expect(hub).toContain("tt('sendbox.requestNote'");
   });
 });
 
@@ -299,7 +310,8 @@ describe('Sawaqit names are sourced, not "source needed"', () => {
     }
     expect(view).toContain('John Friend');
     expect(view).toContain('Ch. 13');
-    expect(view).toContain('Fa-Ja-Sha-Tha-Za-Kha-Za');
+    // The first-sounds mnemonic lives in the tools chunk now.
+    expect(I18N_TOOLS.en['tools.sawaqit.namesBody']).toContain('Fa-Ja-Sha-Tha-Za-Kha-Za');
     expect(view).toContain('Suns of Lights');
   });
 });
@@ -337,7 +349,8 @@ describe('Topics is open: isTopicsView covers every Topics page', () => {
 
   it('the Home Topic of the Day card links to the Topics hub too', () => {
     const home = readSource('src/views/HomeView.tsx');
-    expect(home).toContain('All topics');
+    expect(I18N_HOME.en['home.topic.allTopics']).toBe('All topics');
+    expect(home).toContain("t('home.topic.allTopics'");
     expect(home).toContain("router.navigate('topics')");
   });
 });

@@ -11,6 +11,8 @@ import {
   type DayHours,
 } from '../../utils/astronomy';
 import { planetById } from '../../data/planets';
+import { appState } from '../../state/appState';
+import { localizeMoonMethod, localizePhaseName, localizePlanetName, localizeSunReason, tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -20,6 +22,7 @@ import { ToolsLayout } from './ToolsLayout';
  * about what to do.
  */
 export const MajlisView: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
 
   const savedLocation = useMemo(() => getSavedLocation(), []);
@@ -43,39 +46,39 @@ export const MajlisView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Majlis"
-      eyebrow="Time & Heavens"
-      subtitle="The facts of the moment, in one place: where you are, today's ruler, the current hour, and the Moon."
+      title={tTools('tools.majlis.title', lang)}
+      eyebrow={tTools('tools.majlis.eyebrow', lang)}
+      subtitle={tTools('tools.majlis.subtitle', lang)}
     >
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">Location</h2>
+        <h2 className="ms-h2">{tTools('tools.majlis.locationTitle', lang)}</h2>
         <p className="ms-body">
           {savedLocation
             ? `${savedLocation.label} (${savedLocation.lat}, ${savedLocation.lon}, ${savedLocation.timeZone}).`
-            : 'No location is set. Hours below use the approximate 06:00–18:00 split. Set a location on the Planetary Hours page.'}
+            : tTools('tools.majlis.noLocation', lang)}
         </p>
-        <p className="ms-note">The location is saved on this device only. Nothing is sent anywhere.</p>
+        <p className="ms-note">{tTools('tools.majlis.locationNote', lang)}</p>
       </section>
 
       {dayHours && ruler && currentHour && currentRuler ? (
         <>
           <section className="ms-card space-y-3">
-            <h2 className="ms-h2">Today&apos;s ruler</h2>
+            <h2 className="ms-h2">{tTools('tools.majlis.rulerTitle', lang)}</h2>
             <p className="ms-body">
-              <span className="ms-ink font-medium">{ruler.name}</span>{' '}
+              <span className="ms-ink font-medium">{localizePlanetName(ruler.id, ruler.name, lang)}</span>{' '}
               <span className="ms-arabic-sm" dir="rtl" lang="ar">
                 {ruler.arabic}
               </span>{' '}
-              <span className="ms-muted">({ruler.transliteration})</span> rules the first hour of
-              this day.
+              <span className="ms-muted">({ruler.transliteration})</span>{' '}
+              {tTools('tools.majlis.rulerBodyA', lang)}
             </p>
           </section>
 
           <section className="ms-card space-y-3">
-            <h2 className="ms-h2">The current hour</h2>
+            <h2 className="ms-h2">{tTools('tools.majlis.currentTitle', lang)}</h2>
             <p className="ms-body">
-              Hour {currentHour.index + 1} of 24 ({currentHour.isDay ? 'day' : 'night'} hour),
-              ruled by <span className="ms-ink font-medium">{currentRuler.name}</span>{' '}
+              {tfTools('tools.today.hourLineA', lang, { n: currentHour.index + 1, dayNight: currentHour.isDay ? tTools('tools.common.day', lang) : tTools('tools.common.night', lang) })}{' '}
+              <span className="ms-ink font-medium">{localizePlanetName(currentRuler.id, currentRuler.name, lang)}</span>{' '}
               <span className="ms-arabic-sm" dir="rtl" lang="ar">
                 {currentRuler.arabic}
               </span>{' '}
@@ -86,24 +89,23 @@ export const MajlisView: React.FC = () => {
               ({timeZone})
             </p>
             {dayHours.approximate ? (
-              <p className="ms-note">Approximate, not real hours — no location is set.</p>
+              <p className="ms-note">{tTools('tools.majlis.approxNote', lang)}</p>
             ) : null}
           </section>
         </>
       ) : (
         <p className="ms-note-box" role="alert">
-          Planetary hours are unavailable for this place and day: {unavailableReason}
+          {tfTools('tools.majlis.unavailable', lang, { reason: unavailableReason ? localizeSunReason(unavailableReason, lang) : tTools('tools.today.defaultReason', lang) })}
         </p>
       )}
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">The Moon</h2>
+        <h2 className="ms-h2">{tTools('tools.majlis.moonTitle', lang)}</h2>
         <p className="ms-body">
-          {moon.phaseName}, {(moon.illumination * 100).toFixed(1)}% lit, lunar day {moon.lunarDay}{' '}
-          of 30.
+          {tfTools('tools.majlis.moonLine', lang, { phase: localizePhaseName(moon.phaseName, lang), pct: (moon.illumination * 100).toFixed(1), day: moon.lunarDay })}
         </p>
         <p className="ms-body">
-          Mansion: <span className="ms-ink font-medium">
+          {tTools('tools.majlis.mansionLabel', lang)} <span className="ms-ink font-medium">
             {mansion.index + 1}. {mansion.name}
           </span>{' '}
           <span className="ms-arabic-sm" dir="rtl" lang="ar">
@@ -111,14 +113,12 @@ export const MajlisView: React.FC = () => {
           </span>
         </p>
         <p className="ms-note">
-          Method: {moon.method}. The mansion division (28 equal parts from 0° al-Sharatayn) is a
-          convention; see the Lunar Mansions page.
+          {tfTools('tools.majlis.methodNote', lang, { method: localizeMoonMethod(moon.method, lang) })}
         </p>
       </section>
 
       <p className="ms-note">
-        That is all this page says: facts about the time and the sky. It does not score the day,
-        recommend anything, or say what to do.
+        {tTools('tools.majlis.footer', lang)}
       </p>
     </ToolsLayout>
   );

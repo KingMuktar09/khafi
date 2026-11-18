@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import type { SiteLanguage } from '../../types';
+import { appState } from '../../state/appState';
+import { localizePlanetName, tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 import { copyTextToClipboard, saveSvgAsPng } from '../../utils/figureExport';
 
@@ -22,10 +25,14 @@ const PLATE_METALS: { metal: string; planet: string }[] = [
   { metal: 'Lead', planet: 'Saturn' },
 ];
 
-function buildPlateSvg(): string {
+function buildPlateSvg(lang: SiteLanguage): string {
   const size = 640;
   const height = 560;
   const lines: string[] = [];
+  const rows = PLATE_METALS.map((row) => ({
+    metal: tTools(`tools.data.metal.${row.metal.toLowerCase()}`, lang),
+    planet: localizePlanetName(row.planet.toLowerCase(), row.planet, lang),
+  }));
   lines.push(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${height}" viewBox="0 0 ${size} ${height}">`,
   );
@@ -37,14 +44,14 @@ function buildPlateSvg(): string {
     `<rect x="26" y="26" width="${size - 52}" height="${height - 52}" fill="none" stroke="#e8b84f" stroke-width="1"/>`,
   );
   lines.push(
-    `<text x="${size / 2}" y="96" font-family="Georgia, serif" font-size="26" fill="#e8b84f" text-anchor="middle">Lawh, the plate</text>`,
+    `<text x="${size / 2}" y="96" font-family="Georgia, serif" font-size="26" fill="#e8b84f" text-anchor="middle">${tTools('tools.plate.svgTitle', lang)}</text>`,
   );
   lines.push(
-    `<text x="${size / 2}" y="128" font-family="Georgia, serif" font-size="15" fill="#ece6d8" text-anchor="middle">Each planet has its metal. The metal must match the planet.</text>`,
+    `<text x="${size / 2}" y="128" font-family="Georgia, serif" font-size="15" fill="#ece6d8" text-anchor="middle">${tTools('tools.plate.svgSub', lang)}</text>`,
   );
   const top = 168;
   const rowHeight = 56;
-  PLATE_METALS.forEach((row, i) => {
+  rows.forEach((row, i) => {
     const y = top + i * rowHeight;
     if (i > 0) {
       lines.push(
@@ -59,13 +66,14 @@ function buildPlateSvg(): string {
     );
   });
   lines.push(
-    `<text x="${size / 2}" y="${height - 42}" font-family="Georgia, serif" font-size="14" fill="#ece6d8" text-anchor="middle">Copper and tin are named as plates too. Their planets are not named here.</text>`,
+    `<text x="${size / 2}" y="${height - 42}" font-family="Georgia, serif" font-size="14" fill="#ece6d8" text-anchor="middle">${tTools('tools.plate.svgFoot', lang)}</text>`,
   );
   lines.push('</svg>');
   return lines.join('\n');
 }
 
 export const PlateView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const [copied, setCopied] = useState(false);
   const q = query.trim().toLowerCase();
@@ -85,41 +93,39 @@ export const PlateView: React.FC = () => {
   };
 
   const onSaveImage = async (): Promise<void> => {
-    await saveSvgAsPng(buildPlateSvg(), 'plate-of-metals.png');
+    await saveSvgAsPng(buildPlateSvg(lang), 'plate-of-metals.png');
   };
 
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['plate']}
-      title="Plate"
-      eyebrow="Plate"
-      subtitle="Plates of metal, one for each planet."
+      title={tTools('tools.plate.title', lang)}
+      eyebrow={tTools('tools.plate.eyebrow', lang)}
+      subtitle={tTools('tools.plate.subtitle', lang)}
+      toolId="plate"
       filter={filter}
     >
       <div className="space-y-1.5" aria-label="Entries">
         <label className="ms-label" htmlFor="plate-search">
-          Search entries
+          {tTools('tools.plate.searchLabel', lang)}
         </label>
         <input
           id="plate-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.plate.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
 
-      <section className="ms-card space-y-3" aria-label="The metals and their planets">
-        <h2 className="ms-h2">The metals and their planets, shown on this page</h2>
-        <p className="ms-body">
-          Each planet has its metal, and the metal must match the planet. The Sun has gold. The Moon
-          has silver. Mars has iron. Mercury has quicksilver. Saturn has lead.
-        </p>
+      <section className="ms-card space-y-3" aria-label={tTools('tools.plate.metalsAria', lang)}>
+        <h2 className="ms-h2">{tTools('tools.plate.metalsTitle', lang)}</h2>
+        <p className="ms-body">{tTools('tools.plate.metalsBody', lang)}</p>
         <div
           className="border border-[var(--ms-border)] px-4 py-2"
           role="table"
-          aria-label="Plate of metals and their planets"
+          aria-label={tTools('tools.plate.tableAria', lang)}
         >
           {PLATE_METALS.map((row) => (
             <div
@@ -128,30 +134,27 @@ export const PlateView: React.FC = () => {
               className="flex items-center justify-between gap-3 border-b border-[var(--ms-border)] py-2 last:border-b-0"
             >
               <span role="cell" className="ms-body">
-                {row.metal}
+                {tTools(`tools.data.metal.${row.metal.toLowerCase()}`, lang)}
               </span>
               <span role="cell" className="ms-body ms-gold">
-                {row.planet}
+                {localizePlanetName(row.planet.toLowerCase(), row.planet, lang)}
               </span>
             </div>
           ))}
         </div>
         <p className="ms-note">
-          The figure is fully shown above, on this page. No download is needed to see it or use it.
-          The books also name copper plates and a tin sheet, but they do not tie them to a planet in
-          the entries on this page.
+          {tTools('tools.plate.metalsNote', lang)}
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="ms-btn-solid" onClick={onCopy}>
-            {copied ? 'Copied' : 'Copy list'}
+            {copied ? tTools('tools.common.copied', lang) : tTools('tools.plate.copyList', lang)}
           </button>
           <button type="button" className="ms-btn-solid" onClick={onSaveImage}>
-            Save as image
+            {tTools('tools.plate.saveImage', lang)}
           </button>
         </div>
         <p className="ms-body ms-muted text-sm">
-          Sources: Manba Usul al-Hikma, pp. 140-141; The Radiant Jewels for Summoning, p. 54; Shams
-          al-Ma'arif al-Kubra (John Friend), p. 38.
+          {tTools('tools.common.sources', lang)}: Manba Usul al-Hikma, pp. 140-141; The Radiant Jewels for Summoning, p. 54; Shams al-Ma'arif al-Kubra (John Friend), p. 38.
         </p>
       </section>
     </FilledToolPage>

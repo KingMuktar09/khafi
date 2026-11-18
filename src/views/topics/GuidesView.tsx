@@ -2,6 +2,9 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { router } from '../../router/router';
 import { STUDY_GUIDES } from '../../data/studyGuides';
+import { localizeGuide } from '../../data/topicsI18n';
+import { tt, ttf } from '../../data/i18n-topics';
+import { appState } from '../../state/appState';
 
 /**
  * Study Guides: all six guides in full, one after another, each
@@ -10,6 +13,9 @@ import { STUDY_GUIDES } from '../../data/studyGuides';
  * a study-only note at the top.
  */
 export const GuidesView: React.FC = () => {
+  const lang = appState.settings.language;
+  const guides = STUDY_GUIDES.map((guide) => localizeGuide(guide, lang));
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in ms-tools">
       <button
@@ -18,27 +24,21 @@ export const GuidesView: React.FC = () => {
         className="inline-flex items-center gap-1.5 text-sm ms-muted hover:text-[var(--ms-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)] rounded px-1 py-1"
       >
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-        Topics
+        {tt('topics.back', lang)}
       </button>
 
       <div className="space-y-1.5">
-        <span className="ms-eyebrow block">Topics</span>
-        <h1 className="ms-title">Study Guides</h1>
-        <p className="ms-subtitle">
-          Short practical guides for the seeker, gathered from the books with their sources named.
-          {` ${STUDY_GUIDES.length} guides so far.`}
-        </p>
+        <span className="ms-eyebrow block">{tt('topics.hubTitle', lang)}</span>
+        <h1 className="ms-title">{tt('guides.title', lang)}</h1>
+        <p className="ms-subtitle">{ttf('guides.subtitle', lang, { count: STUDY_GUIDES.length })}</p>
       </div>
 
-      <p className="ms-note-box">
-        These guides are for study only. They do not promise any outcome, and they give no religious
-        ruling. Read them slowly, and check the sources named at the end of each one.
-      </p>
+      <p className="ms-note-box">{tt('guides.studyNote', lang)}</p>
 
-      <nav className="ms-card space-y-2" aria-label="Guides on this page">
-        <h2 className="ms-h2">Guides on this page</h2>
+      <nav className="ms-card space-y-2" aria-label={tt('guides.onThisPage', lang)}>
+        <h2 className="ms-h2">{tt('guides.onThisPage', lang)}</h2>
         <ul className="space-y-2">
-          {STUDY_GUIDES.map((guide) => (
+          {guides.map((guide) => (
             <li key={guide.id}>
               <a
                 href={`#${guide.id}`}
@@ -51,7 +51,7 @@ export const GuidesView: React.FC = () => {
         </ul>
       </nav>
 
-      {STUDY_GUIDES.map((guide) => (
+      {guides.map((guide) => (
         <article key={guide.id} id={guide.id} className="space-y-6 scroll-mt-20">
           <div className="space-y-1.5">
             <span className="ms-eyebrow block">{guide.eyebrow}</span>
@@ -59,7 +59,7 @@ export const GuidesView: React.FC = () => {
             <p className="ms-subtitle">{guide.subtitle}</p>
           </div>
 
-          <section className="ms-card space-y-3" aria-label="Introduction">
+          <section className="ms-card space-y-3" aria-label={tt('topics.intro', lang)}>
             <p className="ms-body">{guide.intro}</p>
           </section>
 
@@ -82,15 +82,18 @@ export const GuidesView: React.FC = () => {
                     <p className="ms-body italic">{section.quote.transliteration}</p>
                   ) : null}
                   <p className="ms-body">&ldquo;{section.quote.text}&rdquo;</p>
-                  <p className="ms-body ms-muted text-sm">Source: {section.quote.source}</p>
+                  <p className="ms-body ms-muted text-sm">
+                    {tt('topics.sourceLabel', lang)}
+                    {section.quote.source}
+                  </p>
                 </blockquote>
               ) : null}
             </section>
           ))}
 
           {guide.terms.length > 0 ? (
-            <section className="ms-card space-y-3" aria-label="Words used here">
-              <h3 className="ms-h2">Words used here</h3>
+            <section className="ms-card space-y-3" aria-label={tt('topics.wordsUsed', lang)}>
+              <h3 className="ms-h2">{tt('topics.wordsUsed', lang)}</h3>
               <ul className="space-y-3">
                 {guide.terms.map((term) => (
                   <li key={term.transliteration} className="space-y-1">
@@ -106,12 +109,12 @@ export const GuidesView: React.FC = () => {
             </section>
           ) : null}
 
-          <section className="ms-card space-y-3" aria-label="Closing">
+          <section className="ms-card space-y-3" aria-label={tt('topics.closing', lang)}>
             <p className="ms-body">{guide.closing}</p>
           </section>
 
-          <section className="ms-card space-y-3" aria-label="Sources">
-            <h3 className="ms-h2">Sources</h3>
+          <section className="ms-card space-y-3" aria-label={tt('topics.sources', lang)}>
+            <h3 className="ms-h2">{tt('topics.sources', lang)}</h3>
             <ul className="space-y-2">
               {guide.sources.map((source, index) => (
                 <li key={index} className="ms-body">

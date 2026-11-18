@@ -7,6 +7,8 @@ import { TOPIC_QUESTIONS } from '../../data/topicsQuestions';
 import { STUDY_GUIDES } from '../../data/studyGuides';
 import { ASMA_NAMES } from '../../data/asmaNames';
 import type { ViewName } from '../../types';
+import { appState } from '../../state/appState';
+import { localizeAsmaMeaning, localizeTool, tTools, tfTools } from '../../data/i18n-tools';
 
 interface ToolsSearchOverlayProps {
   open: boolean;
@@ -30,6 +32,7 @@ const MAX_NAME_HITS = 8;
  * opens the Guides page. Escape closes.
  */
 export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, onClose }) => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,22 +58,30 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
   const hits: SearchHit[] = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    const toolHits: SearchHit[] = TOOLS_INDEX.filter((tool) =>
-      [tool.title, tool.blurb, ...tool.keywords].some((field) => field.toLowerCase().includes(q)),
-    ).map((tool) => ({
-      key: `tool-${tool.id}`,
-      title: tool.title,
-      detail: tool.blurb,
-      route: tool.route,
-    }));
+    const toolHits: SearchHit[] = TOOLS_INDEX.filter((tool) => {
+      const localized = localizeTool(tool, lang);
+      return [tool.title, tool.blurb, localized.title, localized.blurb, ...tool.keywords].some((field) =>
+        field.toLowerCase().includes(q),
+      );
+    }).map((tool) => {
+      const localized = localizeTool(tool, lang);
+      return {
+        key: `tool-${tool.id}`,
+        title: localized.title,
+        detail: localized.blurb,
+        route: tool.route,
+      };
+    });
     const nameHits: SearchHit[] = ASMA_NAMES.filter((name) =>
-      [name.arabic, name.transliteration, name.meaning].some((field) => field.toLowerCase().includes(q)),
+      [name.arabic, name.transliteration, name.meaning, localizeAsmaMeaning(name.bare, name.meaning, lang)].some(
+        (field) => field.toLowerCase().includes(q),
+      ),
     )
       .slice(0, MAX_NAME_HITS)
       .map((name) => ({
         key: `name-${name.bare}`,
         title: name.transliteration,
-        detail: name.meaning,
+        detail: localizeAsmaMeaning(name.bare, name.meaning, lang),
         arabic: name.arabic,
         route: 'tools-asma',
       }));
@@ -111,7 +122,7 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
       route: 'topics-guides' as ViewName,
     }));
     return [...toolHits, ...topicHits, ...guideHits, ...questionHits, ...nameHits];
-  }, [query]);
+  }, [query, lang]);
 
   if (!open) return null;
 
@@ -130,7 +141,7 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Search study tools"
+      aria-label={tTools('tools.search.dialogLabel', lang)}
     >
       <div
         className="ms-search-panel w-full max-w-lg overflow-hidden"
@@ -146,14 +157,14 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
             onKeyDown={(event) => {
               if (event.key === 'Enter') onEnter();
             }}
-            placeholder="Search tools, topics and the 99 Names…"
-            aria-label="Search tools, topics and the 99 Names"
+            placeholder={tTools('tools.search.placeholder', lang)}
+            aria-label={tTools('tools.search.aria', lang)}
             className="ms-search-input flex-1 min-w-0 bg-transparent focus:outline-none"
           />
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close search"
+            aria-label={tTools('tools.common.closeSearch', lang)}
             className="p-1.5 rounded-lg ms-muted hover:text-[var(--ms-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)]"
           >
             <X className="w-5 h-5" aria-hidden="true" />
@@ -163,11 +174,11 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
         <div className="max-h-[60vh] overflow-y-auto">
           {query.trim() === '' ? (
             <p className="px-4 py-5 ms-body">
-              Try “letters”, “counter”, “notes”, “Malakut”, or a Name such as “Rahman”.
+              {tTools('tools.search.hint', lang)}
             </p>
           ) : hits.length === 0 ? (
             <p className="px-4 py-5 ms-body">
-              No matches for “{query.trim()}”.
+              {tfTools('tools.common.noMatchesFor', lang, { q: query.trim() })}
             </p>
           ) : (
             <ul className="ms-search-results">

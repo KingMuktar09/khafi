@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -7,6 +9,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const ShurutView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -18,21 +21,22 @@ export const ShurutView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['shurut']}
-      title="Shurut (Conditions)"
-      eyebrow="Conditions"
-      subtitle="The conditions the books name, each with its source and page."
+      title={tTools('tools.shurut.title', lang)}
+      eyebrow={tTools('tools.shurut.eyebrow', lang)}
+      subtitle={tTools('tools.shurut.subtitle', lang)}
+      toolId="shurut"
       filter={filter}
     >
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor="shurut-search">
-          Search entries
+          {tTools('tools.shurut.searchLabel', lang)}
         </label>
         <input
           id="shurut-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.shurut.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

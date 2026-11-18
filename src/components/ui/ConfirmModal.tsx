@@ -1,5 +1,7 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -18,8 +20,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   isDangerous = true,
   isLoading = false,
   isBlocked = false,
@@ -27,6 +29,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onCancel,
 }) => {
   if (!isOpen) return null;
+
+  // Title and message come from the caller, in the caller's words.
+  // Only this modal's own chrome (defaults, close label, the
+  // deleting state) is translated here.
+  const lang = appState.settings.language;
+  const confirmText = confirmLabel ?? t('ui.confirm.confirmDefault', lang);
+  const cancelText = cancelLabel ?? t('ui.confirm.cancelDefault', lang);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
@@ -40,7 +49,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           onClick={onCancel}
           disabled={isLoading}
           className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors p-1 disabled:opacity-50"
-          aria-label="Close modal"
+          aria-label={t('ui.confirm.closeModal', lang)}
         >
           <X className="w-4 h-4" />
         </button>
@@ -62,7 +71,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             disabled={isLoading}
             className="px-4 py-2 border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded transition-colors font-medium disabled:opacity-50 cursor-pointer"
           >
-            {isBlocked ? 'Cancel' : cancelLabel}
+            {isBlocked ? t('ui.confirm.cancelDefault', lang) : cancelText}
           </button>
           {!isBlocked && (
             <button
@@ -74,7 +83,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   : 'bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black'
               }`}
             >
-              {isLoading ? 'Deleting...' : confirmLabel}
+              {isLoading ? t('ui.confirm.deleting', lang) : confirmText}
             </button>
           )}
         </div>

@@ -9,6 +9,7 @@ import {
 } from '../../utils/abjad';
 import type { AbjadSchool, AbjadSystem } from '../../utils/abjad';
 import { appState } from '../../state/appState';
+import { localizeNormalizationRule, tTools } from '../../data/i18n-tools';
 import { addGrimoireItem } from '../../utils/toolsStorage';
 import { ToolsLayout } from './ToolsLayout';
 
@@ -19,6 +20,7 @@ const EXAMPLE_TEXT = 'بسم الله الرحمن الرحيم';
  * Saghir values, the running total, and the grand total.
  */
 export const BastView: React.FC = () => {
+  const lang = appState.settings.language;
   const [text, setText] = useState('');
   const [system, setSystem] = useState<AbjadSystem>('kabir');
   const [school, setSchool] = useState<AbjadSchool>('mashriqi');
@@ -39,7 +41,7 @@ export const BastView: React.FC = () => {
         .map((item) => `${item.letter} ${item.value}`)
         .join(', ')}.`,
     });
-    appState.showToast('Saved to Grimoire', 'success');
+    appState.showToast(tTools('tools.common.savedToGrimoire', lang), 'success');
   };
 
 
@@ -48,30 +50,30 @@ export const BastView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Bast — Unfold a Text"
-      eyebrow="Unfold a Text"
-      subtitle="Type any text and see it unfolded letter by letter, with each letter’s value and the running total."
+      title={tTools('tools.bast.title', lang)}
+      eyebrow={tTools('tools.bast.eyebrow', lang)}
+      subtitle={tTools('tools.bast.subtitle', lang)}
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <span className="ms-label">System</span>
-          <div className="flex gap-2" role="group" aria-label="System">
+          <span className="ms-label">{tTools('tools.common.system', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.system', lang)}>
             <button type="button" aria-pressed={system === 'kabir'} onClick={() => setSystem('kabir')} className="ms-toggle">
-              Kabir (large)
+              {tTools('tools.common.kabir', lang)}
             </button>
             <button type="button" aria-pressed={system === 'saghir'} onClick={() => setSystem('saghir')} className="ms-toggle">
-              Saghir (small)
+              {tTools('tools.common.saghir', lang)}
             </button>
           </div>
         </div>
         <div className="space-y-1.5">
-          <span className="ms-label">School</span>
-          <div className="flex gap-2" role="group" aria-label="School">
+          <span className="ms-label">{tTools('tools.common.school', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.school', lang)}>
             <button type="button" aria-pressed={school === 'mashriqi'} onClick={() => setSchool('mashriqi')} className="ms-toggle">
-              Mashriqi (eastern)
+              {tTools('tools.common.mashriqi', lang)}
             </button>
             <button type="button" aria-pressed={school === 'maghribi'} onClick={() => setSchool('maghribi')} className="ms-toggle">
-              Maghribi (western)
+              {tTools('tools.common.maghribi', lang)}
             </button>
           </div>
         </div>
@@ -79,7 +81,7 @@ export const BastView: React.FC = () => {
 
       <div className="space-y-2">
         <label className="ms-label block" htmlFor="bast-input">
-          Your text
+          {tTools('tools.bast.yourText', lang)}
         </label>
         <textarea
           id="bast-input"
@@ -87,12 +89,12 @@ export const BastView: React.FC = () => {
           onChange={(event) => setText(event.target.value)}
           rows={3}
           dir="auto"
-          placeholder="Type Arabic text here…"
+          placeholder={tTools('tools.bast.placeholder', lang)}
           className="ms-field w-full px-3.5 py-3 text-base resize-y"
         />
         {normalized.trim() && normalized !== text ? (
           <p className="ms-note">
-            Counted as: <span className="font-arabic text-sm ms-ink" dir="rtl" lang="ar">{normalized}</span>
+            {tTools('tools.bast.countedAs', lang)} <span className="font-arabic text-sm ms-ink" dir="rtl" lang="ar">{normalized}</span>
           </p>
         ) : null}
       </div>
@@ -100,14 +102,14 @@ export const BastView: React.FC = () => {
       {!result ? (
         <div className="ms-card space-y-3 text-center">
           <p className="ms-body">
-            Nothing to unfold yet. Type some text above, or try the example.
+            {tTools('tools.bast.empty', lang)}
           </p>
           <button
             type="button"
             onClick={() => setText(EXAMPLE_TEXT)}
             className="ms-btn-gold"
           >
-            Try an example: <span className="font-arabic" dir="rtl" lang="ar">{EXAMPLE_TEXT}</span>
+            {tTools('tools.bast.tryExample', lang)} <span className="font-arabic" dir="rtl" lang="ar">{EXAMPLE_TEXT}</span>
           </button>
         </div>
       ) : (
@@ -115,11 +117,11 @@ export const BastView: React.FC = () => {
           <table className="ms-table">
             <thead>
               <tr className="text-left">
-                <th scope="col" className="px-4 py-3 font-medium">#</th>
-                <th scope="col" className="px-4 py-3 font-medium">Letter</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Kabir</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Saghir</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Running total</th>
+                <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.bast.thHash', lang)}</th>
+                <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.bast.thLetter', lang)}</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.bast.thKabir', lang)}</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.bast.thSaghir', lang)}</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.bast.thRunning', lang)}</th>
               </tr>
             </thead>
             <tbody>
@@ -143,7 +145,7 @@ export const BastView: React.FC = () => {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={4} className="px-4 py-3 font-medium ms-ink">Grand total</td>
+                <td colSpan={4} className="px-4 py-3 font-medium ms-ink">{tTools('tools.common.grandTotal', lang)}</td>
                 <td className="px-4 py-3 text-right font-bold ms-gold ms-num">{result.total}</td>
               </tr>
             </tfoot>
@@ -155,17 +157,17 @@ export const BastView: React.FC = () => {
               className="ms-btn-gold"
             >
               <BookmarkPlus className="w-4 h-4" aria-hidden="true" />
-              Save this unfolding to Grimoire
+              {tTools('tools.bast.saveUnfolding', lang)}
             </button>
           </div>
         </section>
       )}
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">How the text is counted</h2>
+        <h2 className="ms-h2">{tTools('tools.bast.howCounted', lang)}</h2>
         <ul className="list-disc pl-5 space-y-1.5 ms-body">
           {NORMALIZATION_RULES.map((rule) => (
-            <li key={rule}>{rule}</li>
+            <li key={rule}>{localizeNormalizationRule(rule, lang)}</li>
           ))}
         </ul>
       </section>

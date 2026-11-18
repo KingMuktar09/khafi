@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, CheckCircle2, Flame, Bookmark, Compass, Library } from 'lucide-react';
 import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 /**
  * Reading Stats — local only, from My Shelf, reading progress,
@@ -8,14 +9,15 @@ import { appState } from '../../state/appState';
  * nothing leaves the device.
  */
 export const ReadingStats: React.FC = () => {
+  const lang = appState.settings.language;
   const stats = appState.getReadingStats();
   const items = [
-    { icon: CheckCircle2, label: 'Finished', value: stats.finished },
-    { icon: BookOpen, label: 'Reading now', value: stats.inProgress },
-    { icon: Library, label: 'On My Shelf', value: stats.onShelf },
-    { icon: Compass, label: 'Journey steps done', value: stats.journeyStepsDone },
-    { icon: Bookmark, label: 'Bookmarks', value: stats.bookmarks },
-    { icon: Flame, label: 'Day streak', value: stats.streakDays },
+    { icon: CheckCircle2, label: t('home.stats.finished', lang), value: stats.finished },
+    { icon: BookOpen, label: t('home.stats.readingNow', lang), value: stats.inProgress },
+    { icon: Library, label: t('home.stats.onShelf', lang), value: stats.onShelf },
+    { icon: Compass, label: t('home.stats.journeySteps', lang), value: stats.journeyStepsDone },
+    { icon: Bookmark, label: t('home.stats.bookmarks', lang), value: stats.bookmarks },
+    { icon: Flame, label: t('home.stats.streak', lang), value: stats.streakDays },
   ];
   return (
     <section className="space-y-3 animate-fade-up">
@@ -24,10 +26,10 @@ export const ReadingStats: React.FC = () => {
           <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
             <Flame className="w-4 h-4 text-[var(--gold)]" />
           </div>
-          <span>Your Reading Stats</span>
+          <span>{t('home.stats.title', lang)}</span>
         </h2>
         <p className="text-xs text-[var(--text-muted)]">
-          Only on this device. Your shelf, your progress, your streak.
+          {t('home.stats.subtitle', lang)}
         </p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

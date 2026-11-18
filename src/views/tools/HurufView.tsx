@@ -6,6 +6,8 @@ import {
   saghirOf,
 } from '../../utils/abjad';
 import type { AbjadSchool, AbjadSystem } from '../../utils/abjad';
+import { appState } from '../../state/appState';
+import { localizeNormalizationRule, tTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 type ToggleProps = {
@@ -40,30 +42,31 @@ const Toggle: React.FC<ToggleProps> = ({ label, options, current, onChange }) =>
  * yet, so they are shown as "source needed" and nothing is invented.
  */
 export const HurufView: React.FC = () => {
+  const lang = appState.settings.language;
   const [system, setSystem] = useState<AbjadSystem>('kabir');
   const [school, setSchool] = useState<AbjadSchool>('mashriqi');
 
   return (
     <ToolsLayout
-      title="Huruf — Letters & Numbers"
-      eyebrow="Letters & Numbers"
-      subtitle="The 28 Arabic letters and their Abjad values. Pick a system and a school; the table updates."
+      title={tTools('tools.huruf.title', lang)}
+      eyebrow={tTools('tools.huruf.eyebrow', lang)}
+      subtitle={tTools('tools.huruf.subtitle', lang)}
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <Toggle
-          label="System"
+          label={tTools('tools.common.system', lang)}
           options={[
-            { value: 'kabir', label: 'Kabir (large)' },
-            { value: 'saghir', label: 'Saghir (small)' },
+            { value: 'kabir', label: tTools('tools.common.kabir', lang) },
+            { value: 'saghir', label: tTools('tools.common.saghir', lang) },
           ]}
           current={system}
           onChange={(value) => setSystem(value as AbjadSystem)}
         />
         <Toggle
-          label="School"
+          label={tTools('tools.common.school', lang)}
           options={[
-            { value: 'mashriqi', label: 'Mashriqi (eastern)' },
-            { value: 'maghribi', label: 'Maghribi (western)' },
+            { value: 'mashriqi', label: tTools('tools.common.mashriqi', lang) },
+            { value: 'maghribi', label: tTools('tools.common.maghribi', lang) },
           ]}
           current={school}
           onChange={(value) => setSchool(value as AbjadSchool)}
@@ -74,9 +77,9 @@ export const HurufView: React.FC = () => {
         <table className="ms-table">
           <thead>
             <tr className="text-left">
-              <th scope="col" className="px-4 py-3 font-medium">Letter</th>
-              <th scope="col" className="px-4 py-3 font-medium">Name</th>
-              <th scope="col" className="px-4 py-3 font-medium text-right">Value</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.huruf.thLetter', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.huruf.thName', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.huruf.thValue', lang)}</th>
             </tr>
           </thead>
           <tbody>
@@ -101,36 +104,31 @@ export const HurufView: React.FC = () => {
         </table>
       </section>
 
-      <p className="ms-note">
-        Table: standard Abjad values (mashriqi/maghribi). Kabir is the full value; Saghir is the same value
-        reduced to a single digit. Values checked against Wikipedia’s “Abjad numerals” and the OpenArabic
-        and WiserWork abjad calculators — the two schools agree on 22 letters and differ on six
-        (sad, dad, sin, shin, za, ghayn).
-      </p>
+      <p className="ms-note">{tTools('tools.huruf.tableNote', lang)}</p>
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">How letters are counted</h2>
+        <h2 className="ms-h2">{tTools('tools.huruf.howCounted', lang)}</h2>
         <ul className="list-disc pl-5 space-y-1.5 ms-body">
           {NORMALIZATION_RULES.map((rule) => (
-            <li key={rule}>{rule}</li>
+            <li key={rule}>{localizeNormalizationRule(rule, lang)}</li>
           ))}
         </ul>
       </section>
 
       <section className="ms-card space-y-4">
-        <h2 className="ms-h2">Mappings we do not show yet</h2>
+        <h2 className="ms-h2">{tTools('tools.huruf.mappingsTitle', lang)}</h2>
         <div className="space-y-3 text-sm leading-relaxed">
           <div>
-            <h3 className="ms-h3">Element groups</h3>
-            <p className="ms-body">Source needed — no source has been named for this mapping yet.</p>
+            <h3 className="ms-h3">{tTools('tools.huruf.elementGroups', lang)}</h3>
+            <p className="ms-body">{tTools('tools.huruf.sourceNeeded', lang)}</p>
           </div>
           <div>
-            <h3 className="ms-h3">Luminous and dark letters</h3>
-            <p className="ms-body">Source needed — no source has been named for this mapping yet.</p>
+            <h3 className="ms-h3">{tTools('tools.huruf.luminous', lang)}</h3>
+            <p className="ms-body">{tTools('tools.huruf.sourceNeeded', lang)}</p>
           </div>
           <div>
-            <h3 className="ms-h3">Letter-to-planet links</h3>
-            <p className="ms-body">Source needed — no source has been named for this mapping yet.</p>
+            <h3 className="ms-h3">{tTools('tools.huruf.planetLinks', lang)}</h3>
+            <p className="ms-body">{tTools('tools.huruf.sourceNeeded', lang)}</p>
           </div>
         </div>
       </section>

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Toast } from '../../types';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 interface ToastProps {
   toasts: Toast[];
@@ -9,6 +11,9 @@ interface ToastProps {
 
 export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
   if (toasts.length === 0) return null;
+  // Toast message bodies come from their callers; only this chrome
+  // (the dismiss label) belongs to this component.
+  const lang = appState.settings.language;
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none font-sans">
@@ -37,7 +42,7 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
             <button
               onClick={() => onDismiss(toast.id)}
               className="p-1 opacity-70 hover:opacity-100 transition-opacity"
-              aria-label="Close notification"
+              aria-label={t('ui.toast.close', lang)}
             >
               <X className="w-3.5 h-3.5" />
             </button>

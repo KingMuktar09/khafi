@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { getSunLongitude } from '../../utils/astronomy';
 import { ZODIAC_CONVENTION, ZODIAC_SIGNS, ZODIAC_SOURCE, zodiacSignForLongitude } from '../../data/zodiac';
+import { appState } from '../../state/appState';
+import { localizeElement, localizeZodiacName, tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -10,34 +12,32 @@ import { ToolsLayout } from './ToolsLayout';
  * Facts only.
  */
 export const FalakView: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
 
   const sunLongitude = useMemo(() => getSunLongitude(now), [now]);
 
   const currentSign = useMemo(() => zodiacSignForLongitude(sunLongitude), [sunLongitude]);
 
-  const elementLabel = (element: string): string =>
-    element.charAt(0).toUpperCase() + element.slice(1);
-
   return (
     <ToolsLayout
-      title="Falak — the Twelve Signs"
-      eyebrow="Time & Heavens"
-      subtitle="The twelve signs of the tropical zodiac, with the Sun's sign today. A table for study — nothing here says what a sign means for any person."
+      title={tTools('tools.falak.title', lang)}
+      eyebrow={tTools('tools.falak.eyebrow', lang)}
+      subtitle={tTools('tools.falak.subtitle', lang)}
     >
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">The Sun&apos;s sign today</h2>
+        <h2 className="ms-h2">{tTools('tools.falak.sunSignTitle', lang)}</h2>
         <p className="ms-body">
-          The Sun is at {sunLongitude.toFixed(2)}° ecliptic longitude, in{' '}
-          <span className="ms-ink font-medium">{currentSign.name}</span>{' '}
+          {tfTools('tools.falak.sunSignBodyA', lang, { deg: sunLongitude.toFixed(2) })}{' '}
+          <span className="ms-ink font-medium">{localizeZodiacName(currentSign.index, currentSign.name, lang)}</span>{' '}
           <span className="ms-arabic-sm" dir="rtl" lang="ar">
             {currentSign.arabic}
           </span>{' '}
           <span className="ms-muted">({currentSign.transliteration})</span>,{' '}
-          {elementLabel(currentSign.element)}.
+          {localizeElement(currentSign.element, lang)}.
         </p>
         <p className="ms-note">
-          Worked out with the Astronomy Engine (SunPosition ecliptic longitude of the Sun). {ZODIAC_CONVENTION}
+          {tfTools('tools.falak.methodNote', lang, { convention: tTools('tools.data.zodiacConvention', lang) })}
         </p>
       </section>
 
@@ -45,12 +45,12 @@ export const FalakView: React.FC = () => {
         <table className="ms-table">
           <thead>
             <tr className="text-left">
-              <th scope="col" className="px-4 py-3 font-medium">#</th>
-              <th scope="col" className="px-4 py-3 font-medium">Sign</th>
-              <th scope="col" className="px-4 py-3 font-medium">Arabic</th>
-              <th scope="col" className="px-4 py-3 font-medium">Dates (approx.)</th>
-              <th scope="col" className="px-4 py-3 font-medium">Element</th>
-              <th scope="col" className="px-4 py-3 font-medium text-right">Degrees</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.falak.thHash', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.falak.thSign', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.falak.thArabic', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.falak.thDates', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.falak.thElement', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.falak.thDegrees', lang)}</th>
             </tr>
           </thead>
           <tbody>
@@ -63,9 +63,9 @@ export const FalakView: React.FC = () => {
                 >
                   <td className="px-4 py-2.5 ms-num">
                     {sign.index + 1}
-                    {isCurrent ? ' — today' : ''}
+                    {isCurrent ? tTools('tools.falak.todaySuffix', lang) : ''}
                   </td>
-                  <td className="px-4 py-2.5 ms-ink">{sign.name}</td>
+                  <td className="px-4 py-2.5 ms-ink">{localizeZodiacName(sign.index, sign.name, lang)}</td>
                   <td className="px-4 py-2.5">
                     <span className="ms-arabic-sm" dir="rtl" lang="ar">
                       {sign.arabic}
@@ -73,7 +73,7 @@ export const FalakView: React.FC = () => {
                     <span className="ms-muted text-sm">({sign.transliteration})</span>
                   </td>
                   <td className="px-4 py-2.5 ms-num">{sign.dateRange}</td>
-                  <td className="px-4 py-2.5 ms-body">{elementLabel(sign.element)}</td>
+                  <td className="px-4 py-2.5 ms-body">{localizeElement(sign.element, lang)}</td>
                   <td className="px-4 py-2.5 text-right ms-num">
                     {sign.startLongitude}° – {sign.endLongitude}°
                   </td>
@@ -85,10 +85,8 @@ export const FalakView: React.FC = () => {
       </section>
 
       <p className="ms-note">
-        {ZODIAC_CONVENTION} Elements are the traditional Western grouping: Fire = Aries, Leo,
-        Sagittarius; Earth = Taurus, Virgo, Capricorn; Air = Gemini, Libra, Aquarius; Water =
-        Cancer, Scorpio, Pisces. Source: {ZODIAC_SOURCE}. The date ranges are approximate and shift
-        a day or so from year to year, because the equinox itself moves.
+        {tTools('tools.data.zodiacConvention', lang)}{' '}
+        {tfTools('tools.falak.footer', lang, { source: ZODIAC_SOURCE })}
       </p>
     </ToolsLayout>
   );

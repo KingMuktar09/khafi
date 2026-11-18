@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, BookOpen, Compass } from 'lucide-react';
 import { getTimeline } from '../data/specialFeatures';
 import { appState } from '../state/appState';
+import { t } from '../data/i18n';
 import { router } from '../router/router';
 
 /**
@@ -11,6 +12,7 @@ import { router } from '../router/router';
  * the library.
  */
 export const TimelineView: React.FC = () => {
+  const lang = appState.settings.language;
   const books = appState.getVisibleBooks();
   const byTitle = new Map(books.map((b) => [b.title, b]));
   const masters = getTimeline();
@@ -23,16 +25,13 @@ export const TimelineView: React.FC = () => {
           className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] flex items-center gap-1 font-medium cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home</span>
+          <span>{t('timeline.backHome', lang)}</span>
         </button>
         <h1 className="font-display font-semibold text-3xl sm:text-4xl text-[var(--text-main)] mt-3">
-          Knowledge <span className="gold-shimmer">Map</span>
+          {t('timeline.titleStart', lang)} <span className="gold-shimmer">{t('timeline.titleEnd', lang)}</span>
         </h1>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl mt-2">
-          Twelve masters, five centuries. Follow the line of knowledge from
-          the Hadith masters of the 9th century to the historians of the
-          14th — and tap any master to open their books in this library.
-          Eras are given by century, the way history knows them.
+          {t('timeline.intro', lang)}
         </p>
       </div>
 
@@ -45,7 +44,7 @@ export const TimelineView: React.FC = () => {
                 <span className="font-display font-bold text-[10px] sm:text-xs text-[var(--gold)] text-center leading-tight">
                   {master.century}th
                   <br />
-                  <span className="text-[8px] sm:text-[10px] text-[var(--text-muted)] font-sans">century</span>
+                  <span className="text-[8px] sm:text-[10px] text-[var(--text-muted)] font-sans">{t('timeline.century', lang)}</span>
                 </span>
               </div>
               <div className="flex-1 ms-panel rounded-2xl p-4 sm:p-5 space-y-2 shadow-2xs min-w-0">
@@ -78,14 +77,14 @@ export const TimelineView: React.FC = () => {
 
       <div className="p-4 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <span className="text-[var(--text-muted)] text-center sm:text-left">
-          Rather read a guided path than a timeline? The journeys walk you through the books in order.
+          {t('timeline.journeysPrompt', lang)}
         </span>
         <button
           onClick={() => router.navigate('journeys')}
           className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold rounded-lg cursor-pointer flex items-center gap-1.5 shrink-0"
         >
           <Compass className="w-4 h-4" />
-          <span>Open Guided Journeys</span>
+          <span>{t('timeline.openJourneys', lang)}</span>
         </button>
       </div>
     </div>

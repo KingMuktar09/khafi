@@ -20,6 +20,7 @@ import {
 import { Book, Folder } from '../../types';
 import { appState } from '../../state/appState';
 import { router } from '../../router/router';
+import { t, tf } from '../../data/i18n';
 import {
   getItemType,
   getTypeLabel,
@@ -41,13 +42,17 @@ interface ItemDetailsModalProps {
 export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen, onClose }) => {
   if (!isOpen || !item) return null;
 
+  // Folder and file names stay exactly as they are; only the labels
+  // around them are translated.
+  const lang = appState.settings.language;
+
   const isFolder = 'parentId' in item;
 
   if (isFolder) {
     const folder = item as Folder;
     const itemCount = appState.getItemCountForFolder(folder.id);
     const parentFolder = folder.parentId ? appState.getFolderById(folder.parentId) : null;
-    const locationPath = parentFolder ? `Ilm-e-Ghayb Library > ${parentFolder.name}` : 'Ilm-e-Ghayb Library (Root)';
+    const locationPath = parentFolder ? `Ilm-e-Ghayb Library > ${parentFolder.name}` : t('ui.details.libraryRoot', lang);
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in font-sans">
@@ -63,7 +68,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block">
-                  Folder Details
+                  {t('ui.details.folderTitle', lang)}
                 </span>
                 <h3 className="font-semibold text-base text-[var(--text-main)] truncate">
                   {folder.name}
@@ -74,8 +79,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             <button
               onClick={onClose}
               className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-colors cursor-pointer"
-              title="Close Details"
-              aria-label="Close details dialog"
+              title={t('ui.details.closeDetails', lang)}
+              aria-label={t('ui.details.closeDetails', lang)}
             >
               <X className="w-5 h-5" />
             </button>
@@ -86,7 +91,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             {folder.description && (
               <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)]">
                 <span className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1">
-                  Description
+                  {t('ui.details.description', lang)}
                 </span>
                 <p className="text-xs text-[var(--text-main)] leading-relaxed">
                   {folder.description}
@@ -98,17 +103,17 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1">
                 <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                   <HardDrive className="w-3.5 h-3.5 text-[var(--gold)]" />
-                  <span>Contents</span>
+                  <span>{t('ui.details.contents', lang)}</span>
                 </span>
                 <p className="font-semibold text-sm text-[var(--text-main)]">
-                  {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  {itemCount === 1 ? tf('ui.details.itemsOne', lang, { n: itemCount }) : tf('ui.details.itemsMany', lang, { n: itemCount })}
                 </p>
               </div>
 
               <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1">
                 <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-[var(--gold)]" />
-                  <span>Location</span>
+                  <span>{t('ui.details.location', lang)}</span>
                 </span>
                 <p className="font-medium text-xs text-[var(--text-main)] truncate" title={locationPath}>
                   {locationPath}
@@ -119,7 +124,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
                 <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1 col-span-2 sm:col-span-1">
                   <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[var(--gold)]" />
-                    <span>Created</span>
+                    <span>{t('ui.details.created', lang)}</span>
                   </span>
                   <p className="font-medium text-xs text-[var(--text-main)]">
                     {formatCatalogDate(folder.createdAt, folder.updatedAt)}
@@ -135,7 +140,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               onClick={onClose}
               className="px-4 py-2 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg text-xs font-semibold cursor-pointer"
             >
-              Close
+              {t('ui.details.close', lang)}
             </button>
 
             <button
@@ -150,7 +155,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5"
             >
               <FolderIcon className="w-4 h-4" />
-              <span>Open Folder</span>
+              <span>{t('ui.details.openFolder', lang)}</span>
             </button>
           </div>
         </div>
@@ -167,15 +172,15 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
   const targetUrl = getItemUrl(book);
   const ext = getFileExtension(targetUrl || book.title).toUpperCase();
   const formattedTitle = formatCleanTitle(book.title);
-  const formattedSize = book.fileSize ? formatFileSize(book.fileSize) : book.pageCount ? `${book.pageCount} pages` : 'Standard file';
+  const formattedSize = book.fileSize ? formatFileSize(book.fileSize) : book.pageCount ? tf('home.highlights.pages', lang, { n: book.pageCount }) : t('ui.details.standardFile', lang);
 
   const folder = book.folderId ? appState.getFolderById(book.folderId) : null;
   const subfolder = book.subfolderId ? appState.getFolderById(book.subfolderId) : null;
   const locationPath = subfolder
-    ? `${folder?.name || 'Library'} > ${subfolder.name}`
+    ? `${folder?.name || t('nav.library', lang)} > ${subfolder.name}`
     : folder
     ? folder.name
-    : 'Root Library';
+    : t('ui.details.rootLibrary', lang);
 
   const renderTypeIcon = () => {
     switch (itemType) {
@@ -206,7 +211,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block">
-                File Details
+                {t('ui.details.fileTitle', lang)}
               </span>
               <h3 className="font-semibold text-base text-[var(--text-main)] truncate" title={formattedTitle}>
                 {formattedTitle}
@@ -218,8 +223,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             <button
               onClick={() => appState.toggleFavorite(book.id)}
               className="p-1.5 text-amber-400 hover:bg-[var(--bg-hover)] rounded-md transition-colors cursor-pointer"
-              title={isFav ? 'Remove from favorites' : 'Add to favorites'}
-              aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
+              title={isFav ? t('ui.details.removeFavorite', lang) : t('ui.details.addFavorite', lang)}
+              aria-label={isFav ? t('ui.details.removeFavorite', lang) : t('ui.details.addFavorite', lang)}
             >
               <Star className={`w-5 h-5 ${isFav ? 'fill-amber-400 text-amber-400' : 'text-[var(--text-muted)]'}`} />
             </button>
@@ -227,8 +232,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             <button
               onClick={onClose}
               className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-colors cursor-pointer"
-              title="Close Details"
-              aria-label="Close details dialog"
+              title={t('ui.details.closeDetails', lang)}
+              aria-label={t('ui.details.closeDetails', lang)}
             >
               <X className="w-5 h-5" />
             </button>
@@ -250,7 +255,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               )}
             </div>
             <p className="text-xs text-[var(--text-muted)] font-mono break-all pt-1" title="Original File Reference">
-              Name: {book.title}
+              {tf('ui.details.nameLabel', lang, { name: book.title })}
             </p>
           </div>
 
@@ -258,7 +263,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
           {book.description && (
             <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)]">
               <span className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1">
-                Description
+                {t('ui.details.description', lang)}
               </span>
               <p className="text-xs text-[var(--text-main)] leading-relaxed">
                 {book.description}
@@ -272,7 +277,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1">
                 <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-[var(--gold)]" />
-                  <span>Author / Creator</span>
+                  <span>{t('ui.details.author', lang)}</span>
                 </span>
                 <p className="font-semibold text-xs text-[var(--text-main)] truncate" title={book.author}>
                   {book.author}
@@ -283,7 +288,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1">
               <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                 <HardDrive className="w-3.5 h-3.5 text-[var(--gold)]" />
-                <span>Size / Length</span>
+                <span>{t('ui.details.size', lang)}</span>
               </span>
               <p className="font-semibold text-xs text-[var(--text-main)]">
                 {formattedSize}
@@ -293,7 +298,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1">
               <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[var(--gold)]" />
-                <span>Location</span>
+                <span>{t('ui.details.location', lang)}</span>
               </span>
               <p className="font-medium text-xs text-[var(--text-main)] truncate" title={locationPath}>
                 {locationPath}
@@ -304,7 +309,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               <div className="bg-[var(--bg-main)] p-3 rounded-lg border border-[var(--border-main)] space-y-1">
                 <span className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[var(--gold)]" />
-                  <span>Date Added</span>
+                  <span>{t('ui.details.dateAdded', lang)}</span>
                 </span>
                 <p className="font-medium text-xs text-[var(--text-main)]">
                   {formatCatalogDate(book.addedDate, book.updatedDate) || '—'}
@@ -320,7 +325,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
             onClick={onClose}
             className="px-4 py-2 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg text-xs font-semibold cursor-pointer"
           >
-            Close
+            {t('ui.details.close', lang)}
           </button>
 
           <div className="flex items-center gap-2">
@@ -329,10 +334,10 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
                 type="button"
                 onClick={() => downloadBookFile(book)}
                 className="px-3.5 py-2 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1.5"
-                title="Download file directly"
+                title={t('ui.details.downloadDirect', lang)}
               >
                 <Download className="w-3.5 h-3.5 text-[var(--gold)]" />
-                <span>Download</span>
+                <span>{t('ui.details.download', lang)}</span>
               </button>
             )}
 
@@ -344,7 +349,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
               className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>Open Item</span>
+              <span>{t('ui.details.openItem', lang)}</span>
             </button>
           </div>
         </div>

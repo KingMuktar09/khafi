@@ -15,6 +15,9 @@ import {
   gridToText,
   saveSvgAsPng,
 } from '../../utils/figureExport';
+import type { SiteLanguage } from '../../types';
+import { appState } from '../../state/appState';
+import { localizeForgeReason, localizeValidationFailure, tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -27,7 +30,7 @@ import { ToolsLayout } from './ToolsLayout';
 
 const ORDERS = supportedOrders();
 
-function buildSvg(order: number, target: number, grid: number[][], method: string): string {
+function buildSvg(order: number, target: number, grid: number[][], method: string, lang: SiteLanguage): string {
   const size = 640;
   const margin = 56;
   const inner = size - margin * 2;
@@ -77,14 +80,14 @@ function buildSvg(order: number, target: number, grid: number[][], method: strin
     }
   }
   lines.push(
-    `<text x="${size / 2}" y="${size - 22}" font-family="Georgia, serif" font-size="14" fill="#e8b84f" text-anchor="middle">${order} x ${order} — every line sums to ${target} — ${method}</text>`,
+    `<text x="${size / 2}" y="${size - 22}" font-family="Georgia, serif" font-size="14" fill="#e8b84f" text-anchor="middle">${tfTools('tools.forge.svgCaption', lang, { order, target, method })}</text>`,
   );
   lines.push('</svg>');
   return lines.join('\n');
 }
 
-function downloadSvg(order: number, target: number, grid: number[][], method: string): void {
-  const svg = buildSvg(order, target, grid, method);
+function downloadSvg(order: number, target: number, grid: number[][], method: string, lang: SiteLanguage): void {
+  const svg = buildSvg(order, target, grid, method, lang);
   const blob = new Blob([svg], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -97,6 +100,7 @@ function downloadSvg(order: number, target: number, grid: number[][], method: st
 }
 
 export const ForgeView: React.FC = () => {
+  const lang = appState.settings.language;
   const [order, setOrder] = useState(3);
   const [targetInput, setTargetInput] = useState(String(magicConstant(3)));
   const [result, setResult] = useState<GenerateResult | null>(null);
@@ -134,7 +138,7 @@ export const ForgeView: React.FC = () => {
   const onSavePng = async (): Promise<void> => {
     if (!result || !isGenerateSuccess(result)) return;
     await saveSvgAsPng(
-      buildSvg(result.order, result.target, result.grid, result.method),
+      buildSvg(result.order, result.target, result.grid, result.method, lang),
       `wafq-${result.order}x${result.order}-${result.target}.png`,
     );
   };
@@ -143,9 +147,9 @@ export const ForgeView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Wafq Forge — Magic Squares"
-      eyebrow="Squares & Seals"
-      subtitle="Build a magic square of order 3 to 20 at a target sum, then check it line by line. A square is only shown as passed when every row, column and diagonal adds up."
+      title={tTools('tools.forge.title', lang)}
+      eyebrow={tTools('tools.forge.eyebrow', lang)}
+      subtitle={tTools('tools.forge.subtitle', lang)}
     >
       {/* Print rules live here so no existing file is touched. The plate
           prints at A2 proportions; everything else stays off the page. */}
@@ -167,16 +171,16 @@ export const ForgeView: React.FC = () => {
 
       <section className="ms-card space-y-4">
         <div className="space-y-1.5">
-          <span className="ms-label">Order (size of the square)</span>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Order">
+          <span className="ms-label">{tTools('tools.forge.orderLabel', lang)}</span>
+          <div className="flex flex-wrap gap-2" role="group" aria-label={tTools('tools.forge.orderLabel', lang)}>
             <button
               type="button"
               className="ms-toggle"
               disabled
-              title="No magic square of order 2 exists."
+              title={tTools('tools.forge.order2Title', lang)}
               aria-disabled="true"
             >
-              2 — not possible
+              {tTools('tools.forge.order2', lang)}
             </button>
             {ORDERS.map((n) => (
               <button
@@ -191,15 +195,15 @@ export const ForgeView: React.FC = () => {
             ))}
           </div>
           <p className="ms-note">
-            {kind === 'odd' && 'Odd order — built by the Siamese method (de la Loubère).'}
-            {kind === 'doubly even' && 'Doubly even order (divisible by 4) — built by the complement method.'}
-            {kind === 'singly even' && 'Singly even order (even, not divisible by 4) — built by the LUX method (Conway).'}
+            {kind === 'odd' && tTools('tools.forge.kindOdd', lang)}
+            {kind === 'doubly even' && tTools('tools.forge.kindDoubly', lang)}
+            {kind === 'singly even' && tTools('tools.forge.kindSingly', lang)}
           </p>
         </div>
 
         <div className="space-y-1.5">
           <label className="ms-label" htmlFor="forge-target">
-            Target sum (default: the base constant {baseConstant})
+            {tfTools('tools.forge.targetLabel', lang, { n: baseConstant })}
           </label>
           <input
             id="forge-target"
@@ -213,19 +217,18 @@ export const ForgeView: React.FC = () => {
             }}
           />
           <p className="ms-note">
-            The target must differ from {baseConstant} by a multiple of {order}, and must not be below{' '}
-            {baseConstant}. Otherwise the square is refused, not forced.
+            {tfTools('tools.forge.targetNote', lang, { base: baseConstant, order })}
           </p>
         </div>
 
         <button type="button" onClick={onGenerate} className="ms-btn-gold">
-          Generate square
+          {tTools('tools.forge.generate', lang)}
         </button>
       </section>
 
       {result && isGenerateRefusal(result) ? (
         <p className="ms-note-box" role="alert">
-          This square cannot be made: {result.reason}
+          {tTools('tools.forge.refusalPrefix', lang)} {localizeForgeReason(result.reason, lang)}
         </p>
       ) : null}
 
@@ -233,17 +236,17 @@ export const ForgeView: React.FC = () => {
         <>
           <section className="ms-card space-y-3">
             <h2 className="ms-h2">
-              {result.order}x{result.order} square — target {result.target}
+              {tfTools('tools.forge.squareTitle', lang, { order: result.order, target: result.target })}
             </h2>
             <p className="ms-body">
-              Method: {result.method}. Base constant {magicConstant(result.order)}
-              {result.offset > 0 ? `, shifted by ${result.offset} in every cell.` : ', no shift.'}
+              {tfTools('tools.forge.methodLineA', lang, { method: result.method, base: magicConstant(result.order) })}
+              {result.offset > 0 ? tfTools('tools.forge.shiftSuffix', lang, { n: result.offset }) : tTools('tools.forge.noShift', lang)}
             </p>
             <div
               className="grid gap-px"
               style={{ gridTemplateColumns: `repeat(${result.order}, minmax(0, 1fr))` }}
               role="table"
-              aria-label={`${result.order} by ${result.order} magic square`}
+              aria-label={tfTools('tools.forge.gridAria', lang, { order: result.order })}
             >
               {result.grid.flat().map((value, i) => (
                 <div
@@ -257,17 +260,17 @@ export const ForgeView: React.FC = () => {
               ))}
             </div>
             <p className="ms-note">
-              The square is fully shown above, on this page. No download is needed to see it or use it.
+              {tTools('tools.forge.shownNote', lang)}
             </p>
             <div className="flex flex-wrap gap-2">
               <button type="button" className="ms-btn-solid" disabled={!passed} onClick={onCopy}>
-                {copied ? 'Copied' : 'Copy square'}
+                {copied ? tTools('tools.common.copied', lang) : tTools('tools.forge.copyBtn', lang)}
               </button>
             </div>
           </section>
 
           <section className="ms-card space-y-3" aria-live="polite">
-            <h2 className="ms-h2">Validation — checked separately from the generator</h2>
+            <h2 className="ms-h2">{tTools('tools.forge.validationTitle', lang)}</h2>
             <p
               className="ms-num"
               style={{
@@ -281,35 +284,34 @@ export const ForgeView: React.FC = () => {
             {validation.failures.length > 0 ? (
               <ul className="list-disc pl-5 space-y-1 ms-body">
                 {validation.failures.map((failure) => (
-                  <li key={failure}>{failure}</li>
+                  <li key={failure}>{localizeValidationFailure(failure, lang)}</li>
                 ))}
               </ul>
             ) : (
               <p className="ms-body">
-                Every row, every column and both diagonals sum to {validation.target}, and all{' '}
-                {result.order * result.order} numbers are different positive whole numbers.
+                {tfTools('tools.forge.passBody', lang, { target: validation.target, n: result.order * result.order })}
               </p>
             )}
             <div className="ms-table-wrap">
               <table className="ms-table">
                 <thead>
                   <tr className="text-left">
-                    <th scope="col" className="px-4 py-3 font-medium">Line</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Sum</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Target</th>
+                    <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.forge.thLine', lang)}</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.forge.thSum', lang)}</th>
+                    <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.forge.thTarget', lang)}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {validation.rowSums.map((sum, i) => (
                     <tr key={`row-${i}`}>
-                      <td className="px-4 py-2">Row {i + 1}</td>
+                      <td className="px-4 py-2">{tfTools('tools.forge.rowLabel', lang, { n: i + 1 })}</td>
                       <td className="px-4 py-2 text-right ms-num">{sum}</td>
                       <td className="px-4 py-2 text-right ms-num">{validation.target}</td>
                     </tr>
                   ))}
                   {validation.colSums.map((sum, i) => (
                     <tr key={`col-${i}`}>
-                      <td className="px-4 py-2">Column {i + 1}</td>
+                      <td className="px-4 py-2">{tfTools('tools.forge.colLabel', lang, { n: i + 1 })}</td>
                       <td className="px-4 py-2 text-right ms-num">{sum}</td>
                       <td className="px-4 py-2 text-right ms-num">{validation.target}</td>
                     </tr>
@@ -317,7 +319,7 @@ export const ForgeView: React.FC = () => {
                   {validation.diagSums.map((sum, i) => (
                     <tr key={`diag-${i}`}>
                       <td className="px-4 py-2">
-                        Diagonal {i === 0 ? 'top-left to bottom-right' : 'top-right to bottom-left'}
+                        {i === 0 ? tTools('tools.forge.diag1', lang) : tTools('tools.forge.diag2', lang)}
                       </td>
                       <td className="px-4 py-2 text-right ms-num">{sum}</td>
                       <td className="px-4 py-2 text-right ms-num">{validation.target}</td>
@@ -326,22 +328,20 @@ export const ForgeView: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            <p className="ms-note">All numbers different: {validation.distinct ? 'yes' : 'no'}.</p>
+            <p className="ms-note">{tfTools('tools.forge.distinctLine', lang, { yesNo: validation.distinct ? tTools('tools.common.yes', lang) : tTools('tools.common.no', lang) })}</p>
           </section>
 
           <section className="ms-card space-y-3">
-            <h2 className="ms-h2">Seal frame and plate</h2>
+            <h2 className="ms-h2">{tTools('tools.forge.sealTitle', lang)}</h2>
             <p className="ms-body">
-              The framed seal is shown below, on this page. Copy it as text, save it as an image, or
-              download the framed SVG. Print stays as an option too. All of these open only after the
-              square passes validation.
+              {tTools('tools.forge.sealBody', lang)}
             </p>
             <div
               className="forge-seal-figure"
               role="img"
-              aria-label={`Framed ${result.order} by ${result.order} magic square, every line sums to ${result.target}`}
+              aria-label={tfTools('tools.forge.framedAria', lang, { order: result.order, target: result.target })}
               dangerouslySetInnerHTML={{
-                __html: buildSvg(result.order, result.target, result.grid, result.method),
+                __html: buildSvg(result.order, result.target, result.grid, result.method, lang),
               }}
             />
             <label className="flex items-center gap-2 ms-body">
@@ -350,25 +350,25 @@ export const ForgeView: React.FC = () => {
                 checked={a2Plate}
                 onChange={(event) => setA2Plate(event.target.checked)}
               />
-              Print as an A2 plate (420 x 594 mm proportions)
+              {tTools('tools.forge.printA2', lang)}
             </label>
             <div className="flex flex-wrap gap-2">
               <button type="button" className="ms-btn-solid" disabled={!passed} onClick={onSavePng}>
-                Save as image
+                {tTools('tools.forge.saveImage', lang)}
               </button>
               <button
                 type="button"
                 className="ms-btn-solid"
                 disabled={!passed}
-                onClick={() => downloadSvg(result.order, result.target, result.grid, result.method)}
+                onClick={() => downloadSvg(result.order, result.target, result.grid, result.method, lang)}
               >
-                Download framed SVG
+                {tTools('tools.forge.downloadSvg', lang)}
               </button>
               <button type="button" className="ms-btn-gold" disabled={!passed} onClick={() => window.print()}>
-                Print plate
+                {tTools('tools.forge.printPlate', lang)}
               </button>
             </div>
-            {!passed ? <p className="ms-note">Export and print stay off until the square passes.</p> : null}
+            {!passed ? <p className="ms-note">{tTools('tools.forge.exportOff', lang)}</p> : null}
           </section>
 
           {/* Print-only plate: hidden on screen, shown by the print rules above. */}
@@ -394,13 +394,13 @@ export const ForgeView: React.FC = () => {
               ))}
             </div>
             <p style={{ fontSize: 16 }}>
-              {result.order}x{result.order} — every line sums to {result.target} — {result.method}
+              {tfTools('tools.forge.svgCaption', lang, { order: result.order, target: result.target, method: result.method })}
             </p>
           </div>
         </>
       ) : null}
 
-      <p className="ms-note">Constructions: {MAGIC_SQUARE_SOURCE}.</p>
+      <p className="ms-note">{tfTools('tools.forge.constructions', lang, { source: MAGIC_SQUARE_SOURCE })}</p>
     </ToolsLayout>
   );
 };

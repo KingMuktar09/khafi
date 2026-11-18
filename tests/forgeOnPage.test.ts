@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { validateMagicSquare } from '../src/utils/magicSquare';
 import { buildFramedSquareSvg, gridToText } from '../src/utils/figureExport';
+import { I18N_TOOLS } from '../src/data/i18n-tools';
 
 /**
  * No-PDF rule for the Wafq Forge, the seal (Khatam) and the plate.
@@ -24,14 +25,19 @@ describe('Wafq Forge: square usable on the page, no download needed', () => {
 
   it('renders the square grid on the page, not behind a download click', () => {
     expect(src).toContain('role="table"');
-    expect(src).toContain('aria-label={`${result.order} by ${result.order} magic square`}');
+    // The grid aria-label lives in the tools chunk now; the view renders it through the key.
+    expect(I18N_TOOLS.en['tools.forge.gridAria']).toBe('{order} by {order} magic square');
+    expect(src).toContain("tfTools('tools.forge.gridAria'");
     // The grid section renders whenever a square is generated; the
     // download button is not part of that section.
-    expect(src).toContain('The square is fully shown above, on this page');
+    // The note lives in the tools chunk now; the view renders it through the key.
+    expect(I18N_TOOLS.en['tools.forge.shownNote']).toContain('The square is fully shown above, on this page');
+    expect(src).toContain("tTools('tools.forge.shownNote'");
   });
 
   it('has a Copy button that copies the square as text rows', () => {
-    expect(src).toContain('Copy square');
+    expect(I18N_TOOLS.en['tools.forge.copyBtn']).toBe('Copy square');
+    expect(src).toContain("tTools('tools.forge.copyBtn'");
     expect(src).toContain('copyTextToClipboard');
     expect(src).toContain('gridToText(result.grid)');
   });
@@ -39,13 +45,16 @@ describe('Wafq Forge: square usable on the page, no download needed', () => {
   it('shows the framed seal figure on the page and offers save-as-image', () => {
     expect(src).toContain('forge-seal-figure');
     expect(src).toContain('dangerouslySetInnerHTML');
-    expect(src).toContain('Save as image');
+    expect(I18N_TOOLS.en['tools.forge.saveImage']).toBe('Save as image');
+    expect(src).toContain("tTools('tools.forge.saveImage'");
     expect(src).toContain('saveSvgAsPng');
   });
 
   it('keeps the framed SVG download and the print option as extras', () => {
-    expect(src).toContain('Download framed SVG');
-    expect(src).toContain('Print plate');
+    expect(I18N_TOOLS.en['tools.forge.downloadSvg']).toBe('Download framed SVG');
+    expect(I18N_TOOLS.en['tools.forge.printPlate']).toBe('Print plate');
+    expect(src).toContain("tTools('tools.forge.downloadSvg'");
+    expect(src).toContain("tTools('tools.forge.printPlate'");
     expect(src).toContain('window.print()');
   });
 
@@ -55,7 +64,8 @@ describe('Wafq Forge: square usable on the page, no download needed', () => {
 
   it('keeps copy, image save, SVG download and print behind validation PASS', () => {
     expect(src).toContain('disabled={!passed}');
-    expect(src).toContain('Export and print stay off until the square passes.');
+    expect(I18N_TOOLS.en['tools.forge.exportOff']).toBe('Export and print stay off until the square passes.');
+    expect(src).toContain("tTools('tools.forge.exportOff'");
   });
 });
 
@@ -92,15 +102,19 @@ describe('Khatam (seal): the 3 by 3 Solomon grid on the page', () => {
   const src = readView('KhatamView.tsx');
 
   it('shows the Solomon grid on the page with its source named', () => {
-    expect(src).toContain('The 3 by 3 grid, shown on this page');
+    expect(I18N_TOOLS.en['tools.khatam.gridTitle']).toBe('The 3 by 3 grid, shown on this page');
+    expect(src).toContain("tTools('tools.khatam.gridTitle'");
     expect(src).toContain('The Radiant Jewels for Summoning, p. 47');
     expect(src).toContain('role="table"');
-    expect(src).toContain('No download is needed to see it or use it');
+    expect(I18N_TOOLS.en['tools.khatam.gridNote']).toContain('No download is needed to see it or use it');
+    expect(src).toContain("tTools('tools.khatam.gridNote'");
   });
 
   it('has a Copy button and a save-as-image control', () => {
-    expect(src).toContain('Copy grid');
-    expect(src).toContain('Save as image');
+    expect(I18N_TOOLS.en['tools.khatam.copyGrid']).toBe('Copy grid');
+    expect(src).toContain("tTools('tools.khatam.copyGrid'");
+    expect(I18N_TOOLS.en['tools.khatam.saveImage']).toBe('Save as image');
+    expect(src).toContain("tTools('tools.khatam.saveImage'");
     expect(src).toContain('copyTextToClipboard');
     expect(src).toContain('saveSvgAsPng');
   });
@@ -131,15 +145,19 @@ describe('Plate: the metals and their planets on the page', () => {
   const src = readView('PlateView.tsx');
 
   it('shows the plate figure on the page with its sources named', () => {
-    expect(src).toContain('The metals and their planets, shown on this page');
+    expect(I18N_TOOLS.en['tools.plate.metalsTitle']).toBe('The metals and their planets, shown on this page');
+    expect(src).toContain("tTools('tools.plate.metalsTitle'");
     expect(src).toContain('Manba Usul al-Hikma, pp. 140-141');
     expect(src).toContain('role="table"');
-    expect(src).toContain('No download is needed to see it or use it');
+    expect(I18N_TOOLS.en['tools.plate.metalsNote']).toContain('No download is needed to see it or use it');
+    expect(src).toContain("tTools('tools.plate.metalsNote'");
   });
 
   it('has a Copy button and a save-as-image control', () => {
-    expect(src).toContain('Copy list');
-    expect(src).toContain('Save as image');
+    expect(I18N_TOOLS.en['tools.plate.copyList']).toBe('Copy list');
+    expect(src).toContain("tTools('tools.plate.copyList'");
+    expect(I18N_TOOLS.en['tools.plate.saveImage']).toBe('Save as image');
+    expect(src).toContain("tTools('tools.plate.saveImage'");
     expect(src).toContain('copyTextToClipboard');
     expect(src).toContain('saveSvgAsPng');
   });
@@ -156,8 +174,8 @@ describe('Plate: the metals and their planets on the page', () => {
     expect(src).toContain("{ metal: 'Lead', planet: 'Saturn' }");
     expect(src).not.toContain("planet: 'Venus'");
     expect(src).not.toContain("planet: 'Jupiter'");
-    expect(src).toContain('do not tie them to a planet in');
-    expect(src).toContain('the entries on this page');
+    expect(I18N_TOOLS.en['tools.plate.metalsNote']).toContain('do not tie them to a planet in');
+    expect(I18N_TOOLS.en['tools.plate.metalsNote']).toContain('the entries on this page');
   });
 });
 
@@ -165,6 +183,7 @@ describe('Qawaid rules page: no PDF route is offered', () => {
   it('mentions no PDF and keeps export behind PASS', () => {
     const src = readView('QawaidView.tsx');
     expect(src.toLowerCase()).not.toContain('pdf');
-    expect(src).toContain('Export and printing open only after a PASS.');
+    expect(I18N_TOOLS.en['tools.qawaid.validatorBody2']).toContain('Export and printing open only after a PASS.');
+    expect(src).toContain("tTools('tools.qawaid.validatorBody2'");
   });
 });

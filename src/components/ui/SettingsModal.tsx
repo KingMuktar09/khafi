@@ -21,6 +21,7 @@ import {
   UserSettings,
 } from '../../types';
 import { ACCENT_PALETTES } from '../../config/accentPalettes';
+import { t, SITE_LANGUAGES } from '../../data/i18n';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   settings,
 }) => {
   if (!isOpen) return null;
+  const lang = settings.language;
 
   const handleUpdate = (partial: Partial<UserSettings>) => {
     appState.updateSettings(partial);
@@ -55,15 +57,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div>
               <h2 id="settings-modal-title" className="font-bold text-base text-[var(--text-main)] leading-tight">
-                Settings
+                {t('settings.title', lang)}
               </h2>
-              <p className="text-xs text-[var(--text-muted)]">Personalize Ilm-e-Ghayb Library</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('settings.subtitle', lang)}</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] rounded-md transition-colors"
-            aria-label="Close Settings"
+            aria-label={t('settings.close', lang)}
           >
             <X className="w-4 h-4" />
           </button>
@@ -75,14 +77,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* 1. APPEARANCE */}
           <section className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
-              Appearance
+              {t('settings.appearance', lang)}
             </label>
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Appearance">
               {(
                 [
-                  { id: 'dark', label: 'Dark', icon: Moon },
-                  { id: 'light', label: 'Light', icon: Sun },
-                  { id: 'system', label: 'System', icon: Monitor },
+                  { id: 'dark', label: t('settings.dark', lang), icon: Moon },
+                  { id: 'light', label: t('settings.light', lang), icon: Sun },
+                  { id: 'system', label: t('settings.system', lang), icon: Monitor },
                 ] as const
               ).map((item) => {
                 const isSelected = settings.appearance === item.id;
@@ -109,10 +111,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </section>
 
+          {/* 1b. LANGUAGE */}
+          <section className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
+              {t('settings.language', lang)}
+            </label>
+            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Language">
+              {SITE_LANGUAGES.map((item) => {
+                const isSelected = settings.language === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => handleUpdate({ language: item.id })}
+                    className={`flex flex-col items-center justify-center py-2 px-2 rounded-lg border text-xs transition-all ${
+                      isSelected
+                        ? 'bg-[var(--gold-faint)] border-[var(--gold)] text-[var(--gold)] font-semibold'
+                        : 'bg-[var(--bg-main)] border-[var(--border-main)] text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 font-medium">
+                      <span>{item.label}</span>
+                      {isSelected && <Check className="w-3 h-3 text-[var(--gold)]" />}
+                    </div>
+                    <span className="text-[10px] text-[var(--text-muted)] font-normal">{item.nativeLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+              {t('settings.languageNote', lang)}
+            </p>
+          </section>
+
           {/* 2. ACCENT COLOR */}
           <section className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
-              Accent Color
+              {t('settings.accentColor', lang)}
             </label>
             <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Accent Color">
               {(['gold', 'blue', 'green', 'purple', 'rose'] as AccentColorSetting[]).map((colorKey) => {
@@ -130,7 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         ? 'bg-[var(--gold-faint)] border-[var(--gold)] text-[var(--text-main)] font-semibold'
                         : 'bg-[var(--bg-main)] border-[var(--border-main)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'
                     }`}
-                    title={palette.name}
+                    title={t({ gold: 'settings.colorGold', blue: 'settings.colorBlue', green: 'settings.colorGreen', purple: 'settings.colorPurple', rose: 'settings.colorRose' }[colorKey], lang)}
                   >
                     <div
                       className="w-4 h-4 rounded-full border border-black/20 shadow-inner flex items-center justify-center shrink-0"
@@ -138,7 +175,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     >
                       {isSelected && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
                     </div>
-                    <span className="text-[11px] leading-none capitalize">{palette.name}</span>
+                    <span className="text-[11px] leading-none capitalize">{t({ gold: 'settings.colorGold', blue: 'settings.colorBlue', green: 'settings.colorGreen', purple: 'settings.colorPurple', rose: 'settings.colorRose' }[colorKey], lang)}</span>
                   </button>
                 );
               })}
@@ -148,13 +185,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* 3. VIEW */}
           <section className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
-              Default View Mode
+              {t('settings.viewMode', lang)}
             </label>
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Default View Mode">
               {(
                 [
-                  { id: 'list', label: 'List View', icon: LayoutList },
-                  { id: 'grid', label: 'Grid View', icon: LayoutGrid },
+                  { id: 'list', label: t('settings.listView', lang), icon: LayoutList },
+                  { id: 'grid', label: t('settings.gridView', lang), icon: LayoutGrid },
                 ] as const
               ).map((item) => {
                 const isSelected = settings.viewMode === item.id;
@@ -184,14 +221,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* 4. FONT SIZE */}
           <section className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
-              Font Scale
+              {t('settings.fontScale', lang)}
             </label>
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Font Scale">
               {(
                 [
-                  { id: 'small', label: 'Small', detail: '14px' },
-                  { id: 'medium', label: 'Medium', detail: '16px' },
-                  { id: 'large', label: 'Large', detail: '18px' },
+                  { id: 'small', label: t('settings.small', lang), detail: '14px' },
+                  { id: 'medium', label: t('settings.medium', lang), detail: '16px' },
+                  { id: 'large', label: t('settings.large', lang), detail: '18px' },
                 ] as const
               ).map((item) => {
                 const isSelected = settings.fontSize === item.id;
@@ -222,13 +259,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* 5. ANIMATIONS */}
           <section className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
-              Animations
+              {t('settings.animations', lang)}
             </label>
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Animations">
               {(
                 [
-                  { id: 'normal', label: 'Normal', desc: 'Subtle transitions', icon: Zap },
-                  { id: 'reduced', label: 'Reduced Motion', desc: 'Minimal motion', icon: ZapOff },
+                  { id: 'normal', label: t('settings.animNormal', lang), desc: t('settings.animNormalDesc', lang), icon: Zap },
+                  { id: 'reduced', label: t('settings.animReduced', lang), desc: t('settings.animReducedDesc', lang), icon: ZapOff },
                 ] as const
               ).map((item) => {
                 const isSelected = settings.animations === item.id;
@@ -268,7 +305,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={onClose}
             className="px-5 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-semibold text-xs rounded-md transition-colors"
           >
-            Done
+            {t('settings.done', lang)}
           </button>
         </div>
 

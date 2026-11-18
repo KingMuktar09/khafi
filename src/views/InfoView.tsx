@@ -1,10 +1,13 @@
 import React from 'react';
 import { BookOpen, ExternalLink, Instagram, Send, User, MapPin, Quote } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
+import { appState } from '../state/appState';
+import { t } from '../data/i18n';
 import { router } from '../router/router';
 
 export const InfoView: React.FC = () => {
   const { creator } = siteConfig;
+  const lang = appState.settings.language;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in py-2 font-sans">
@@ -12,14 +15,13 @@ export const InfoView: React.FC = () => {
       {/* Header Banner */}
       <div className="ms-panel rounded-2xl p-6 space-y-2">
         <span className="text-xs px-2.5 py-0.5 bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)] font-semibold rounded">
-          About & Creator
+          {t('info.tag', lang)}
         </span>
         <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)] tracking-tight">
           Ilm-e-Ghayb Library
         </h1>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl">
-          A free library of old and important books. It covers the Quran, the Prophet's life, Sufism, history and
-          more. Everyone is welcome to read.
+          {t('info.intro', lang)}
         </p>
       </div>
 
@@ -28,7 +30,7 @@ export const InfoView: React.FC = () => {
         <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-3">
           <User className="w-5 h-5 text-[var(--gold)]" />
           <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-            Creator Identity
+            {t('info.creatorTitle', lang)}
           </h2>
         </div>
 
@@ -38,7 +40,7 @@ export const InfoView: React.FC = () => {
               {creator.name}
             </h3>
             <p className="text-xs sm:text-sm text-[var(--gold)] font-medium mt-0.5">
-              {creator.tagline}
+              {t('info.creatorTagline', lang)}
             </p>
           </div>
         </div>
@@ -48,7 +50,7 @@ export const InfoView: React.FC = () => {
           <div className="py-2.5 flex items-center justify-between gap-4">
             <span className="text-[var(--text-muted)] font-medium flex items-center gap-2">
               <User className="w-4 h-4 text-[var(--gold)]" />
-              <span>Public Identity</span>
+              <span>{t('info.publicIdentity', lang)}</span>
             </span>
             <span className="font-semibold text-[var(--text-main)]">
               {creator.name}
@@ -58,7 +60,7 @@ export const InfoView: React.FC = () => {
           <div className="py-2.5 flex items-center justify-between gap-4">
             <span className="text-[var(--text-muted)] font-medium flex items-center gap-2">
               <MapPin className="w-4 h-4 text-[var(--gold)]" />
-              <span>Based in</span>
+              <span>{t('info.basedIn', lang)}</span>
             </span>
             <span className="font-semibold text-[var(--text-main)]">
               {creator.location}
@@ -82,7 +84,7 @@ export const InfoView: React.FC = () => {
               </a>
             ) : (
               <span className="text-[var(--text-muted)] italic">
-                Configurable
+                {t('info.configurable', lang)}
               </span>
             )}
           </div>
@@ -104,7 +106,7 @@ export const InfoView: React.FC = () => {
               </a>
             ) : (
               <span className="text-[var(--text-muted)] italic">
-                Configurable
+                {t('info.configurable', lang)}
               </span>
             )}
           </div>
@@ -114,16 +116,14 @@ export const InfoView: React.FC = () => {
       {/* About Section */}
       <section className="ms-panel rounded-2xl p-6 space-y-3">
         <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-          About Ilm-e-Ghayb Library
+          {t('info.aboutTitle', lang)}
         </h2>
         <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
           <p>
-            Ilm-e-Ghayb Library, by Ghayb Chronicles, is a free library of hidden knowledge and Sufi wisdom
-            (Sufism is the spiritual side of Islam), and the books behind it.
+            {t('info.about1', lang)}
           </p>
           <p>
-            It covers Islamic knowledge: the Quran, the Sunnah (the Prophet's way of life), spirituality,
-            history and philosophy. Every entry names its source, so you can check it yourself.
+            {t('info.about2', lang)}
           </p>
         </div>
       </section>
@@ -131,23 +131,17 @@ export const InfoView: React.FC = () => {
       {/* What "Authentic" means */}
       <section className="ms-panel rounded-2xl p-6 space-y-3">
         <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-          What does “Authentic” mean here?
+          {t('info.authenticTitle', lang)}
         </h2>
         <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
           <p>
-            A book marked Authentic was checked by the library admin and found to be the genuine,
-            unaltered text of the named work. Not a fake, altered or mislabelled copy.
+            {t('info.authentic1', lang)}
           </p>
           <p>
-            It is the admin's own check, not a scholarly certificate. A book without the mark has
-            simply not been checked yet, not that it is fake. You can filter the library to
-            Authentic books only from the Library page.
+            {t('info.authentic2', lang)}
           </p>
           <p>
-            Books with the same title are shown as versions. Version 1 is the oldest copy,
-            Version 2 the next. Each has its real date, so you can tell which copy you are
-            opening. If two copies share a title, check the date, author and edition before
-            choosing.
+            {t('info.authentic3', lang)}
           </p>
         </div>
       </section>
@@ -157,12 +151,12 @@ export const InfoView: React.FC = () => {
         <div className="flex items-center gap-2 text-[var(--gold)]">
           <Quote className="w-5 h-5 rotate-180" />
           <h2 className="font-semibold text-base text-[var(--text-main)]">
-            Creator Note
+            {t('info.creatorNoteTitle', lang)}
           </h2>
         </div>
         <blockquote className="border-l-2 border-[var(--gold)] pl-4 py-1 space-y-2">
           <p className="text-sm sm:text-base italic font-serif text-[var(--text-main)] leading-relaxed whitespace-pre-line">
-            "{creator.note.quote}"
+            "{t('info.creatorNoteQuote', lang)}"
           </p>
           <footer className="text-xs text-[var(--gold)] font-medium">
             — {creator.note.author}
@@ -173,10 +167,10 @@ export const InfoView: React.FC = () => {
       {/* Connect Section */}
       <section className="ms-panel rounded-2xl p-6 space-y-4">
         <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-          Connect
+          {t('info.connectTitle', lang)}
         </h2>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-          Questions, or a book to suggest? Message us here:
+          {t('info.connectText', lang)}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -230,7 +224,7 @@ export const InfoView: React.FC = () => {
               <div>
                 <span className="text-xs text-[var(--text-muted)] block">Telegram</span>
                 <span className="text-xs font-semibold text-[var(--text-muted)] italic">
-                  To be added
+                  {t('info.telegramToBeAdded', lang)}
                 </span>
               </div>
             </div>
@@ -245,7 +239,7 @@ export const InfoView: React.FC = () => {
           className="bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-semibold text-xs px-6 py-2.5 rounded-md transition-all inline-flex items-center gap-2"
         >
           <BookOpen className="w-4 h-4" />
-          <span>Explore Library</span>
+          <span>{t('info.explore', lang)}</span>
         </button>
       </div>
 

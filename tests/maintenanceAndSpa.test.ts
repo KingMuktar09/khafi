@@ -56,10 +56,21 @@ describe('Vercel SPA fallback (vercel.json in dist)', () => {
     }
   });
 
-  it('the build copies vercel.json into dist/', () => {
+  it('the build copies vercel.json into dist/ (Drop copy: SPA rewrite only)', () => {
     const distVercel = readFileSync(join(process.cwd(), 'dist', 'vercel.json'), 'utf8');
     const distJson = JSON.parse(distVercel);
-    expect(distJson.rewrites).toEqual(vercelJson.rewrites);
+    // The Drop copy deliberately strips functions/crons and the /api
+    // rewrite (see scripts/copy-spa-config.mjs: dist/ has no api/
+    // folder, so Vercel would fail on the unused function). What must
+    // survive intact is the SPA fallback rewrite to /index.html.
+    expect(distJson.functions).toBeUndefined();
+    expect(distJson.crons).toBeUndefined();
+    expect(distJson.rewrites).toEqual(
+      (vercelJson.rewrites || []).filter((r: any) => !(r.source || '').startsWith('/api/')),
+    );
+    const distRewrite = (distJson.rewrites || []).find((r: any) => r.destination === '/index.html');
+    expect(distRewrite).toBeTruthy();
+    expect(distRewrite.source).toBe(rewrite.source);
   });
 });
 

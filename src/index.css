@@ -114,6 +114,25 @@
   font-family: 'Amiri', 'Noto Naskh Arabic', serif;
 }
 
+/* Bengali language: proper Bengali fonts (Hind Siliguri for body and
+   UI, Noto Serif Bengali for display headings), loaded from Google
+   Fonts in index.html the same way as the other fonts. Applied only
+   when the visitor picks Bengali in Settings. Hinglish keeps the
+   Latin fonts above, and Arabic always keeps Amiri. */
+html[lang="bn"] {
+  --font-display: 'Noto Serif Bengali', 'Hind Siliguri', serif;
+  --font-sans: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+  --ms-display: 'Noto Serif Bengali', 'Hind Siliguri', serif;
+  --ms-body: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+  --ms-mono: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
+html[lang="bn"] body {
+  font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
+html[lang="bn"] .font-mono {
+  font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
+
 /* Premium polish: generous, calm surfaces */
 body {
   overflow-x: clip;

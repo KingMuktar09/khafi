@@ -5,6 +5,8 @@ import { appState } from '../../state/appState';
 import { siteConfig } from '../../config/siteConfig';
 import { ViewName } from '../../types';
 import { SettingsModal } from '../ui/SettingsModal';
+import { LanguagePicker } from '../ui/LanguagePicker';
+import { t } from '../../data/i18n';
 import { isTopicsView } from '../../data/topicsContent';
 
 /**
@@ -29,6 +31,7 @@ export const Navbar: React.FC = () => {
   const theme = appState.theme;
   const isAdmin = appState.adminAuthenticated;
   const userSettings = appState.settings;
+  const lang = userSettings.language;
 
   const handleNav = (view: ViewName) => {
     setMobileMenuOpen(false);
@@ -111,7 +114,7 @@ export const Navbar: React.FC = () => {
             >
               <img
                 src={siteConfig.logo}
-                alt="Ilm-e-Ghayb Library logo"
+                alt={t('home.logoAlt', lang)}
                 className="w-9 h-9 rounded-lg object-cover border border-[var(--border-main)] shadow-2xs group-hover:border-[var(--gold)] group-hover:scale-105 transition-all duration-200 shrink-0"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
@@ -120,7 +123,7 @@ export const Navbar: React.FC = () => {
                   Ilm-e-Ghayb Library
                 </span>
                 <span className="text-[11px] text-[var(--text-muted)] font-normal block">
-                  by Ghayb Chronicles
+                  {t('nav.byGhayb', lang)}
                 </span>
               </div>
             </button>
@@ -136,7 +139,7 @@ export const Navbar: React.FC = () => {
               type="text"
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
-              placeholder="Search this library..."
+              placeholder={t('nav.searchPlaceholder', lang)}
               className="w-full pl-9 pr-8 py-1.5 text-sm bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-md focus:outline-none focus:border-[var(--gold)] transition-colors font-sans shadow-2xs"
             />
             {searchVal && (
@@ -158,22 +161,22 @@ export const Navbar: React.FC = () => {
 
           {/* Right: main pages + "More" menu (Desktop) */}
           <div className="hidden lg:flex items-center gap-1 font-sans text-sm shrink-0">
-            {desktopLink('home', 'Home', <Home className="w-4 h-4 text-[var(--gold)]" />, currentView === 'home')}
+            {desktopLink('home', t('nav.home', lang), <Home className="w-4 h-4 text-[var(--gold)]" />, currentView === 'home')}
             {desktopLink(
               'library',
-              'Library',
+              t('nav.library', lang),
               <BookOpen className="w-4 h-4 text-[var(--gold)]" />,
               currentView === 'library' || currentView === 'book' || currentView === 'read'
             )}
             {desktopLink(
               'tools',
-              'Study Tools',
+              t('nav.studyTools', lang),
               <Calculator className="w-4 h-4 text-[var(--gold)]" />,
               currentView === 'tools' || currentView.startsWith('tools-')
             )}
             {desktopLink(
               'topics',
-              'Topics',
+              t('nav.topics', lang),
               <NotebookText className="w-4 h-4 text-[var(--gold)]" />,
               isTopicsView(currentView)
             )}
@@ -190,40 +193,40 @@ export const Navbar: React.FC = () => {
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
                 }`}
               >
-                <span>More</span>
+                <span>{t('nav.more', lang)}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-[var(--gold)] transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
               </button>
               {moreOpen && (
                 <>
                   <button
-                    aria-label="Close menu"
+                    aria-label={t('nav.closeMenu', lang)}
                     onClick={() => setMoreOpen(false)}
                     className="fixed inset-0 z-10 cursor-default"
                     tabIndex={-1}
                   />
                   <div className="absolute right-0 top-full mt-2 w-64 z-20 ms-panel rounded-xl p-2 space-y-0.5 font-sans text-sm shadow-2xl animate-fade-in">
-                    {moreLink('journeys', 'Reading Paths', <Compass className="w-4 h-4 text-[var(--gold)]" />, currentView === 'journeys')}
-                    {moreLink('timeline', 'History Timeline', <MapIcon className="w-4 h-4 text-[var(--gold)]" />, currentView === 'timeline')}
-                    {moreLink('shelf', 'My Shelf', <Bookmark className="w-4 h-4 text-[var(--gold)]" />, currentView === 'shelf', shelfCount)}
-                    {moreLink('finder', 'Find a Book', <Compass className="w-4 h-4 text-[var(--gold)]" />, currentView === 'finder')}
-                    {moreLink('wafq', 'Magic Square', <Grid3X3 className="w-4 h-4 text-[var(--gold)]" />, currentView === 'wafq')}
-                    {moreLink('amals', 'Amals', <MoonStar className="w-4 h-4 text-[var(--gold)]" />, currentView === 'amals')}
-                    {moreLink('favorites', 'Favorites', <Star className="w-4 h-4 fill-amber-400 text-amber-400" />, currentView === 'favorites', favoritesCount)}
-                    {moreLink('info', 'Info', <Info className="w-4 h-4 text-blue-400" />, currentView === 'info')}
+                    {moreLink('journeys', t('nav.readingPaths', lang), <Compass className="w-4 h-4 text-[var(--gold)]" />, currentView === 'journeys')}
+                    {moreLink('timeline', t('nav.timeline', lang), <MapIcon className="w-4 h-4 text-[var(--gold)]" />, currentView === 'timeline')}
+                    {moreLink('shelf', t('nav.myShelf', lang), <Bookmark className="w-4 h-4 text-[var(--gold)]" />, currentView === 'shelf', shelfCount)}
+                    {moreLink('finder', t('nav.findBook', lang), <Compass className="w-4 h-4 text-[var(--gold)]" />, currentView === 'finder')}
+                    {moreLink('wafq', t('nav.magicSquare', lang), <Grid3X3 className="w-4 h-4 text-[var(--gold)]" />, currentView === 'wafq')}
+                    {moreLink('amals', t('nav.amals', lang), <MoonStar className="w-4 h-4 text-[var(--gold)]" />, currentView === 'amals')}
+                    {moreLink('favorites', t('nav.favorites', lang), <Star className="w-4 h-4 fill-amber-400 text-amber-400" />, currentView === 'favorites', favoritesCount)}
+                    {moreLink('info', t('nav.info', lang), <Info className="w-4 h-4 text-blue-400" />, currentView === 'info')}
                     <a
                       href="https://instagram.com/ghayb.chronicles"
                       target="_blank"
                       rel="noreferrer"
-                      title="Follow @ghayb.chronicles on Instagram"
+                      title={t('home.nav.instagramFollow', lang)}
                       onClick={() => setMoreOpen(false)}
                       className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
                     >
                       <Instagram className="w-4 h-4 text-[var(--gold)]" />
-                      <span className="flex-1">Instagram</span>
+                      <span className="flex-1">{t('nav.instagram', lang)}</span>
                     </a>
                     {moreLink(
                       'admin',
-                      isAdmin ? 'Admin (signed in)' : 'Admin',
+                      isAdmin ? t('nav.adminSignedIn', lang) : t('nav.admin', lang),
                       isAdmin ? <ShieldCheck className="w-4 h-4 text-emerald-400" /> : <Lock className="w-4 h-4 text-[var(--gold)]" />,
                       currentView === 'admin'
                     )}
@@ -232,14 +235,14 @@ export const Navbar: React.FC = () => {
                       className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
                     >
                       <SettingsIcon className="w-4 h-4 text-[var(--gold)]" />
-                      <span className="flex-1">Settings</span>
+                      <span className="flex-1">{t('nav.settings', lang)}</span>
                     </button>
                     <button
                       onClick={() => { setMoreOpen(false); handleThemeToggle(); }}
                       className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
                     >
                       {theme === 'dark' ? <Sun className="w-4 h-4 text-[var(--gold)]" /> : <Moon className="w-4 h-4 text-[var(--gold)]" />}
-                      <span className="flex-1">{theme === 'dark' ? 'Light theme' : 'Dark theme'}</span>
+                      <span className="flex-1">{theme === 'dark' ? t('nav.lightTheme', lang) : t('nav.darkTheme', lang)}</span>
                     </button>
                   </div>
                 </>
@@ -248,8 +251,8 @@ export const Navbar: React.FC = () => {
 
             <button
               onClick={handleThemeToggle}
-              title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+              title={t(theme === 'dark' ? 'nav.switchLight' : 'nav.switchDark', lang)}
+              aria-label={t(theme === 'dark' ? 'nav.switchLight' : 'nav.switchDark', lang)}
               className="p-2 rounded-md text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-[var(--gold)]" /> : <Moon className="w-4 h-4 text-[var(--gold)]" />}
@@ -260,8 +263,8 @@ export const Navbar: React.FC = () => {
           <div className="flex lg:hidden items-center gap-1.5 shrink-0">
             <button
               onClick={() => setSettingsOpen(true)}
-              title="Settings"
-              aria-label="Settings"
+              title={t('nav.settings', lang)}
+              aria-label={t('nav.settings', lang)}
               className="p-2 text-[var(--text-muted)] rounded hover:bg-[var(--bg-hover)]"
             >
               <SettingsIcon className="w-4 h-4 text-[var(--gold)]" />
@@ -270,12 +273,19 @@ export const Navbar: React.FC = () => {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-[var(--text-main)] rounded hover:bg-[var(--bg-hover)]"
-              aria-label="Toggle Menu"
+              aria-label={t('nav.toggleMenu', lang)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
 
+        </div>
+
+        {/* Language strip — always visible in the top bar on every page,
+            so anyone can switch at a glance without opening any menu.
+            Same choice as Settings; both write the same setting. */}
+        <div className="border-t border-[var(--border-subtle)] py-2 flex justify-center">
+          <LanguagePicker variant="bar" />
         </div>
 
         {/* Mobile Search Input */}
@@ -286,7 +296,7 @@ export const Navbar: React.FC = () => {
               type="text"
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
-              placeholder="Search this library..."
+              placeholder={t('nav.searchPlaceholder', lang)}
               className="w-full pl-9 pr-8 py-1.5 text-sm bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-md font-sans"
             />
           </form>
@@ -303,7 +313,7 @@ export const Navbar: React.FC = () => {
               currentView === 'home' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Home
+            {t('nav.home', lang)}
           </button>
 
           <button
@@ -314,7 +324,7 @@ export const Navbar: React.FC = () => {
                 : 'text-[var(--text-muted)]'
             }`}
           >
-            Library
+            {t('nav.library', lang)}
           </button>
 
           <button
@@ -323,7 +333,7 @@ export const Navbar: React.FC = () => {
               isTopicsView(currentView) ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Topics
+            {t('nav.topics', lang)}
           </button>
 
           <button
@@ -332,7 +342,7 @@ export const Navbar: React.FC = () => {
               currentView === 'journeys' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Reading Paths
+            {t('nav.readingPaths', lang)}
           </button>
 
           <button
@@ -341,7 +351,7 @@ export const Navbar: React.FC = () => {
               currentView === 'timeline' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            History Timeline
+            {t('nav.timeline', lang)}
           </button>
 
           <button
@@ -350,7 +360,7 @@ export const Navbar: React.FC = () => {
               currentView === 'shelf' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            <span>My Shelf</span>
+            <span>{t('nav.myShelf', lang)}</span>
             {shelfCount > 0 && (
               <span className="px-2 py-0.5 bg-[var(--gold)] text-black text-xs font-semibold rounded-full">
                 {shelfCount}
@@ -364,7 +374,7 @@ export const Navbar: React.FC = () => {
               currentView === 'finder' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Find a Book
+            {t('nav.findBook', lang)}
           </button>
 
           <button
@@ -373,7 +383,7 @@ export const Navbar: React.FC = () => {
               currentView === 'wafq' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Magic Square Maker
+            {t('nav.magicSquareMaker', lang)}
           </button>
 
           <button
@@ -382,7 +392,7 @@ export const Navbar: React.FC = () => {
               currentView === 'amals' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Amals
+            {t('nav.amals', lang)}
           </button>
 
           <button
@@ -391,7 +401,7 @@ export const Navbar: React.FC = () => {
               currentView === 'tools' || currentView.startsWith('tools-') ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Study Tools
+            {t('nav.studyTools', lang)}
           </button>
 
           <button
@@ -400,7 +410,7 @@ export const Navbar: React.FC = () => {
               currentView === 'favorites' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            <span>Favorites</span>
+            <span>{t('nav.favorites', lang)}</span>
             {favoritesCount > 0 && (
               <span className="px-2 py-0.5 bg-[var(--gold)] text-black text-xs font-semibold rounded-full">
                 {favoritesCount}
@@ -414,7 +424,7 @@ export const Navbar: React.FC = () => {
               currentView === 'info' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Info
+            {t('nav.info', lang)}
           </button>
 
           <button
@@ -425,8 +435,8 @@ export const Navbar: React.FC = () => {
                 : 'text-[var(--text-muted)]'
             }`}
           >
-            <span>Admin</span>
-            {isAdmin && <span className="text-xs font-medium text-emerald-400">Authenticated</span>}
+            <span>{t('nav.admin', lang)}</span>
+            {isAdmin && <span className="text-xs font-medium text-emerald-400">{t('nav.authenticated', lang)}</span>}
           </button>
 
           <button
@@ -436,7 +446,7 @@ export const Navbar: React.FC = () => {
             }}
             className="w-full text-left px-3 py-2 rounded text-[var(--text-muted)] hover:bg-[var(--bg-hover)] flex items-center justify-between"
           >
-            <span>Settings</span>
+            <span>{t('nav.settings', lang)}</span>
             <SettingsIcon className="w-4 h-4 text-[var(--gold)]" />
           </button>
         </div>

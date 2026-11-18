@@ -3,6 +3,9 @@ import { ArrowLeft, ChevronDown, ArrowRight } from 'lucide-react';
 import { router } from '../../router/router';
 import { TOPIC_QUESTIONS } from '../../data/topicsQuestions';
 import { topicRouteFor } from '../../data/topicsContent';
+import { localizeQuestion } from '../../data/topicsI18n';
+import { tt } from '../../data/i18n-topics';
+import { appState } from '../../state/appState';
 import { InstagramSendBox } from './InstagramSendBox';
 
 /**
@@ -12,6 +15,8 @@ import { InstagramSendBox } from './InstagramSendBox';
  * to them, and the answered question is added here for others to read.
  */
 export const QuestionsView: React.FC = () => {
+  const lang = appState.settings.language;
+  const questions = TOPIC_QUESTIONS.map((item) => localizeQuestion(item, lang));
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
@@ -22,24 +27,19 @@ export const QuestionsView: React.FC = () => {
         className="inline-flex items-center gap-1.5 text-sm ms-muted hover:text-[var(--ms-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)] rounded px-1 py-1"
       >
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-        Topics
+        {tt('topics.back', lang)}
       </button>
 
       <div className="space-y-1.5">
-        <span className="ms-eyebrow block">Topics</span>
-        <h1 className="ms-title">Questions</h1>
-        <p className="ms-subtitle">
-          Short answers to common questions, with the source named for every answer.
-        </p>
+        <span className="ms-eyebrow block">{tt('topics.hubTitle', lang)}</span>
+        <h1 className="ms-title">{tt('questions.title', lang)}</h1>
+        <p className="ms-subtitle">{tt('questions.subtitle', lang)}</p>
       </div>
 
-      <p className="ms-note-box">
-        These answers are for study only. They do not promise any outcome, and they give no religious
-        ruling. New answers get added here, so check back.
-      </p>
+      <p className="ms-note-box">{tt('questions.studyNote', lang)}</p>
 
       <div className="space-y-3">
-        {TOPIC_QUESTIONS.map((item) => {
+        {questions.map((item) => {
           const isOpen = openId === item.id;
           return (
             <div
@@ -75,7 +75,10 @@ export const QuestionsView: React.FC = () => {
                         <p className="ms-body italic">{item.quote.transliteration}</p>
                       ) : null}
                       <p className="ms-body">&ldquo;{item.quote.text}&rdquo;</p>
-                      <p className="ms-body ms-muted text-sm">Source: {item.quote.source}</p>
+                      <p className="ms-body ms-muted text-sm">
+                        {tt('topics.sourceLabel', lang)}
+                        {item.quote.source}
+                      </p>
                     </blockquote>
                   ) : null}
                   {item.terms && item.terms.length > 0 ? (
@@ -93,7 +96,7 @@ export const QuestionsView: React.FC = () => {
                     </ul>
                   ) : null}
                   <p className="ms-body text-sm">
-                    <span className="font-semibold">Sources: </span>
+                    <span className="font-semibold">{tt('topics.sourcesLabel', lang)}</span>
                     {item.sources.join(' ')}
                   </p>
                   {item.topicId ? (
@@ -102,7 +105,7 @@ export const QuestionsView: React.FC = () => {
                       onClick={() => router.navigate(topicRouteFor(item.topicId as string))}
                       className="inline-flex items-center gap-1.5 text-sm ms-gold font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)] rounded px-1 py-1"
                     >
-                      Read the full discussion
+                      {tt('questions.readFull', lang)}
                       <ArrowRight className="w-4 h-4" aria-hidden="true" />
                     </button>
                   ) : null}
@@ -116,11 +119,11 @@ export const QuestionsView: React.FC = () => {
       <InstagramSendBox
         kind="question"
         topic="general"
-        title="Ask a question"
-        messageLabel="Your question"
-        messagePlaceholder="What do you want to know?"
-        note="Send your question with your Instagram name, or post as anonymous. If you give your name, the answer comes back to you on Instagram too. New answers get added here so others can read them too."
-        doneMessage="Thanks. Your question is saved. The answer will come back to you on Instagram, and it will be added here too."
+        title={tt('sendbox.askTitle', lang)}
+        messageLabel={tt('sendbox.askLabel', lang)}
+        messagePlaceholder={tt('sendbox.askPlaceholder', lang)}
+        note={tt('sendbox.askNote', lang)}
+        doneMessage={tt('sendbox.askDone', lang)}
       />
     </div>
   );

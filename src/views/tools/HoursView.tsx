@@ -12,6 +12,8 @@ import {
 } from '../../utils/astronomy';
 import { CITIES } from '../../data/cities';
 import { planetById } from '../../data/planets';
+import { appState } from '../../state/appState';
+import { localizePlanetName, localizeSunReason, tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -23,6 +25,7 @@ import { ToolsLayout } from './ToolsLayout';
  * the reason — hours are never invented.
  */
 export const HoursView: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
   const [location, setLocation] = useState<GeoLocation | null>(() => getSavedLocation());
   // The picker shows the saved city when the saved location is one of the
@@ -54,9 +57,9 @@ export const HoursView: React.FC = () => {
   const applyLocation = (loc: GeoLocation): void => {
     if (saveLocation(loc)) {
       setLocation(loc);
-      setGeoMessage(`Location saved on this device: ${loc.label}.`);
+      setGeoMessage(tfTools('tools.hours.geoSaved', lang, { label: loc.label }));
     } else {
-      setGeoMessage('That location is not valid. Latitude must be between -90 and 90, longitude between -180 and 180.');
+      setGeoMessage(tTools('tools.hours.geoInvalid', lang));
     }
   };
 
@@ -71,29 +74,29 @@ export const HoursView: React.FC = () => {
     const lat = Number(latInput);
     const lon = Number(lonInput);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      setGeoMessage('Type a number for latitude and a number for longitude.');
+      setGeoMessage(tTools('tools.hours.geoTypeNumbers', lang));
       return;
     }
-    applyLocation({ lat, lon, label: `Manual (${lat}, ${lon})`, timeZone: deviceZone });
+    applyLocation({ lat, lon, label: tfTools('tools.hours.geoManual', lang, { lat, lon }), timeZone: deviceZone });
   };
 
   const useMyLocation = (): void => {
     if (!navigator.geolocation) {
-      setGeoMessage('This browser does not offer geolocation.');
+      setGeoMessage(tTools('tools.hours.geoNoGeo', lang));
       return;
     }
-    setGeoMessage('Asking for your location…');
+    setGeoMessage(tTools('tools.hours.geoAsking', lang));
     navigator.geolocation.getCurrentPosition(
       (position) => {
         applyLocation({
           lat: position.coords.latitude,
           lon: position.coords.longitude,
-          label: `My location (${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)})`,
+          label: tfTools('tools.hours.geoMyLocation', lang, { lat: position.coords.latitude.toFixed(2), lon: position.coords.longitude.toFixed(2) }),
           timeZone: deviceZone,
         });
       },
       () => {
-        setGeoMessage('Location was not shared. Pick a city or type a latitude and longitude instead.');
+        setGeoMessage(tTools('tools.hours.geoNotShared', lang));
       },
     );
   };
@@ -102,25 +105,25 @@ export const HoursView: React.FC = () => {
     clearLocation();
     setLocation(null);
     setCityName('');
-    setGeoMessage('Location cleared. Hours are now the approximate 06:00–18:00 split.');
+    setGeoMessage(tTools('tools.hours.geoCleared', lang));
   };
 
   return (
     <ToolsLayout
-      title="Planetary Hours"
-      eyebrow="Time & Heavens"
-      subtitle="The 24 hours of the day, each ruled by a planet in Chaldean order. Day hours run sunrise to sunset, night hours sunset to next sunrise — so the hours are unequal."
+      title={tTools('tools.hours.title', lang)}
+      eyebrow={tTools('tools.hours.eyebrow', lang)}
+      subtitle={tTools('tools.hours.subtitle', lang)}
     >
       <section className="ms-card space-y-4">
-        <h2 className="ms-h2">Location</h2>
+        <h2 className="ms-h2">{tTools('tools.hours.locationTitle', lang)}</h2>
         <p className="ms-body">
           {location
-            ? `Using ${location.label} (${location.lat}, ${location.lon}, ${location.timeZone}).`
-            : 'No location is set. Hours below use the fixed 06:00–18:00 split — approximate, not real hours.'}
+            ? tfTools('tools.hours.usingLocation', lang, { label: location.label, lat: location.lat, lon: location.lon, tz: location.timeZone })
+            : tTools('tools.hours.noLocation', lang)}
         </p>
         <div className="space-y-1.5">
           <label className="ms-label" htmlFor="hours-city">
-            Pick a city
+            {tTools('tools.hours.pickCity', lang)}
           </label>
           <select
             id="hours-city"
@@ -128,7 +131,7 @@ export const HoursView: React.FC = () => {
             value={cityName}
             onChange={(event) => pickCity(event.target.value)}
           >
-            <option value="">Choose a city…</option>
+            <option value="">{tTools('tools.hours.chooseCity', lang)}</option>
             {CITIES.map((city) => (
               <option key={city.name} value={city.name}>
                 {city.name}, {city.country}
@@ -139,7 +142,7 @@ export const HoursView: React.FC = () => {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label className="ms-label" htmlFor="hours-lat">
-              Latitude
+              {tTools('tools.hours.lat', lang)}
             </label>
             <input
               id="hours-lat"
@@ -153,7 +156,7 @@ export const HoursView: React.FC = () => {
           </div>
           <div className="space-y-1.5">
             <label className="ms-label" htmlFor="hours-lon">
-              Longitude
+              {tTools('tools.hours.lon', lang)}
             </label>
             <input
               id="hours-lon"
@@ -168,20 +171,18 @@ export const HoursView: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="ms-btn-gold" onClick={saveManual}>
-            Use this latitude and longitude
+            {tTools('tools.hours.useLatLon', lang)}
           </button>
           <button type="button" className="ms-btn" onClick={useMyLocation}>
-            Use my location
+            {tTools('tools.hours.useMyLocation', lang)}
           </button>
           <button type="button" className="ms-btn" onClick={clear} disabled={!location}>
-            Clear location
+            {tTools('tools.hours.clearLocation', lang)}
           </button>
         </div>
         {geoMessage ? <p className="ms-note">{geoMessage}</p> : null}
         <p className="ms-note">
-          Your location is used on this device only to work out sunrise and sunset — it is never
-          sent anywhere. “Use my location” asks your browser for it first; you can say no and pick
-          a city or type coordinates instead. No external geocoding or timezone service is used.
+          {tTools('tools.hours.privacyNote', lang)}
         </p>
       </section>
 
@@ -190,7 +191,7 @@ export const HoursView: React.FC = () => {
           <section className="ms-card space-y-3">
             <h2 className="ms-h2">{dayHours.dateLabel}</h2>
             <p className="ms-body">
-              Day ruler: <span className="ms-ink font-medium">{planetById(dayHours.dayRuler).name}</span>{' '}
+              {tTools('tools.hours.dayRuler', lang)} <span className="ms-ink font-medium">{localizePlanetName(dayHours.dayRuler, planetById(dayHours.dayRuler).name, lang)}</span>{' '}
               <span className="ms-arabic-sm" dir="rtl" lang="ar">
                 {planetById(dayHours.dayRuler).arabic}
               </span>{' '}
@@ -198,22 +199,17 @@ export const HoursView: React.FC = () => {
             </p>
             {sunTimes && sunTimes.sunrise && sunTimes.sunset ? (
               <p className="ms-body ms-num">
-                Sunrise {formatInZone(sunTimes.sunrise, timeZone)} · Sunset{' '}
+                {tTools('tools.hours.sunrise', lang)} {formatInZone(sunTimes.sunrise, timeZone)} · {tTools('tools.hours.sunset', lang)}{' '}
                 {formatInZone(sunTimes.sunset, timeZone)} ({timeZone})
               </p>
             ) : null}
             {dayHours.approximate ? (
               <p className="ms-note-box">
-                Approximate, not real hours. No location is set, so this table uses a fixed
-                06:00–18:00 split in {timeZone}. Set a location above for real hours.
+                {tfTools('tools.hours.approxBox', lang, { tz: timeZone })}
               </p>
             ) : (
               <p className="ms-note">
-                Hours are unequal: each day hour is one twelfth of sunrise to sunset, each night
-                hour one twelfth of sunset to next sunrise. The day is counted from sunrise, so an
-                instant before sunrise belongs to the previous day. Times are worked out with the
-                Astronomy Engine library; the time zone is handled with Intl, so daylight saving is
-                followed.
+                {tTools('tools.hours.realNote', lang)}
               </p>
             )}
           </section>
@@ -222,10 +218,10 @@ export const HoursView: React.FC = () => {
             <table className="ms-table">
               <thead>
                 <tr className="text-left">
-                  <th scope="col" className="px-4 py-3 font-medium">Hour</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Time</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Ruler</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Day / night</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.hours.thHour', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.hours.thTime', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.hours.thRuler', lang)}</th>
+                  <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.hours.thDayNight', lang)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,18 +232,18 @@ export const HoursView: React.FC = () => {
                     <tr key={hour.index} style={isCurrent ? { background: 'rgba(232, 184, 79, 0.10)' } : undefined}>
                       <td className="px-4 py-2.5 ms-num">
                         {hour.index + 1}
-                        {isCurrent ? ' — now' : ''}
+                        {isCurrent ? tTools('tools.hours.nowSuffix', lang) : ''}
                       </td>
                       <td className="px-4 py-2.5 ms-num">
                         {formatInZone(hour.start, timeZone)} – {formatInZone(hour.end, timeZone)}
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className="ms-ink">{ruler.name}</span>{' '}
+                        <span className="ms-ink">{localizePlanetName(ruler.id, ruler.name, lang)}</span>{' '}
                         <span className="ms-arabic-sm" dir="rtl" lang="ar">
                           {ruler.arabic}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 ms-body">{hour.isDay ? 'Day' : 'Night'}</td>
+                      <td className="px-4 py-2.5 ms-body">{hour.isDay ? tTools('tools.common.day', lang) : tTools('tools.common.night', lang)}</td>
                     </tr>
                   );
                 })}
@@ -257,18 +253,16 @@ export const HoursView: React.FC = () => {
         </>
       ) : (
         <p className="ms-note-box" role="alert">
-          Planetary hours are unavailable for this place and day:{' '}
+          {tTools('tools.hours.unavailableTitle', lang)}{' '}
           {sunTimes && sunTimes.unavailableReason
-            ? sunTimes.unavailableReason
-            : 'the Sun does not rise or set around now (polar day or night), so there is no sunrise or sunset to divide into hours.'}{' '}
-          No hours are invented. Pick another place or day.
+            ? localizeSunReason(sunTimes.unavailableReason, lang)
+            : tTools('tools.hours.unavailableDefault', lang)}{' '}
+          {tTools('tools.hours.unavailableTail', lang)}
         </p>
       )}
 
       <p className="ms-note">
-        Method: Astronomy Engine (SearchRiseSet for the Sun); the Chaldean order is Saturn, Jupiter,
-        Mars, Sun, Venus, Mercury, Moon, and the first hour of the day is the day ruler. Source:
-        Wikipedia, “Planetary hours”.
+        {tTools('tools.hours.methodNote', lang)}
       </p>
     </ToolsLayout>
   );

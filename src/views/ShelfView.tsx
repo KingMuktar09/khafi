@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Bookmark, BookOpen, CheckCircle2, Clock, Library } from 'lucide-react';
 import { appState } from '../state/appState';
+import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
 import { BookGrid } from '../components/books/BookGrid';
 import { ReadingStats } from '../components/special/ReadingStats';
 import type { ShelfStatus } from '../data/tools';
-import { SHELF_LABELS, shelfCounts } from '../data/tools';
+import { shelfCounts } from '../data/tools';
 
 type ShelfTab = ShelfStatus | 'all';
 
@@ -15,6 +16,7 @@ type ShelfTab = ShelfStatus | 'all';
  * Change the status from a book's own page, or remove it here.
  */
 export const ShelfView: React.FC = () => {
+  const lang = appState.settings.language;
   const [tab, setTab] = useState<ShelfTab>('all');
   const shelf = appState.shelf;
   const counts = shelfCounts(shelf);
@@ -22,10 +24,10 @@ export const ShelfView: React.FC = () => {
   const books = tab === 'all' ? appState.getShelfBooks() : appState.getShelfBooksByStatus(tab);
 
   const tabs: { key: ShelfTab; label: string; count: number; icon: React.ReactNode }[] = [
-    { key: 'all', label: 'All saved', count: total, icon: <Library className="w-3.5 h-3.5" /> },
-    { key: 'to-read', label: SHELF_LABELS['to-read'], count: counts['to-read'], icon: <Bookmark className="w-3.5 h-3.5" /> },
-    { key: 'reading', label: SHELF_LABELS.reading, count: counts.reading, icon: <Clock className="w-3.5 h-3.5" /> },
-    { key: 'finished', label: SHELF_LABELS.finished, count: counts.finished, icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    { key: 'all', label: t('shelf.allSaved', lang), count: total, icon: <Library className="w-3.5 h-3.5" /> },
+    { key: 'to-read', label: t('shelf.to-read', lang), count: counts['to-read'], icon: <Bookmark className="w-3.5 h-3.5" /> },
+    { key: 'reading', label: t('shelf.reading', lang), count: counts.reading, icon: <Clock className="w-3.5 h-3.5" /> },
+    { key: 'finished', label: t('shelf.finished', lang), count: counts.finished, icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -33,16 +35,16 @@ export const ShelfView: React.FC = () => {
       <div className="px-1">
         <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)] flex items-center gap-2">
           <Bookmark className="w-6 h-6 text-[var(--gold)]" />
-          <span>My Shelf</span>
+          <span>{t('shelf.title', lang)}</span>
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Your saved books, with a reading status. Saved on this device only. Nothing leaves your phone or laptop.
+          {t('shelf.subtitle', lang)}
         </p>
       </div>
 
       <ReadingStats />
 
-      <div className="flex gap-2 flex-wrap" role="group" aria-label="Shelf status">
+      <div className="flex gap-2 flex-wrap" role="group" aria-label={t('shelf.statusAria', lang)}>
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -63,9 +65,9 @@ export const ShelfView: React.FC = () => {
       {total === 0 ? (
         <div className="py-12 px-4 text-center bg-[var(--bg-surface)] border border-dashed border-[var(--border-main)] rounded-xl space-y-3">
           <Bookmark className="w-8 h-8 text-[var(--gold)] mx-auto" />
-          <p className="font-semibold text-sm text-[var(--text-main)]">Your shelf is empty.</p>
+          <p className="font-semibold text-sm text-[var(--text-main)]">{t('shelf.emptyTitle', lang)}</p>
           <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto leading-relaxed">
-            Open any book and tap “Save to My Shelf”, or tap it on a Surprise Me book. Then set it to To Read, Reading or Finished.
+            {t('shelf.emptyText', lang)}
           </p>
           <button
             type="button"
@@ -73,16 +75,16 @@ export const ShelfView: React.FC = () => {
             className="tap-target px-5 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs rounded-lg cursor-pointer inline-flex items-center gap-2"
           >
             <BookOpen className="w-4 h-4" />
-            <span>Browse the Library</span>
+            <span>{t('shelf.browseLibrary', lang)}</span>
           </button>
         </div>
       ) : books.length === 0 ? (
         <div className="py-12 px-4 text-center bg-[var(--bg-surface)] border border-dashed border-[var(--border-main)] rounded-xl">
-          <p className="font-semibold text-sm text-[var(--text-main)]">No books with this status yet.</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">Change a book's status from its own page.</p>
+          <p className="font-semibold text-sm text-[var(--text-main)]">{t('shelf.noBooksStatus', lang)}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{t('shelf.changeStatus', lang)}</p>
         </div>
       ) : (
-        <BookGrid books={books} emptyMessage="No books here yet." />
+        <BookGrid books={books} emptyMessage={t('shelf.noBooksHere', lang)} />
       )}
     </div>
   );

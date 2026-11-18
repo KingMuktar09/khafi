@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { appState } from '../state/appState';
+import { t, tf } from '../data/i18n';
 import { BookGrid } from '../components/books/BookGrid';
 import { CompactAdvisoryBanner } from '../components/ui/CompactAdvisoryBanner';
 import { RefreshCw, AlertTriangle, LayoutGrid, FileText, BookOpen, ShieldCheck, Search, Upload } from 'lucide-react';
@@ -9,7 +10,7 @@ import { api } from '../services/api';
 import { Book } from '../types';
 import { cleanLabel } from '../utils/bookOrder';
 import type { ShelfStatus } from '../data/tools';
-import { SHELF_LABELS } from '../data/tools';
+
 import { TOPIC_GROUPS, groupForCategory, topicGroupCounts } from '../data/topicGroups';
 
 type TypeFilter = 'all' | 'pdf' | 'notes';
@@ -28,6 +29,7 @@ type SortBy = 'arranged' | 'title' | 'topic' | 'date';
  */
 export const LibraryView: React.FC = () => {
   const { searchQuery, category: routeCategory } = appState.route;
+  const lang = appState.settings.language;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(routeCategory || null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(
     routeCategory ? groupForCategory(routeCategory)?.id || null : null
@@ -58,18 +60,18 @@ export const LibraryView: React.FC = () => {
         const suffix =
           res.durable === true
             ? 'Saved permanently.'
-            : 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep it.';
+            : t('library.savedForNow', lang);
         appState.showToast(
-          `Removed "${deleteTarget.title}" from the library catalog. The Drive file was not deleted. ${suffix}`,
+          tf('library.deleteSuccess', lang, { title: deleteTarget.title, suffix }),
           res.durable === true ? 'success' : 'info'
         );
         await appState.loadCatalog();
         setDeleteTarget(null);
       } else {
-        appState.showToast(res.error || 'Unable to delete this book.', 'error');
+        appState.showToast(res.error || t('library.deleteFail', lang), 'error');
       }
     } catch {
-      appState.showToast('Unable to delete this book.', 'error');
+      appState.showToast(t('library.deleteFail', lang), 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -208,7 +210,7 @@ export const LibraryView: React.FC = () => {
         <div className="w-10 h-10 border border-[var(--border-main)] bg-[var(--bg-main)] text-[var(--gold)] flex items-center justify-center rounded-lg mx-auto animate-spin">
           <RefreshCw className="w-5 h-5 text-[var(--gold)]" />
         </div>
-        <p className="text-sm font-semibold text-[var(--text-main)]">Loading the library…</p>
+        <p className="text-sm font-semibold text-[var(--text-main)]">{t('library.loading', lang)}</p>
         <div className="space-y-2 pt-2 text-left">
           <div className="skeleton h-10 w-full" />
           <div className="skeleton h-10 w-11/12" />
@@ -225,9 +227,9 @@ export const LibraryView: React.FC = () => {
           <AlertTriangle className="w-5 h-5 text-amber-500" />
         </div>
         <div className="space-y-1">
-          <h3 className="font-bold text-base text-[var(--text-main)]">Unable to load the library.</h3>
+          <h3 className="font-bold text-base text-[var(--text-main)]">{t('library.loadErrorTitle', lang)}</h3>
           <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-            A network error occurred while retrieving the books.
+            {t('library.loadErrorText', lang)}
           </p>
         </div>
         <div className="pt-1">
@@ -237,7 +239,7 @@ export const LibraryView: React.FC = () => {
             className="px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs rounded-lg cursor-pointer transition-colors inline-flex items-center gap-2 shadow-xs"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Try Again</span>
+            <span>{t('library.tryAgain', lang)}</span>
           </button>
         </div>
       </div>
@@ -245,23 +247,23 @@ export const LibraryView: React.FC = () => {
   }
 
   const title = q
-    ? `Search: "${q}"`
-    : selectedCategory || activeGroup?.title || 'All Books';
+    ? tf('library.searchTitle', lang, { q })
+    : selectedCategory || activeGroup?.title || t('library.allBooks', lang);
 
   return (
     <div className="space-y-5 animate-fade-in py-2 font-sans">
       {/* Heading */}
       <div className="flex flex-wrap items-end justify-between gap-2 px-1">
         <div>
-          <span className="ms-eyebrow block">The Library</span>
+          <span className="ms-eyebrow block">{t('library.eyebrow', lang)}</span>
           <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)]">{title}</h1>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            {displayedBooks.length} {displayedBooks.length === 1 ? 'book' : 'books'}
-            . Grouped by topic and category. No folders to open.
+            {tf(displayedBooks.length === 1 ? 'library.countOne' : 'library.countMany', lang, { n: displayedBooks.length })}
+            . {t('library.groupedNote', lang)}
           </p>
         </div>
         <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full">
-          {appState.getVisibleBooks().length} books in the library
+          {tf('library.totalInLibrary', lang, { n: appState.getVisibleBooks().length })}
         </span>
       </div>
 
@@ -272,8 +274,8 @@ export const LibraryView: React.FC = () => {
           type="search"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          placeholder="Search books: try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…"
-          aria-label="Search books by title, author or topic"
+          placeholder={t('library.searchPlaceholder', lang)}
+          aria-label={t('library.searchAria', lang)}
           className="tap-target w-full pl-11 pr-4 py-3.5 text-sm sm:text-base bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)] shadow-lg"
         />
       </div>
@@ -286,12 +288,12 @@ export const LibraryView: React.FC = () => {
             type="search"
             value={categorySearch}
             onChange={(e) => setCategorySearch(e.target.value)}
-            placeholder="Type to find a category..."
-            aria-label="Find a category"
+            placeholder={t('library.findCategoryPlaceholder', lang)}
+            aria-label={t('library.findCategoryAria', lang)}
             className="tap-target w-full pl-10 pr-4 py-2.5 text-sm bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)]"
           />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2" role="group" aria-label="Topics">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2" role="group" aria-label={t('library.topicsAria', lang)}>
           <button
             type="button"
             onClick={() => { setSelectedGroup(null); setSelectedCategory(null); setSelectedTopic(null); }}
@@ -303,10 +305,10 @@ export const LibraryView: React.FC = () => {
           >
             <span className="font-bold text-sm flex items-center gap-1.5">
               <LayoutGrid className="w-4 h-4" />
-              <span>All Books</span>
+              <span>{t('library.allBooks', lang)}</span>
             </span>
             <span className={`text-xs mt-0.5 block ${selectedGroup === null && selectedCategory === null ? 'text-black/70' : 'text-[var(--text-muted)]'}`}>
-              Everything in the library — {appState.getVisibleBooks().length} books
+              {tf('library.allBooksBlurb', lang, { n: appState.getVisibleBooks().length })}
             </span>
           </button>
           {groupCounts
@@ -354,12 +356,12 @@ export const LibraryView: React.FC = () => {
           );
         }).length === 0 && (
           <p className="text-xs text-[var(--text-muted)] px-1">
-            No topic matches "{categorySearch.trim()}". Try another word, like "Quran" or "history".
+            {tf('library.noTopicMatch', lang, { q: categorySearch.trim() })}
           </p>
         )}
 
         {/* Categories inside the picked topic — tap one to narrow further. */}
-        <div className="flex gap-2 flex-wrap items-center" role="group" aria-label="Categories">
+        <div className="flex gap-2 flex-wrap items-center" role="group" aria-label={t('library.categoriesAria', lang)}>
           {shownCategories.map((category) => {
             const count = appState.getVisibleBooks().filter((b) => cleanLabel(b.category) === category).length;
             return (
@@ -378,16 +380,16 @@ export const LibraryView: React.FC = () => {
             );
           })}
           {shownCategories.length === 0 && (
-            <p className="text-xs text-[var(--text-muted)]">No category matches "{categorySearch.trim()}".</p>
+            <p className="text-xs text-[var(--text-muted)]">{tf('library.noCategoryMatch', lang, { q: categorySearch.trim() })}</p>
           )}
         </div>
 
         {/* Type filter + Authentic */}
-        <div className="flex gap-2 flex-wrap items-center" role="group" aria-label="Book type and Authentic">
+        <div className="flex gap-2 flex-wrap items-center" role="group" aria-label={t('library.typeFilterAria', lang)}>
           {([
-            { key: 'all', label: 'All types', icon: BookOpen },
-            { key: 'pdf', label: 'PDF books', icon: FileText },
-            { key: 'notes', label: 'Notes', icon: FileText },
+            { key: 'all', label: t('library.typeAll', lang), icon: BookOpen },
+            { key: 'pdf', label: t('library.typePdf', lang), icon: FileText },
+            { key: 'notes', label: t('library.typeNotes', lang), icon: FileText },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
@@ -407,7 +409,7 @@ export const LibraryView: React.FC = () => {
             type="button"
             onClick={() => setAuthenticOnly((v) => !v)}
             aria-pressed={authenticOnly}
-            title="Show only books the admin marked Authentic — checked copies, genuine and unaltered. A book without the mark has simply not been checked yet."
+            title={t('library.authenticTitle', lang)}
             className={`tap-target px-3 py-2 rounded-lg text-xs font-bold border flex items-center gap-1.5 cursor-pointer ${
               authenticOnly
                 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/50'
@@ -415,32 +417,32 @@ export const LibraryView: React.FC = () => {
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Authentic only ({authenticCount})</span>
+            <span>{tf('library.authenticOnly', lang, { n: authenticCount })}</span>
           </button>
 
           {/* Reading status (My Shelf) + sort */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            aria-label="Filter by reading status on My Shelf"
+            aria-label={t('library.statusAria', lang)}
             className="tap-target px-3 py-2 rounded-lg text-xs font-semibold border bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)] cursor-pointer"
           >
-            <option value="all">Any status</option>
-            {(Object.keys(SHELF_LABELS) as ShelfStatus[]).map((s) => (
-              <option key={s} value={s}>{SHELF_LABELS[s]}</option>
+            <option value="all">{t('library.statusAny', lang)}</option>
+            {(['to-read', 'reading', 'finished'] as ShelfStatus[]).map((s) => (
+              <option key={s} value={s}>{t(`shelf.${s}`, lang)}</option>
             ))}
-            <option value="not-shelf">Not on My Shelf</option>
+            <option value="not-shelf">{t('library.statusNotShelf', lang)}</option>
           </select>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
-            aria-label="Sort books"
+            aria-label={t('library.sortAria', lang)}
             className="tap-target px-3 py-2 rounded-lg text-xs font-semibold border bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)] cursor-pointer"
           >
-            <option value="arranged">Sort: library order</option>
-            <option value="title">Sort: title A–Z</option>
-            <option value="topic">Sort: topic A–Z</option>
-            <option value="date">Sort: newest first</option>
+            <option value="arranged">{t('library.sortArranged', lang)}</option>
+            <option value="title">{t('library.sortTitle', lang)}</option>
+            <option value="topic">{t('library.sortTopic', lang)}</option>
+            <option value="date">{t('library.sortDate', lang)}</option>
           </select>
         </div>
 
@@ -450,9 +452,9 @@ export const LibraryView: React.FC = () => {
       {displayedBooks.length === 0 ? (
         <div className="py-12 px-4 text-center ms-panel rounded-xl">
           <p className="font-semibold text-sm text-[var(--text-main)]">
-            {q ? `No books found for "${q}".` : 'No books match these filters.'}
+            {q ? tf('library.noBooksSearch', lang, { q }) : t('library.noBooksFilters', lang)}
           </p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">Try a different search word, topic or category.</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{t('library.tryDifferent', lang)}</p>
         </div>
       ) : grouped ? (
         grouped.map((group) => (
@@ -460,7 +462,7 @@ export const LibraryView: React.FC = () => {
             <div className="flex items-baseline gap-3 px-1 pt-2">
               <h2 className="font-display font-semibold text-xl text-[var(--text-main)]">{group.category}</h2>
               <span className="text-xs text-[var(--text-muted)]">
-                {group.topics.reduce((n, t) => n + t.books.length, 0)} books
+                {tf(group.topics.reduce((n, t) => n + t.books.length, 0) === 1 ? 'library.countOne' : 'library.countMany', lang, { n: group.topics.reduce((n, t) => n + t.books.length, 0) })}
               </span>
               {appState.isAdmin() && (
                 <button
@@ -472,7 +474,7 @@ export const LibraryView: React.FC = () => {
                   className="ml-auto self-center px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--gold)]/50 bg-[var(--gold-faint)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-black transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Upload a book here</span>
+                  <span>{t('library.uploadHere', lang)}</span>
                 </button>
               )}
             </div>
@@ -483,12 +485,12 @@ export const LibraryView: React.FC = () => {
                     {topicGroup.topic}
                   </span>
                   <span className="text-[11px] text-[var(--text-muted)]">
-                    {topicGroup.books.length} {topicGroup.books.length === 1 ? 'book' : 'books'}
+                    {tf(topicGroup.books.length === 1 ? 'library.countOne' : 'library.countMany', lang, { n: topicGroup.books.length })}
                   </span>
                 </div>
                 <BookGrid
                   books={topicGroup.books}
-                  emptyMessage="No books in this topic."
+                  emptyMessage={t('library.noBooksInTopic', lang)}
                   onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
                 />
               </div>
@@ -498,7 +500,7 @@ export const LibraryView: React.FC = () => {
       ) : (
         <BookGrid
           books={displayedBooks}
-          emptyMessage={q ? `No books found for "${q}".` : 'No books match these filters.'}
+          emptyMessage={q ? tf('library.noBooksSearch', lang, { q }) : t('library.noBooksFilters', lang)}
           onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
         />
       )}
@@ -513,14 +515,14 @@ export const LibraryView: React.FC = () => {
       {/* Admin delete confirmation — title shown, catalog entry only. */}
       <ConfirmModal
         isOpen={deleteTarget !== null}
-        title={deleteTarget ? `Delete "${deleteTarget.title}"?` : 'Delete this book?'}
+        title={deleteTarget ? tf('library.deleteTitle', lang, { title: deleteTarget.title }) : t('library.deleteTitleFallback', lang)}
         message={
           deleteTarget
-            ? `This removes "${deleteTarget.title}" from the library catalog only. The file on Drive is NOT deleted. This cannot be undone.`
+            ? tf('library.deleteMessage', lang, { title: deleteTarget.title })
             : ''
         }
-        confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
-        cancelLabel="Cancel"
+        confirmLabel={isDeleting ? t('library.deleting', lang) : t('library.deleteConfirm', lang)}
+        cancelLabel={t('library.cancel', lang)}
         isDangerous={true}
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}

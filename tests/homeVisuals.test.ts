@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { greetingForHour } from '../src/utils/greeting';
+import { I18N_HOME } from '../src/data/i18n-home';
 
 /**
  * Home visuals: the big greeting, the live sky cards, and the reckon
@@ -55,8 +56,13 @@ describe('Home sky cards', () => {
     expect(cards).toContain('getApproximateHours');
     expect(cards).toContain('getMoonInfo');
     expect(cards).toContain('getMansion');
-    expect(cards).toContain('Approximate, not real hours');
-    expect(cards).toContain('28 equal parts from 0° al-Sharatayn, a stated convention');
+    // The honest labels live in the home chunk now; the cards render them through keys.
+    expect(I18N_HOME.en['home.sky.approxNote']).toContain('Approximate, not real hours');
+    expect(I18N_HOME.en['home.sky.mansionNote']).toContain(
+      '28 equal parts from 0° al-Sharatayn, a stated convention',
+    );
+    expect(cards).toContain("t('home.sky.approxNote'");
+    expect(cards).toContain("t('home.sky.mansionNote'");
     expect(cards).toContain('ms-live-card');
   });
 });

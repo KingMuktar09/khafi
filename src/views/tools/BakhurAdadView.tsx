@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -8,6 +10,7 @@ import { FilledToolPage } from './FilledToolPage';
  * preparation, or recipes. The search box filters the entries.
  */
 export const BakhurAdadView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -19,21 +22,22 @@ export const BakhurAdadView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['bakhur-adad']}
-      title="Bakhur and Adad"
-      eyebrow="Bakhur and Adad"
-      subtitle="A catalogue of named substances and the number work, nothing more."
+      title={tTools('tools.bakhur.title', lang)}
+      eyebrow={tTools('tools.bakhur.eyebrow', lang)}
+      subtitle={tTools('tools.bakhur.subtitle', lang)}
+      toolId="bakhur-adad"
       filter={filter}
     >
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor="bakhur-adad-search">
-          Search the catalogue
+          {tTools('tools.bakhur.searchLabel', lang)}
         </label>
         <input
           id="bakhur-adad-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.bakhur.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

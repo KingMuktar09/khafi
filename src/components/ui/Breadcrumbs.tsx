@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronRight, Home, Folder as FolderIcon, FileText } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 interface BreadcrumbsProps {
   folderId?: string | null;
@@ -10,18 +11,19 @@ interface BreadcrumbsProps {
 }
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ folderId, subfolderId, bookTitle }) => {
+  const lang = appState.settings.language;
   const folder = folderId ? appState.getFolderById(folderId) : null;
   const subfolder = subfolderId ? appState.getFolderById(subfolderId) : null;
 
   const isAtRoot = !folder && !subfolder && !bookTitle;
 
   return (
-    <nav className="flex items-center flex-wrap gap-1.5 text-xs sm:text-sm font-sans text-[var(--text-muted)] py-1" aria-label="Breadcrumb">
+    <nav className="flex items-center flex-wrap gap-1.5 text-xs sm:text-sm font-sans text-[var(--text-muted)] py-1" aria-label={t('ui.breadcrumb.label', lang)}>
       {/* Root Library Link */}
       {isAtRoot ? (
         <span className="font-semibold text-[var(--gold)] flex items-center gap-1.5">
           <Home className="w-3.5 h-3.5 text-[var(--gold)] shrink-0" />
-          <span>Library</span>
+          <span>{t('nav.library', lang)}</span>
         </span>
       ) : (
         <button
@@ -30,7 +32,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ folderId, subfolderId,
           className="hover:text-[var(--gold)] text-[var(--text-muted)] transition-colors focus:outline-none cursor-pointer font-medium flex items-center gap-1.5"
         >
           <Home className="w-3.5 h-3.5 text-[var(--text-faint)] hover:text-[var(--gold)] shrink-0" />
-          <span>Library</span>
+          <span>{t('nav.library', lang)}</span>
         </button>
       )}
 

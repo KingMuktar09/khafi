@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
 import { TalismanFiguresSection } from '../../components/special/TalismanFigures';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -8,6 +10,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const TalasimView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -19,21 +22,22 @@ export const TalasimView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['talasim']}
-      title="Talasim (Figures)"
-      eyebrow="Figures"
-      subtitle="What a talisman is, its shapes, and the four strict conditions."
+      title={tTools('tools.talasim.title', lang)}
+      eyebrow={tTools('tools.talasim.eyebrow', lang)}
+      subtitle={tTools('tools.talasim.subtitle', lang)}
+      toolId="talasim"
       filter={filter}
     >
-      <div className="space-y-1.5" aria-label="Figure entries">
+      <div className="space-y-1.5" aria-label={tTools('tools.shell.aria.figureEntries', lang)}>
         <label className="ms-label" htmlFor="talasim-search">
-          Search figures
+          {tTools('tools.talasim.searchLabel', lang)}
         </label>
         <input
           id="talasim-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.talasim.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

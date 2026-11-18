@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools, tfTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -10,6 +12,7 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
  * chips filter them.
  */
 export const GlossaryView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const [letter, setLetter] = useState('All');
   const q = query.trim().toLowerCase();
@@ -28,28 +31,29 @@ export const GlossaryView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['glossary']}
-      title="Glossary"
-      eyebrow="Glossary"
-      subtitle="The words used across this section, in plain words."
+      title={tTools('tools.glossary.title', lang)}
+      eyebrow={tTools('tools.glossary.eyebrow', lang)}
+      subtitle={tTools('tools.glossary.subtitle', lang)}
+      toolId="glossary"
       filter={filter}
     >
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor="glossary-search">
-          Search terms
+          {tTools('tools.glossary.searchLabel', lang)}
         </label>
         <input
           id="glossary-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by term"
+          placeholder={tTools('tools.glossary.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
 
       <div className="space-y-1.5">
         <span className="ms-label" id="glossary-letter-label">
-          Filter by letter
+          {tTools('tools.glossary.filterLabel', lang)}
         </span>
         <div className="flex flex-wrap gap-2" role="group" aria-labelledby="glossary-letter-label">
           {['All', ...LETTERS].map((option) => (
@@ -60,13 +64,13 @@ export const GlossaryView: React.FC = () => {
               onClick={() => setLetter(option)}
               className="ms-toggle ms-toggle-chip"
             >
-              {option}
+              {option === 'All' ? tTools('tools.common.all', lang) : option}
             </button>
           ))}
         </div>
         {letter !== 'All' ? (
           <p className="ms-note-box">
-            Showing terms under {letter}. Tap All to see the whole glossary again.
+            {tfTools('tools.glossary.showingLetter', lang, { letter })}
           </p>
         ) : null}
       </div>

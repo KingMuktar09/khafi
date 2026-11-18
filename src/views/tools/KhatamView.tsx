@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 import {
   buildFramedSquareSvg,
@@ -25,6 +27,7 @@ const SOLOMON_GRID: number[][] = [
 ];
 
 export const KhatamView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const [copied, setCopied] = useState(false);
   const q = query.trim().toLowerCase();
@@ -44,7 +47,7 @@ export const KhatamView: React.FC = () => {
 
   const onSaveImage = async (): Promise<void> => {
     await saveSvgAsPng(
-      buildFramedSquareSvg(SOLOMON_GRID, 'The seal of Solomon, 3 by 3, every line sums to 15'),
+      buildFramedSquareSvg(SOLOMON_GRID, tTools('tools.khatam.sealCaption', lang)),
       'seal-of-solomon-3x3.png',
     );
   };
@@ -52,36 +55,34 @@ export const KhatamView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['khatam']}
-      title="Khatam"
-      eyebrow="Khatam"
-      subtitle="The Seal, and Solomon its master."
+      title={tTools('tools.khatam.title', lang)}
+      eyebrow={tTools('tools.khatam.eyebrow', lang)}
+      subtitle={tTools('tools.khatam.subtitle', lang)}
+      toolId="khatam"
       filter={filter}
     >
       <div className="space-y-1.5" aria-label="Entries">
         <label className="ms-label" htmlFor="khatam-search">
-          Search entries
+          {tTools('tools.khatam.searchLabel', lang)}
         </label>
         <input
           id="khatam-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.khatam.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
 
-      <section className="ms-card space-y-3" aria-label="The 3 by 3 grid, the seal of Solomon">
-        <h2 className="ms-h2">The 3 by 3 grid, shown on this page</h2>
-        <p className="ms-body">
-          The books call the 3 by 3 grid the seal of Solomon and of al-Ghazali. Here it is, as the
-          books give it. Every row, every column and both diagonals add to 15.
-        </p>
+      <section className="ms-card space-y-3" aria-label={tTools('tools.khatam.gridAria', lang)}>
+        <h2 className="ms-h2">{tTools('tools.khatam.gridTitle', lang)}</h2>
+        <p className="ms-body">{tTools('tools.khatam.gridBody', lang)}</p>
         <div
           className="grid gap-px"
           style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}
           role="table"
-          aria-label="The seal of Solomon, a 3 by 3 grid"
+          aria-label={tTools('tools.khatam.sealAria', lang)}
         >
           {SOLOMON_GRID.flat().map((value, i) => (
             <div
@@ -95,19 +96,18 @@ export const KhatamView: React.FC = () => {
           ))}
         </div>
         <p className="ms-note">
-          The grid is fully shown above, on this page. No download is needed to see it or use it.
+          {tTools('tools.khatam.gridNote', lang)}
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="ms-btn-solid" onClick={onCopy}>
-            {copied ? 'Copied' : 'Copy grid'}
+            {copied ? tTools('tools.common.copied', lang) : tTools('tools.khatam.copyGrid', lang)}
           </button>
           <button type="button" className="ms-btn-solid" onClick={onSaveImage}>
-            Save as image
+            {tTools('tools.khatam.saveImage', lang)}
           </button>
         </div>
         <p className="ms-body ms-muted text-sm">
-          Source: The Radiant Jewels for Summoning, p. 47. The numbers are the classic 3 by 3
-          square, and every line sums to 15.
+          {tTools('tools.common.source', lang)}: The Radiant Jewels for Summoning, p. 47. {tTools('tools.khatam.gridSourceBody', lang)}
         </p>
       </section>
     </FilledToolPage>

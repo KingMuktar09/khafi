@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { computeFawatih, QURAN_TEXT_SOURCE, TRANSLITERATION_SOURCE, transliterateForm } from '../../data/quranTexts';
 import { saghirOf, valueOfText } from '../../utils/abjad';
 import type { AbjadSchool, AbjadSystem } from '../../utils/abjad';
+import { appState } from '../../state/appState';
+import { tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -12,6 +14,7 @@ import { ToolsLayout } from './ToolsLayout';
  * for an interpretation, so nothing is invented.
  */
 export const FawatihView: React.FC = () => {
+  const lang = appState.settings.language;
   const [system, setSystem] = useState<AbjadSystem>('kabir');
   const [school, setSchool] = useState<AbjadSchool>('mashriqi');
 
@@ -20,50 +23,47 @@ export const FawatihView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Fawatih (The Opening Letters)"
-      eyebrow="Letters & Numbers"
-      subtitle="Fourteen letter forms open twenty-nine surahs. The forms below are found by a rule run over the opening verse of every surah. They are computed from the text, not typed in."
+      title={tTools('tools.fawatih.title', lang)}
+      eyebrow={tTools('tools.fawatih.eyebrow', lang)}
+      subtitle={tTools('tools.fawatih.subtitle', lang)}
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <span className="ms-label">System</span>
-          <div className="flex gap-2" role="group" aria-label="System">
+          <span className="ms-label">{tTools('tools.common.system', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.system', lang)}>
             <button type="button" aria-pressed={system === 'kabir'} onClick={() => setSystem('kabir')} className="ms-toggle">
-              Kabir (large)
+              {tTools('tools.common.kabir', lang)}
             </button>
             <button type="button" aria-pressed={system === 'saghir'} onClick={() => setSystem('saghir')} className="ms-toggle">
-              Saghir (small)
+              {tTools('tools.common.saghir', lang)}
             </button>
           </div>
         </div>
         <div className="space-y-1.5">
-          <span className="ms-label">School</span>
-          <div className="flex gap-2" role="group" aria-label="School">
+          <span className="ms-label">{tTools('tools.common.school', lang)}</span>
+          <div className="flex gap-2" role="group" aria-label={tTools('tools.common.school', lang)}>
             <button type="button" aria-pressed={school === 'mashriqi'} onClick={() => setSchool('mashriqi')} className="ms-toggle">
-              Mashriqi (eastern)
+              {tTools('tools.common.mashriqi', lang)}
             </button>
             <button type="button" aria-pressed={school === 'maghribi'} onClick={() => setSchool('maghribi')} className="ms-toggle">
-              Maghribi (western)
+              {tTools('tools.common.maghribi', lang)}
             </button>
           </div>
         </div>
       </div>
 
       <p className="ms-body">
-        <span className="font-semibold ms-ink">{totalSurahs} surahs</span> open with disjointed letters, in{' '}
-        <span className="font-semibold ms-ink">{forms.length} distinct forms</span>. Pick a system and a
-        school; the values update. The “Say it” column reads each form in Latin letters, so you can
-        sound it out without knowing Arabic.
+        {tfTools('tools.fawatih.summary', lang, { total: totalSurahs, forms: forms.length })}
       </p>
 
       <section className="ms-surface ms-table-wrap">
         <table className="ms-table">
           <thead>
             <tr className="text-left">
-              <th scope="col" className="px-4 py-3 font-medium">Form</th>
-              <th scope="col" className="px-4 py-3 font-medium">Say it</th>
-              <th scope="col" className="px-4 py-3 font-medium">Surahs it opens</th>
-              <th scope="col" className="px-4 py-3 font-medium text-right">Value</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.fawatih.thForm', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.fawatih.thSayIt', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium">{tTools('tools.fawatih.thSurahs', lang)}</th>
+              <th scope="col" className="px-4 py-3 font-medium text-right">{tTools('tools.fawatih.thValue', lang)}</th>
             </tr>
           </thead>
           <tbody>
@@ -97,37 +97,18 @@ export const FawatihView: React.FC = () => {
       </section>
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">How these were found</h2>
-        <p className="ms-body">
-          The Qur&apos;an text used here is fully vocalised: every ordinary word carries vowel marks. A
-          word with no vowel marks at all stands out at the start of a surah. It may carry only the
-          lengthening mark (maddah), or no mark. And it is one to five letters long. The rule is:
-          take the first word of each surah&apos;s opening verse (after the Basmalah, where the
-          Basmalah is a prefix and not a verse), and keep it only if it is such a bare word. That
-          rule finds exactly 29 surahs and 14 forms. Ordinary first words, like “inna” in Surah 71
-          or “la” in Surah 75, carry vowel marks and are not picked up. Surah 42 is the one case
-          where the letters run over two verses: Ha Mim opens verse 1, and Ayn Sin Qaf is the whole
-          of verse 2.
-        </p>
-        <p className="ms-body">
-          The Basmalah is verse 1 of Surah al-Fatiha, so it stays in that surah&apos;s text. For the
-          other surahs it is a prefix in the printed text, not a verse, so the rule strips it first.
-        </p>
+        <h2 className="ms-h2">{tTools('tools.fawatih.howFound', lang)}</h2>
+        <p className="ms-body">{tTools('tools.fawatih.howFoundBody', lang)}</p>
+        <p className="ms-body">{tTools('tools.fawatih.basmalahBody', lang)}</p>
       </section>
 
       <section className="ms-card space-y-3">
-        <h2 className="ms-h2">What this page does not say</h2>
-        <p className="ms-body">
-          This page shows which letters open which surahs and what the letters add up to. It does not
-          say what the letters mean. No source has been named for an interpretation yet, so none is
-          offered. The forms are shown as they appear at the start of the surahs, nothing more.
-        </p>
+        <h2 className="ms-h2">{tTools('tools.fawatih.notSay', lang)}</h2>
+        <p className="ms-body">{tTools('tools.fawatih.notSayBody', lang)}</p>
       </section>
 
       <p className="ms-note">
-        {QURAN_TEXT_SOURCE}. {TRANSLITERATION_SOURCE}. The forms and values are computed from that
-        text at run time; the test suite checks the result is 29 surahs in 14 forms with the exact
-        mapping shown above.
+        {QURAN_TEXT_SOURCE}. {TRANSLITERATION_SOURCE}. {tTools('tools.fawatih.sourceTail', lang)}
       </p>
     </ToolsLayout>
   );

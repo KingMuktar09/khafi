@@ -9,6 +9,8 @@ import {
   type DayHours,
 } from '../../utils/astronomy';
 import { planetById } from '../../data/planets';
+import { appState } from '../../state/appState';
+import { localizeHijriMethod, localizeHijriNote, localizePlanetName, localizeSunReason, tTools, tfTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -17,6 +19,7 @@ import { ToolsLayout } from './ToolsLayout';
  * are in now. Facts only; nothing here promises any outcome.
  */
 export const TodayView: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
 
   const savedLocation = useMemo(() => getSavedLocation(), []);
@@ -50,46 +53,44 @@ export const TodayView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Today"
-      eyebrow="Time & Heavens"
-      subtitle="The facts of this day: the date, the day's ruler, and the planetary hour we are in now."
+      title={tTools('tools.today.title', lang)}
+      eyebrow={tTools('tools.today.eyebrow', lang)}
+      subtitle={tTools('tools.today.subtitle', lang)}
     >
       <section className="ms-card space-y-3">
         <h2 className="ms-h2">{gregorianLabel}</h2>
         <p className="ms-body">
-          Hijri date (approximate): <span className="ms-ink font-medium">{hijri.formatted}</span>
+          {tTools('tools.today.hijriLabel', lang)} <span className="ms-ink font-medium">{hijri.formatted}</span>
         </p>
         <p className="ms-note">
-          {hijri.method}. {hijri.note} This date is approximate — it is the civil calendar, not a
-          sighted date.
+          {localizeHijriMethod(hijri.method, lang)}. {localizeHijriNote(hijri.note, lang)}{' '}
+          {tTools('tools.today.hijriApprox', lang)}
         </p>
       </section>
 
       {dayHours && ruler ? (
         <>
           <section className="ms-card space-y-3">
-            <h2 className="ms-h2">Today&apos;s ruler</h2>
+            <h2 className="ms-h2">{tTools('tools.today.rulerTitle', lang)}</h2>
             <p className="ms-body">
-              <span className="ms-ink font-medium">{ruler.name}</span>{' '}
+              <span className="ms-ink font-medium">{localizePlanetName(ruler.id, ruler.name, lang)}</span>{' '}
               <span className="ms-arabic-sm" dir="rtl" lang="ar">
                 {ruler.arabic}
               </span>{' '}
-              <span className="ms-muted">({ruler.transliteration})</span> rules the first hour of
-              this day, so it is the day&apos;s ruler. The day is counted from sunrise: an instant
-              before sunrise belongs to the previous day.
+              <span className="ms-muted">({ruler.transliteration})</span>{' '}
+              {tTools('tools.today.rulerBodyA', lang)}
             </p>
             <p className="ms-note">
-              Day rulers: Sunday Sun, Monday Moon, Tuesday Mars, Wednesday Mercury, Thursday
-              Jupiter, Friday Venus, Saturday Saturn. Source: Wikipedia, “Planetary hours”.
+              {tTools('tools.today.dayRulersNote', lang)}
             </p>
           </section>
 
           {currentHour && currentRuler ? (
             <section className="ms-card space-y-3">
-              <h2 className="ms-h2">The current hour</h2>
+              <h2 className="ms-h2">{tTools('tools.today.currentTitle', lang)}</h2>
               <p className="ms-body">
-                Hour {currentHour.index + 1} of 24 ({currentHour.isDay ? 'day' : 'night'} hour),
-                ruled by <span className="ms-ink font-medium">{currentRuler.name}</span>{' '}
+                {tfTools('tools.today.hourLineA', lang, { n: currentHour.index + 1, dayNight: currentHour.isDay ? tTools('tools.common.day', lang) : tTools('tools.common.night', lang) })}{' '}
+                <span className="ms-ink font-medium">{localizePlanetName(currentRuler.id, currentRuler.name, lang)}</span>{' '}
                 <span className="ms-arabic-sm" dir="rtl" lang="ar">
                   {currentRuler.arabic}
                 </span>{' '}
@@ -101,24 +102,23 @@ export const TodayView: React.FC = () => {
               </p>
               <p className="ms-note">
                 {dayHours.approximate
-                  ? 'Approximate, not real hours — no location is set, so these hours use a fixed 06:00–18:00 split. Set a location on the Planetary Hours page for real hours.'
-                  : `Real hours for ${dayHours.location ? dayHours.location.label : 'your saved location'}. Hours are unequal: each day hour is one twelfth of sunrise to sunset, each night hour one twelfth of sunset to next sunrise.`}
+                  ? tTools('tools.today.approxNote', lang)
+                  : tfTools('tools.today.realNote', lang, { label: dayHours.location ? dayHours.location.label : tTools('tools.today.yourSavedLocation', lang) })}
               </p>
             </section>
           ) : null}
         </>
       ) : (
         <p className="ms-note-box" role="alert">
-          Planetary hours are unavailable for this place and day: {unavailableReason}
+          {tfTools('tools.today.unavailable', lang, { reason: unavailableReason ? localizeSunReason(unavailableReason, lang) : tTools('tools.today.defaultReason', lang) })}
         </p>
       )}
 
       <p className="ms-note">
         {savedLocation
-          ? `Location: ${savedLocation.label} (${savedLocation.lat}, ${savedLocation.lon}, ${savedLocation.timeZone}).`
-          : 'No location is set. Times use the device time zone and the approximate 06:00–18:00 split. Set a location on the Planetary Hours page.'}{' '}
-        Nothing is sent anywhere — the location is saved on this device only. There are no prayer
-        times here.
+          ? tfTools('tools.today.locationLine', lang, { label: savedLocation.label, lat: savedLocation.lat, lon: savedLocation.lon, tz: savedLocation.timeZone })
+          : tTools('tools.today.noLocation', lang)}{' '}
+        {tTools('tools.today.locationTail', lang)}
       </p>
     </ToolsLayout>
   );

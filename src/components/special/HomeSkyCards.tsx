@@ -11,6 +11,8 @@ import {
 } from '../../utils/astronomy';
 import { planetById, type PlanetId } from '../../data/planets';
 import { router } from '../../router/router';
+import { appState } from '../../state/appState';
+import { t, tf } from '../../data/i18n';
 
 /**
  * Home sky cards: the live facts of this moment, in a row of four
@@ -41,7 +43,24 @@ export const PLANET_COLOURS: Record<PlanetId, string> = {
   moon: '#c9d2e0',
 };
 
+/**
+ * Moon phase names are descriptions, not names, so they follow the
+ * Settings language. Planet names, mansion names and their Arabic are
+ * names and transliteration, so they stay exactly as they are.
+ */
+const PHASE_KEYS: Record<string, string> = {
+  'New Moon': 'home.sky.phase.newMoon',
+  'Waxing Crescent': 'home.sky.phase.waxingCrescent',
+  'First Quarter': 'home.sky.phase.firstQuarter',
+  'Waxing Gibbous': 'home.sky.phase.waxingGibbous',
+  'Full Moon': 'home.sky.phase.fullMoon',
+  'Waning Gibbous': 'home.sky.phase.waningGibbous',
+  'Last Quarter': 'home.sky.phase.lastQuarter',
+  'Waning Crescent': 'home.sky.phase.waningCrescent',
+};
+
 export const HomeSkyCards: React.FC = () => {
+  const lang = appState.settings.language;
   const [now] = useState(() => new Date());
 
   const savedLocation = useMemo(() => getSavedLocation(), []);
@@ -53,20 +72,25 @@ export const HomeSkyCards: React.FC = () => {
   const moon = useMemo(() => getMoonInfo(now), [now]);
   const mansion = useMemo(() => getMansion(getMoonLongitude(now)), [now]);
 
+  // Bengali dates read in Bengali; Hinglish keeps the English date
+  // words, since Hinglish is written in the Roman script.
+  const dateLocale = lang === 'bn' ? 'bn' : 'en-GB';
   const dayLabel = useMemo(
     () =>
-      new Intl.DateTimeFormat('en-GB', {
+      new Intl.DateTimeFormat(dateLocale, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric',
       }).format(now),
-    [now],
+    [now, dateLocale],
   );
   const weekday = useMemo(
-    () => new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(now),
-    [now],
+    () => new Intl.DateTimeFormat(dateLocale, { weekday: 'long' }).format(now),
+    [now, dateLocale],
   );
+  const phaseKey = PHASE_KEYS[moon.phaseName];
+  const phaseName = phaseKey ? t(phaseKey, lang) : moon.phaseName;
 
   const currentHour = dayHours ? dayHours.hours[dayHours.currentIndex] : null;
   const currentRuler = currentHour ? planetById(currentHour.ruler) : null;
@@ -76,7 +100,7 @@ export const HomeSkyCards: React.FC = () => {
     : Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
-    <section aria-label="The sky right now" className="animate-fade-up">
+    <section aria-label={t('home.sky.aria', lang)} className="animate-fade-up">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Today */}
         <div
@@ -88,12 +112,12 @@ export const HomeSkyCards: React.FC = () => {
             if (e.key === 'Enter') router.navigate('tools-today');
           }}
         >
-          <p className="ms-label">Today</p>
+          <p className="ms-label">{t('home.sky.today', lang)}</p>
           <p className="font-display font-semibold text-xl text-[var(--text-main)] leading-snug">
             {weekday}
           </p>
           <p className="ms-body">{dayLabel}</p>
-          <p className="text-xs text-[var(--gold)] font-medium">See today</p>
+          <p className="text-xs text-[var(--gold)] font-medium">{t('home.sky.seeToday', lang)}</p>
         </div>
 
         {/* Planetary hour now */}
@@ -107,7 +131,7 @@ export const HomeSkyCards: React.FC = () => {
             if (e.key === 'Enter') router.navigate('tools-hours');
           }}
         >
-          <p className="ms-label">Planetary hour now</p>
+          <p className="ms-label">{t('home.sky.planetaryHour', lang)}</p>
           {currentHour && currentRuler ? (
             <>
               <p className="font-display font-semibold text-xl text-[var(--text-main)] leading-snug">
@@ -117,24 +141,25 @@ export const HomeSkyCards: React.FC = () => {
                 </span>
               </p>
               <p className="ms-body">
-                Hour {currentHour.index + 1} of 24, {currentHour.isDay ? 'day' : 'night'} ·{' '}
-                {formatInZone(currentHour.start, timeZone)} to{' '}
+                {tf('home.sky.hourOf', lang, {
+                  n: currentHour.index + 1,
+                  dayNight: t(currentHour.isDay ? 'home.sky.day' : 'home.sky.night', lang),
+                })}{' '}
+                · {formatInZone(currentHour.start, timeZone)} to{' '}
                 {formatInZone(currentHour.end, timeZone)}
               </p>
               {dayHours?.approximate && (
                 <p className="ms-note">
-                  Approximate, not real hours. Set your place in Planetary Hours for the true
-                  hours.
+                  {t('home.sky.approxNote', lang)}
                 </p>
               )}
             </>
           ) : (
             <p className="ms-body">
-              No sunrise or sunset could be worked out for this place and day, so the hour is
-              unavailable.
+              {t('home.sky.noHours', lang)}
             </p>
           )}
-          <p className="text-xs text-[var(--gold)] font-medium">See the hours</p>
+          <p className="text-xs text-[var(--gold)] font-medium">{t('home.sky.seeHours', lang)}</p>
         </div>
 
         {/* Moon phase */}
@@ -147,14 +172,17 @@ export const HomeSkyCards: React.FC = () => {
             if (e.key === 'Enter') router.navigate('tools-moon');
           }}
         >
-          <p className="ms-label">The Moon</p>
+          <p className="ms-label">{t('home.sky.moon', lang)}</p>
           <p className="font-display font-semibold text-xl text-[var(--text-main)] leading-snug">
-            {moon.phaseName}
+            {phaseName}
           </p>
           <p className="ms-body">
-            Lit {Math.round(moon.illumination * 100)}% · Day {moon.lunarDay} of the lunar month
+            {tf('home.sky.moonLit', lang, {
+              n: Math.round(moon.illumination * 100),
+              day: moon.lunarDay,
+            })}
           </p>
-          <p className="text-xs text-[var(--gold)] font-medium">See the Moon</p>
+          <p className="text-xs text-[var(--gold)] font-medium">{t('home.sky.seeMoon', lang)}</p>
         </div>
 
         {/* Lunar mansion now */}
@@ -167,18 +195,21 @@ export const HomeSkyCards: React.FC = () => {
             if (e.key === 'Enter') router.navigate('tools-mansions');
           }}
         >
-          <p className="ms-label">Lunar mansion now</p>
+          <p className="ms-label">{t('home.sky.mansion', lang)}</p>
           <p className="font-display font-semibold text-xl text-[var(--text-main)] leading-snug">
             {mansion.name}
           </p>
           <p className="ms-body">
-            Mansion {mansion.index + 1} of 28 · {mansion.startDeg.toFixed(1)}° to{' '}
-            {mansion.endDeg.toFixed(1)}°
+            {tf('home.sky.mansionOf', lang, {
+              n: mansion.index + 1,
+              from: mansion.startDeg.toFixed(1),
+              to: mansion.endDeg.toFixed(1),
+            })}
           </p>
           <p className="ms-note">
-            28 equal parts from 0° al-Sharatayn, a stated convention.
+            {t('home.sky.mansionNote', lang)}
           </p>
-          <p className="text-xs text-[var(--gold)] font-medium">See the mansions</p>
+          <p className="text-xs text-[var(--gold)] font-medium">{t('home.sky.seeMansions', lang)}</p>
         </div>
       </div>
     </section>

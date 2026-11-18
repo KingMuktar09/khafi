@@ -21,11 +21,13 @@ import { WisdomOfTheDay } from '../components/special/WisdomOfTheDay';
 import { HijriDate } from '../components/special/HijriDate';
 import { ReadingStats } from '../components/special/ReadingStats';
 import { RandomBookCard } from '../components/books/RandomBookCard';
-import { JOURNEYS, resolveJourneys, journeyProgress } from '../data/specialFeatures';
+import { localizeJourney, resolveJourneys, journeyProgress } from '../data/specialFeatures';
 import { getTopicOfTheDay, formatTopicDate, topicRouteFor } from '../data/topicsContent';
 import { greetingForHour } from '../utils/greeting';
+import { t, tf } from '../data/i18n';
 import { HomeSkyCards } from '../components/special/HomeSkyCards';
 import { HomeReckonBox } from '../components/special/HomeReckonBox';
+import { LanguagePicker } from '../components/ui/LanguagePicker';
 
 export const HomeView: React.FC = () => {
   // Browse by topic and category, NOT by folders: the folders only say
@@ -34,7 +36,8 @@ export const HomeView: React.FC = () => {
   const topics = appState.getTopics();
   const allBooks = appState.getVisibleBooks();
   const booksInProgress = appState.getBooksInProgress();
-  const journeys = resolveJourneys(allBooks);
+  const lang = appState.settings.language;
+  const journeys = resolveJourneys(allBooks).map((j) => localizeJourney(j, lang));
   const topicOfTheDay = getTopicOfTheDay(new Date());
 
   // Recent books (sorted by id or added date if available)
@@ -52,7 +55,7 @@ export const HomeView: React.FC = () => {
     router.navigate('library', { searchQuery: q });
   };
 
-  const greeting = greetingForHour(new Date().getHours());
+  const greeting = greetingForHour(new Date().getHours(), lang);
 
   return (
     <div className="space-y-6 animate-fade-in py-2 font-sans">
@@ -64,7 +67,7 @@ export const HomeView: React.FC = () => {
           {/* Official logo, whole and centred in its square frame */}
           <img
             src={siteConfig.logo}
-            alt="Ilm-e-Ghayb Library logo — halftone gold arch doorway with a geometric star"
+            alt={t('home.logoAltLong', lang)}
             className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border border-[var(--gold)]/40 shadow-lg shadow-black/40 animate-fade-up"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
             style={{ animationDelay: '0ms' }}
@@ -72,7 +75,7 @@ export const HomeView: React.FC = () => {
           <div className="flex items-center gap-2 animate-fade-up" style={{ animationDelay: '0ms' }}>
             <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full flex items-center gap-1.5 tracking-wide">
               <Compass className="w-3.5 h-3.5 text-[var(--gold)]" />
-              <span>Ghayb Chronicles • Islamic history and wisdom</span>
+              <span>Ghayb Chronicles • {t('home.hero.eyebrow', lang)}</span>
             </span>
             <HijriDate />
           </div>
@@ -81,17 +84,15 @@ export const HomeView: React.FC = () => {
           <p className="ms-greeting font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05] animate-fade-up" style={{ animationDelay: '20ms' }}>
             {greeting}.
           </p>
-          <p className="ms-eyebrow animate-fade-up" style={{ animationDelay: '40ms' }}>A free library of hidden knowledge</p>
+          <p className="ms-eyebrow animate-fade-up" style={{ animationDelay: '40ms' }}>{t('home.hero.tagline', lang)}</p>
           <h1 className="font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05] animate-fade-up" style={{ animationDelay: '70ms' }}>
             Ilm-e-Ghayb <span className="gold-shimmer">Library</span>
           </h1>
           <p className="text-sm sm:text-base text-[var(--text-muted)] leading-relaxed max-w-xl animate-fade-up" style={{ animationDelay: '140ms' }}>
-            Hidden knowledge, Sufi wisdom, and the books behind it: the Quran (the Muslim holy book), Tafseer
-            (explaining the Quran), Hadith (the Prophet's sayings), Seerah (the Prophet's life), and history.
-            Every entry names its source.
+            {t('home.hero.intro1', lang)}
           </p>
           <p className="text-sm sm:text-base text-[var(--text-main)] leading-relaxed max-w-xl animate-fade-up" style={{ animationDelay: '170ms' }}>
-            Everyone is welcome here. You do not need to be Muslim to read and learn.
+            {t('home.hero.intro2', lang)}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1 animate-fade-up" style={{ animationDelay: '210ms' }}>
@@ -100,7 +101,7 @@ export const HomeView: React.FC = () => {
               className="tap-target px-5 py-3 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-sm rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer hover:scale-[1.02]"
             >
               <BookOpen className="w-4 h-4" />
-              <span>Browse the Library</span>
+              <span>{t('home.hero.browse', lang)}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
@@ -110,26 +111,26 @@ export const HomeView: React.FC = () => {
               className="tap-target px-5 py-3 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
             >
               <Instagram className="w-4 h-4 text-[var(--gold)]" />
-              <span>Follow @ghayb.chronicles</span>
+              <span>{t('home.hero.follow', lang)}</span>
             </a>
           </div>
 
           <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 border-t border-[var(--border-subtle)] animate-fade-up" style={{ animationDelay: '280ms' }}>
             <div>
               <p className="font-display font-semibold text-2xl text-[var(--text-main)]">{categories.length}</p>
-              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">Categories</p>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('home.hero.statCategories', lang)}</p>
             </div>
             <div>
               <p className="font-display font-semibold text-2xl text-[var(--text-main)]">{allBooks.length}</p>
-              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">Books</p>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('gate.books', lang)}</p>
             </div>
             <div>
               <p className="font-display font-semibold text-2xl text-[var(--text-main)]">{topics.length}</p>
-              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">Topics</p>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('nav.topics', lang)}</p>
             </div>
             <div>
-              <p className="font-display font-semibold text-2xl text-[var(--gold)]">Free</p>
-              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">After follow</p>
+              <p className="font-display font-semibold text-2xl text-[var(--gold)]">{t('gate.free', lang)}</p>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('gate.afterFollow', lang)}</p>
             </div>
           </div>
 
@@ -140,19 +141,22 @@ export const HomeView: React.FC = () => {
               type="search"
               value={homeSearch}
               onChange={(e) => setHomeSearch(e.target.value)}
-              placeholder="Search books: try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…"
-              aria-label="Search books by title, author or topic"
+              placeholder={t('home.hero.searchPlaceholder', lang)}
+              aria-label={t('home.hero.searchAria', lang)}
               className="tap-target w-full pl-11 pr-24 py-3.5 text-sm sm:text-base bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)] shadow-lg"
             />
             <button
               type="submit"
               className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs sm:text-sm rounded-lg cursor-pointer transition-colors"
             >
-              Search
+              {t('home.hero.searchButton', lang)}
             </button>
           </form>
         </div>
       </div>
+
+      {/* Language picker — big, right at the top of Home, same choice as the top bar and Settings. */}
+      <LanguagePicker variant="large" />
 
       {/* The sky right now: live stat cards, then the reckon box. */}
       <HomeSkyCards />
@@ -166,13 +170,13 @@ export const HomeView: React.FC = () => {
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                 <Clock className="w-4 h-4 text-[var(--gold)]" />
               </div>
-              <span>Continue Reading</span>
+              <span>{t('home.continue.title', lang)}</span>
             </h2>
             <button
               onClick={() => router.navigate('favorites')}
               className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] flex items-center gap-1 font-medium transition-colors cursor-pointer"
             >
-              <span>View History</span>
+              <span>{t('home.continue.viewHistory', lang)}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -202,9 +206,9 @@ export const HomeView: React.FC = () => {
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-[var(--text-muted)] font-medium">
                     <span>
-                      Progress
-                      {progress.currentPage ? ` • page ${progress.currentPage}${progress.totalPages ? ` of ${progress.totalPages}` : ''}` : ''}
-                      {appState.getBookmarksForBook(book.id).length > 0 ? ` • ${appState.getBookmarksForBook(book.id).length} bookmark${appState.getBookmarksForBook(book.id).length === 1 ? '' : 's'}` : ''}
+                      {t('home.continue.progress', lang)}
+                      {progress.currentPage ? ` • ${progress.totalPages ? tf('home.continue.pageOf', lang, { page: progress.currentPage, total: progress.totalPages }) : tf('home.continue.pageOnly', lang, { page: progress.currentPage })}` : ''}
+                      {appState.getBookmarksForBook(book.id).length > 0 ? ` • ${appState.getBookmarksForBook(book.id).length === 1 ? tf('home.continue.bookmarksOne', lang, { n: appState.getBookmarksForBook(book.id).length }) : tf('home.continue.bookmarksMany', lang, { n: appState.getBookmarksForBook(book.id).length })}` : ''}
                     </span>
                     <span className="font-bold text-[var(--gold)]">{progress.percentage}%</span>
                   </div>
@@ -237,18 +241,18 @@ export const HomeView: React.FC = () => {
             <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
               <Sparkles className="w-4 h-4 text-[var(--gold)]" />
             </div>
-            <span>Tools</span>
+            <span>{t('home.tools.title', lang)}</span>
           </h2>
           <p className="text-xs text-[var(--text-muted)]">
-            Made for this library. Your shelf, a book finder, the magic square maker, and amals from al-Buni&apos;s books.
+            {t('home.tools.blurb', lang)}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { title: 'My Shelf', blurb: 'Save books with a status — To Read, Reading, Finished.', view: 'shelf' as const },
-            { title: 'Find My Next Book', blurb: 'Three quick questions, three real books for your mood.', view: 'finder' as const },
-            { title: 'Magic Square Maker', blurb: 'Build a magic number square in 3×3, 4×4, 5×5 or 7×7. Then check that every row adds up.', view: 'wafq' as const },
-            { title: 'Amals from al-Buni', blurb: '25 simple practices from Shams al-Ma\u2019arif. Tap one to see the full detail.', view: 'amals' as const },
+            { title: t('nav.myShelf', lang), blurb: t('home.tools.shelfBlurb', lang), view: 'shelf' as const },
+            { title: t('home.tools.findTitle', lang), blurb: t('home.tools.findBlurb', lang), view: 'finder' as const },
+            { title: t('nav.magicSquareMaker', lang), blurb: t('home.tools.squareBlurb', lang), view: 'wafq' as const },
+            { title: t('home.tools.amalsTitle', lang), blurb: t('home.tools.amalsBlurb', lang), view: 'amals' as const },
           ].map((tool) => (
             <div
               key={tool.view}
@@ -272,7 +276,7 @@ export const HomeView: React.FC = () => {
           className="motion-item card-lift p-5 bg-[var(--bg-surface)] border border-[var(--gold)]/40 hover:border-[var(--gold)] rounded-xl cursor-pointer space-y-2 shadow-2xs"
         >
           <p className="text-[11px] tracking-[0.18em] uppercase text-[var(--gold)] font-semibold">
-            Topic of the Day · Day {topicOfTheDay.dayNumber} · {formatTopicDate(topicOfTheDay.date)}
+            {tf('home.topic.label', lang, { day: topicOfTheDay.dayNumber, date: formatTopicDate(topicOfTheDay.date) })}
           </p>
           <h2 className="font-display font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
             <span>{topicOfTheDay.topic.title}</span>
@@ -280,7 +284,7 @@ export const HomeView: React.FC = () => {
           </h2>
           <p className="text-xs text-[var(--text-muted)] leading-relaxed">{topicOfTheDay.topic.subtitle}</p>
           <div className="flex items-center gap-4">
-            <p className="text-xs text-[var(--gold)] font-medium">Read today&rsquo;s topic</p>
+            <p className="text-xs text-[var(--gold)] font-medium">{t('home.topic.readToday', lang)}</p>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -288,7 +292,7 @@ export const HomeView: React.FC = () => {
               }}
               className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-medium flex items-center gap-1 cursor-pointer"
             >
-              <span>All topics</span>
+              <span>{t('home.topic.allTopics', lang)}</span>
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </div>
@@ -303,17 +307,17 @@ export const HomeView: React.FC = () => {
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                 <Compass className="w-4 h-4 text-[var(--gold)]" />
               </div>
-              <span>Reading Paths</span>
+              <span>{t('nav.readingPaths', lang)}</span>
             </h2>
             <p className="text-xs text-[var(--text-muted)]">
-              A path through the books, in order, with your place saved.
+              {t('home.journey.subtitle', lang)}
             </p>
           </div>
           <button
             onClick={() => router.navigate('journeys')}
             className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-medium flex items-center gap-1 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span>All journeys</span>
+            <span>{t('home.journey.allJourneys', lang)}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -328,7 +332,7 @@ export const HomeView: React.FC = () => {
                 className="motion-item card-lift p-5 bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 hover:bg-[var(--bg-hover)] rounded-xl cursor-pointer space-y-3 group shadow-2xs"
               >
                 <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full">
-                  {journey.level} • {journey.steps.length} books
+                  {journey.level} • {tf('home.journey.booksCount', lang, { n: journey.steps.length })}
                 </span>
                 <h3 className="font-display font-semibold text-lg text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors">
                   {journey.title}
@@ -336,7 +340,7 @@ export const HomeView: React.FC = () => {
                 <p className="text-xs text-[var(--text-muted)] line-clamp-2 leading-relaxed">{journey.description}</p>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-[var(--text-muted)] font-medium">
-                    <span>{done.length} of {journey.steps.length} read</span>
+                    <span>{tf('home.journey.readCount', lang, { done: done.length, total: journey.steps.length })}</span>
                     <span className="font-bold text-[var(--gold)]">{pct}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-[var(--bg-main)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
@@ -352,7 +356,7 @@ export const HomeView: React.FC = () => {
             onClick={() => router.navigate('timeline')}
             className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-medium flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <span>Or see the Knowledge Map. It lists the masters in order of time</span>
+            <span>{t('home.journey.knowledgeMap', lang)}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -366,10 +370,10 @@ export const HomeView: React.FC = () => {
               <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                 <Layers className="w-4 h-4 text-[var(--gold)]" />
               </div>
-              <span>Browse by Category</span>
+              <span>{t('home.category.title', lang)}</span>
             </h2>
             <p className="text-xs text-[var(--text-muted)]">
-              Topics and categories — not folders. Tap a card to see its books.
+              {t('home.category.subtitle', lang)}
             </p>
           </div>
 
@@ -377,7 +381,7 @@ export const HomeView: React.FC = () => {
             onClick={() => router.navigate('library')}
             className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-medium flex items-center gap-1 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span>All Books</span>
+            <span>{t('home.category.allBooks', lang)}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -394,16 +398,16 @@ export const HomeView: React.FC = () => {
               </div>
               <span className="text-[11px] px-2.5 py-0.5 bg-[var(--bg-main)] text-[var(--text-muted)] border border-[var(--border-main)] rounded-full font-medium flex items-center gap-1">
                 <Layers className="w-3 h-3 text-[var(--gold)]" />
-                <span>{allBooks.length} books</span>
+                <span>{tf('home.category.bookCountMany', lang, { n: allBooks.length })}</span>
               </span>
             </div>
             <div>
               <h3 className="font-display font-semibold text-lg text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors flex items-center justify-between gap-2">
-                <span className="min-w-0 truncate">All Books</span>
+                <span className="min-w-0 truncate">{t('home.category.allBooks', lang)}</span>
                 <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--gold)] shrink-0" />
               </h3>
               <p className="text-xs text-[var(--text-muted)] line-clamp-2 mt-1 leading-relaxed">
-                Every book in the library, flat. Tap a category chip to filter, tap a book to open it. No folders to dig through.
+                {t('home.category.allBooksBlurb', lang)}
               </p>
             </div>
           </div>
@@ -423,7 +427,7 @@ export const HomeView: React.FC = () => {
                   </div>
                   <span className="text-[11px] px-2.5 py-0.5 bg-[var(--bg-main)] text-[var(--text-muted)] border border-[var(--border-main)] rounded-full font-medium flex items-center gap-1">
                     <Layers className="w-3 h-3 text-[var(--gold)]" />
-                    <span>{count} {count === 1 ? 'book' : 'books'}</span>
+                    <span>{count === 1 ? tf('home.category.bookCountOne', lang, { n: count }) : tf('home.category.bookCountMany', lang, { n: count })}</span>
                   </span>
                 </div>
 
@@ -433,7 +437,7 @@ export const HomeView: React.FC = () => {
                     <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--gold)] shrink-0" />
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] line-clamp-2 mt-1 leading-relaxed">
-                    {categoryTopics.length > 0 ? categoryTopics.join(' • ') : 'Books in this category.'}
+                    {categoryTopics.length > 0 ? categoryTopics.join(' • ') : t('home.category.booksFallback', lang)}
                   </p>
                 </div>
               </div>
@@ -447,7 +451,7 @@ export const HomeView: React.FC = () => {
               onClick={() => router.navigate('library')}
               className="tap-target px-5 py-2.5 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
             >
-              <span>View all {categories.length} categories</span>
+              <span>{tf('home.category.viewAll', lang, { n: categories.length })}</span>
               <ArrowRight className="w-4 h-4 text-[var(--gold)]" />
             </button>
           </div>
@@ -469,34 +473,31 @@ export const HomeView: React.FC = () => {
           </span>
         </div>
         <h2 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)] mt-3 leading-tight">
-          The channel behind the <span className="gold-shimmer">library</span>
+          {t('home.channel.titleA', lang)} <span className="gold-shimmer">{t('home.channel.titleB', lang)}</span>
         </h2>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl mt-2">
-          Ghayb Chronicles is a channel about Islamic history and wisdom — Sufism (the spiritual side of
-          Islam), hidden knowledge, and the old books behind it. Every reel and post is
-          built from real sources, with the source named in every entry, so you
-          can check it yourself instead of taking our word for it.
+          {t('home.channel.intro', lang)}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
           <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
             <Moon className="w-5 h-5 text-[var(--gold)]" />
-            <h3 className="font-semibold text-sm text-[var(--text-main)] mt-2">Sufism — the spiritual path</h3>
+            <h3 className="font-semibold text-sm text-[var(--text-main)] mt-2">{t('home.channel.sufiTitle', lang)}</h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
-              Sufism is the spiritual side of Islam. Ibn Arabi, Rumi, Attar and Ghazali — their ideas, in simple words.
+              {t('home.channel.sufiBlurb', lang)}
             </p>
           </div>
           <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
             <Eye className="w-5 h-5 text-[var(--gold)]" />
-            <h3 className="font-semibold text-sm text-[var(--text-main)] mt-2">Sources in every entry</h3>
+            <h3 className="font-semibold text-sm text-[var(--text-main)] mt-2">{t('home.channel.sourcesTitle', lang)}</h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
-              History, religious teachings, literary stories and theories are kept separate — and cited.
+              {t('home.channel.sourcesBlurb', lang)}
             </p>
           </div>
           <div className="p-4 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl">
             <BookOpen className="w-5 h-5 text-[var(--gold)]" />
-            <h3 className="font-semibold text-sm text-[var(--text-main)] mt-2">How the library connects</h3>
+            <h3 className="font-semibold text-sm text-[var(--text-main)] mt-2">{t('home.channel.connectTitle', lang)}</h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
-              The books quoted in the channel live here. Read the full book behind any reel, free after follow.
+              {t('home.channel.connectBlurb', lang)}
             </p>
           </div>
         </div>
@@ -509,14 +510,14 @@ export const HomeView: React.FC = () => {
             style={{ background: 'linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)' }}
           >
             <Instagram className="w-4 h-4" />
-            <span>Follow @ghayb.chronicles</span>
+            <span>{t('home.hero.follow', lang)}</span>
           </a>
           <button
             onClick={() => router.navigate('library')}
             className="tap-target px-5 py-3 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
           >
             <BookOpen className="w-4 h-4 text-[var(--gold)]" />
-            <span>Read the books</span>
+            <span>{t('home.channel.readBooks', lang)}</span>
           </button>
         </div>
       </section>
@@ -530,10 +531,10 @@ export const HomeView: React.FC = () => {
                 <div className="p-1 rounded bg-[var(--gold-faint)] border border-[var(--border-main)] text-[var(--gold)]">
                   <Sparkles className="w-4 h-4 text-[var(--gold)]" />
                 </div>
-                <span>Catalog Highlights</span>
+                <span>{t('home.highlights.title', lang)}</span>
               </h2>
               <p className="text-xs text-[var(--text-muted)]">
-                Some books to start with.
+                {t('home.highlights.subtitle', lang)}
               </p>
             </div>
           </div>
@@ -563,7 +564,7 @@ export const HomeView: React.FC = () => {
 
                   <div className="flex items-center gap-2 shrink-0 text-right">
                     <span className="text-[11px] text-[var(--text-muted)] hidden sm:inline font-medium">
-                      {book.pageCount ? `${book.pageCount} pages` : 'Document'}
+                      {book.pageCount ? tf('home.highlights.pages', lang, { n: book.pageCount }) : t('home.highlights.document', lang)}
                     </span>
                     <ChevronRight className="w-4 h-4 text-[var(--text-faint)] group-hover:text-[var(--gold)] transition-colors" />
                   </div>
@@ -581,13 +582,13 @@ export const HomeView: React.FC = () => {
       <div className="p-4 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-2xs">
         <div className="flex items-center gap-2 text-[var(--text-muted)] text-center sm:text-left">
           <BookOpen className="w-4 h-4 text-[var(--gold)] shrink-0 hidden sm:block" />
-          <span>Looking for a book by topic or category, with search and filters?</span>
+          <span>{t('home.bottom.question', lang)}</span>
         </div>
         <button
           onClick={() => router.navigate('library')}
           className="px-3.5 py-1.5 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] font-semibold rounded-lg shrink-0 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
         >
-          <span>Explore All Books</span>
+          <span>{t('home.bottom.explore', lang)}</span>
           <ArrowRight className="w-3.5 h-3.5 text-[var(--gold)]" />
         </button>
       </div>

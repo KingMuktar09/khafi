@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Grid3X3, CheckCircle2, Download, Printer, BookOpen, Sparkles, AlertTriangle } from 'lucide-react';
 import { appState } from '../state/appState';
+import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
 import {
   LO_SHU,
@@ -30,6 +31,7 @@ import {
 const SIZES = [3, 4, 5, 7];
 
 export const WafqView: React.FC = () => {
+  const lang = appState.settings.language;
   const [size, setSize] = useState(3);
   const [showLoShu, setShowLoShu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -75,7 +77,7 @@ export const WafqView: React.FC = () => {
   };
 
   if (!grid || !check) {
-    return <div className="py-20 text-center text-sm text-[var(--text-muted)]">Choose a size to make a square.</div>;
+    return <div className="py-20 text-center text-sm text-[var(--text-muted)]">{t('wafq.chooseSize', lang)}</div>;
   }
 
   return (
@@ -83,10 +85,10 @@ export const WafqView: React.FC = () => {
       <div className="px-1">
         <h1 className="font-display font-semibold text-2xl sm:text-3xl text-[var(--text-main)] flex items-center gap-2">
           <Grid3X3 className="w-6 h-6 text-[var(--gold)]" />
-          <span>Magic Square Maker</span>
+          <span>{t('wafq.title', lang)}</span>
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">
-          Wafq. A square where every row, column and diagonal adds up to the same number.
+          {t('wafq.subtitle', lang)}
         </p>
       </div>
 
@@ -94,51 +96,41 @@ export const WafqView: React.FC = () => {
       <div className="p-4 bg-amber-500/10 border-2 border-amber-500/60 rounded-xl flex items-start gap-3" role="alert">
         <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
         <p className="text-sm font-semibold text-[var(--text-main)] leading-relaxed">
-          Warning. Use this at your own risk. Using any magic square on this page is fully your own choice
-          and your own risk. Ghayb Chronicles and the Ilm-e-Ghayb Library are NOT responsible for any
-          problems, harm, or consequences that follow, now or in the future.
+          {t('wafq.warning', lang)}
         </p>
       </div>
 
       <div className="p-5 ms-panel rounded-xl space-y-4">
         <div>
-          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">What is a wafq?</h2>
+          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">{t('wafq.whatTitle', lang)}</h2>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1">
-            A <span className="text-[var(--text-main)] font-semibold">wafq</span> (also called a magic square) is a
-            square of numbers where every row, every column and both diagonals add up to the same total. That
-            total is called the magic constant. It is a maths pattern. Nothing more, nothing less.
+            {t('wafq.whatBefore', lang)}<span className="text-[var(--text-main)] font-semibold">wafq</span>{t('wafq.whatAfter', lang)}<span className="text-[var(--text-main)] font-semibold">{t('wafq.magicConstant', lang)}</span>{t('wafq.whatEnd', lang)}
           </p>
         </div>
         <div>
-          <h2 className="font-semibold text-sm text-[var(--text-main)]">Where does it come from?</h2>
+          <h2 className="font-semibold text-sm text-[var(--text-main)]">{t('wafq.whereTitle', lang)}</h2>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1">
-            Scholars of the Islamic tradition, like al-Buni in his book{' '}
-            <span className="text-[var(--text-main)] font-semibold">Shams al-Ma'arif</span> (The Sun of Knowledge),
-            studied these squares as part of the science of letters and numbers. People have made and studied
-            them for hundreds of years, as maths and as history.
+            {t('wafq.whereA', lang)}<span className="text-[var(--text-main)] font-semibold">Shams al-Ma'arif</span>{t('wafq.whereB', lang)}
           </p>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Source: <span className="text-[var(--gold)] font-semibold">{SHAMS_SOURCE}</span>.
-            The catalog holds Shams al-Ma'arif books (linked below), but no edition there is labelled as the John
-            Friend English version, so no square here is quoted from that edition. These are the classic,
-            well-known magic squares of the wafq tradition.
+            {t('wafq.sourceNoteA', lang)}<span className="text-[var(--gold)] font-semibold">{SHAMS_SOURCE}</span>{t('wafq.sourceNoteB', lang)}
           </p>
         </div>
         <div>
-          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">How are the numbers arranged?</h2>
+          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">{t('wafq.howTitle', lang)}</h2>
           <ol className="text-sm text-[var(--text-muted)] leading-relaxed mt-1 list-decimal list-inside space-y-1">
-            <li>Pick a size below: 3 × 3, 4 × 4, 5 × 5 or 7 × 7.</li>
-            <li>The square uses the numbers 1, 2, 3… up to the number of boxes. Each number once, no repeats. (For 3 × 3 that is 1 to 9.)</li>
-            <li>Every row, column and diagonal adds up to the same total (the magic constant).</li>
-            <li>Check the sums in the green box below the square. Every line must match.</li>
+            <li>{t('wafq.step1', lang)}</li>
+            <li>{t('wafq.step2', lang)}</li>
+            <li>{t('wafq.step3', lang)}</li>
+            <li>{t('wafq.step4', lang)}</li>
           </ol>
         </div>
         <div>
-          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">Worked example: the Lo Shu 3 × 3</h2>
+          <h2 className="font-display font-semibold text-sm text-[var(--text-main)]">{t('wafq.exampleTitle', lang)}</h2>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1">
-            The oldest known magic square is the Lo Shu, from China, over 4,000 years old:
+            {t('wafq.exampleIntro', lang)}
           </p>
-          <div className="grid grid-cols-3 gap-1 max-w-[180px] mt-2" aria-label="Lo Shu 3 by 3 example">
+          <div className="grid grid-cols-3 gap-1 max-w-[180px] mt-2" aria-label={t('wafq.loShuExampleAria', lang)}>
             {LO_SHU.flat().map((num, i) => (
               <div key={i} className="aspect-square flex items-center justify-center rounded-lg border border-[var(--gold)]/40 bg-[var(--bg-main)] font-display font-semibold text-[var(--text-main)]">
                 {num}
@@ -146,14 +138,13 @@ export const WafqView: React.FC = () => {
             ))}
           </div>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-2">
-            Rows: 4 + 9 + 2 = 15, 3 + 5 + 7 = 15, 8 + 1 + 6 = 15.
+            {t('wafq.exampleRows', lang)}
             <br />
-            Columns: 4 + 3 + 8 = 15, 9 + 5 + 1 = 15, 2 + 7 + 6 = 15.
+            {t('wafq.exampleCols', lang)}
             <br />
-            Diagonals: 4 + 5 + 6 = 15, 2 + 5 + 8 = 15.
+            {t('wafq.exampleDiags', lang)}
             <br />
-            Every line adds to 15. That is the magic constant for 3 × 3. Tap "Lo Shu 3 × 3 (classic)" below
-            to see it in the big square and check the sums yourself.
+            {tf('wafq.exampleSumsB', lang, { loShu: t('wafq.loShu', lang) })}
           </p>
         </div>
         {shamsBooks.length > 0 && (
@@ -174,8 +165,8 @@ export const WafqView: React.FC = () => {
       </div>
 
       {/* Size picker */}
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Square size">
-        <span className="text-xs font-semibold text-[var(--text-muted)]">Size:</span>
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('wafq.sizeAria', lang)}>
+        <span className="text-xs font-semibold text-[var(--text-muted)]">{t('wafq.sizeLabel', lang)}</span>
         {SIZES.map((n) => (
           <button
             key={n}
@@ -200,7 +191,7 @@ export const WafqView: React.FC = () => {
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Lo Shu 3 × 3 (classic)</span>
+          <span>{t('wafq.loShu', lang)}</span>
         </button>
       </div>
 
@@ -208,10 +199,10 @@ export const WafqView: React.FC = () => {
       <div className="p-5 sm:p-6 bg-[var(--bg-surface)] border border-[var(--gold)]/30 rounded-2xl space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
-            {showLoShu ? 'Lo Shu, the classic 3 × 3' : `${grid.length} × ${grid.length} magic square`}
+            {showLoShu ? t('wafq.loShuTitle', lang) : tf('wafq.squareTitle', lang, { n: grid.length })}
           </h2>
           <span className="text-xs px-3 py-1.5 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-bold rounded-full">
-            Magic constant: {check.constant}
+            {tf('wafq.magicConstantLabel', lang, { n: check.constant })}
           </span>
         </div>
         <div
@@ -228,24 +219,23 @@ export const WafqView: React.FC = () => {
           ))}
         </div>
         <p className="text-xs text-[var(--text-muted)] text-center">
-          Odd sizes (3, 5, 7) are built by the Siamese method; 4 × 4 uses the classic pattern.
-          The magic constant for {grid.length} × {grid.length} is {grid.length} × ({grid.length}² + 1) ÷ 2 = {magicConstant(grid.length)}.
+          {tf('wafq.methodNote', lang, { n: grid.length, c: magicConstant(grid.length) })}
         </p>
 
         {/* Verification */}
         <div className={`p-4 rounded-xl border ${check.allOk ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-red-500/40 bg-red-500/5'}`}>
           <p className="font-semibold text-sm flex items-center gap-2 text-[var(--text-main)]">
             <CheckCircle2 className={`w-4 h-4 ${check.allOk ? 'text-emerald-400' : 'text-red-400'}`} />
-            <span>{check.allOk ? 'Verified. This is a true magic square' : 'Not a magic square — the sums do not match'}</span>
+            <span>{check.allOk ? t('wafq.verified', lang) : t('wafq.notVerified', lang)}</span>
           </p>
           <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-2">
-            Rows: {check.rowSums.join(' + ')} = {check.constant} each. {check.rowsOk ? 'all match' : 'do not match'}.
+            {tf('wafq.rowsLine', lang, { sums: check.rowSums.join(' + '), c: check.constant, ok: t(check.rowsOk ? 'wafq.allMatch' : 'wafq.notMatch', lang) })}
             <br />
-            Columns: {check.colSums.join(', ')}. {check.colsOk ? 'all match' : 'do not match'}.
+            {tf('wafq.colsLine', lang, { sums: check.colSums.join(', '), ok: t(check.colsOk ? 'wafq.allMatch' : 'wafq.notMatch', lang) })}
             <br />
-            Diagonals: {check.diagSums.join(', ')}. {check.diagsOk ? 'both match' : 'do not match'}.
+            {tf('wafq.diagsLine', lang, { sums: check.diagSums.join(', '), ok: t(check.diagsOk ? 'wafq.bothMatch' : 'wafq.notMatch', lang) })}
             <br />
-            Numbers 1 to {grid.length * grid.length}, each used exactly once: {check.usesAllNumbers ? 'yes' : 'no'}.
+            {tf('wafq.numbersLine', lang, { total: grid.length * grid.length, yesno: t(check.usesAllNumbers ? 'wafq.yes' : 'wafq.no', lang) })}
           </p>
         </div>
 
@@ -256,7 +246,7 @@ export const WafqView: React.FC = () => {
             className="tap-target px-4 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-bold text-xs rounded-lg cursor-pointer flex items-center gap-1.5"
           >
             <Download className="w-4 h-4" />
-            <span>Download the square</span>
+            <span>{t('wafq.download', lang)}</span>
           </button>
           <button
             type="button"
@@ -264,14 +254,14 @@ export const WafqView: React.FC = () => {
             className="tap-target px-4 py-2.5 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-xs rounded-lg cursor-pointer flex items-center gap-1.5"
           >
             <Printer className="w-4 h-4" />
-            <span>Print</span>
+            <span>{t('wafq.print', lang)}</span>
           </button>
           <button
             type="button"
             onClick={copySquare}
             className="tap-target px-4 py-2.5 bg-[var(--bg-main)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 font-semibold text-xs rounded-lg cursor-pointer"
           >
-            {copied ? 'Copied!' : 'Copy numbers'}
+            {copied ? t('wafq.copied', lang) : t('wafq.copy', lang)}
           </button>
         </div>
       </div>

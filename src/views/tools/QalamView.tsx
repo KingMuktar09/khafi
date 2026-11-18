@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { appState } from '../../state/appState';
+import { tTools } from '../../data/i18n-tools';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -7,6 +9,7 @@ import { FilledToolPage } from './FilledToolPage';
  * below with their source named; the search box filters them.
  */
 export const QalamView: React.FC = () => {
+  const lang = appState.settings.language;
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filter = q
@@ -18,21 +21,22 @@ export const QalamView: React.FC = () => {
   return (
     <FilledToolPage
       content={AL_ASRAR_TOOLS['qalam']}
-      title="Qalam"
-      eyebrow="Qalam"
-      subtitle="The Pen, the first thing created, and the first thing that wrote."
+      title={tTools('tools.qalam.title', lang)}
+      eyebrow={tTools('tools.qalam.eyebrow', lang)}
+      subtitle={tTools('tools.qalam.subtitle', lang)}
+      toolId="qalam"
       filter={filter}
     >
-      <div className="space-y-1.5" aria-label="Entries">
+      <div className="space-y-1.5" aria-label={tTools('tools.shell.aria.entries', lang)}>
         <label className="ms-label" htmlFor="qalam-search">
-          Search entries
+          {tTools('tools.qalam.searchLabel', lang)}
         </label>
         <input
           id="qalam-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or page"
+          placeholder={tTools('tools.qalam.searchPlaceholder', lang)}
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>

@@ -3,6 +3,7 @@ import { Search, X, ArrowUpRight } from 'lucide-react';
 import { appState } from '../../state/appState';
 import { router } from '../../router/router';
 import { Book } from '../../types';
+import { t, tf } from '../../data/i18n';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -10,9 +11,13 @@ interface SearchBarProps {
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
-  placeholder = 'Execute search command...',
+  placeholder,
   autoFocus = false,
 }) => {
+  const lang = appState.settings.language;
+  // A caller-passed placeholder stays as given; only the built-in
+  // default is translated here.
+  const placeholderText = placeholder ?? t('ui.search.placeholderDefault', lang);
   const [query, setQuery] = useState(appState.searchQuery || '');
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,7 +86,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => setIsOpen(query.trim().length > 0)}
-            placeholder={placeholder}
+            placeholder={placeholderText}
             autoFocus={autoFocus}
             className="w-full bg-transparent border-none text-lg sm:text-xl outline-none pl-12 pr-10 py-3.5 text-white font-sans placeholder:text-white/30"
           />
@@ -90,7 +95,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               type="button"
               onClick={clearQuery}
               className="absolute right-3 p-1 text-white/40 hover:text-white transition-colors"
-              aria-label="Clear query"
+              aria-label={t('ui.search.clearQuery', lang)}
             >
               <X className="w-4 h-4" />
             </button>
@@ -101,7 +106,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="submit"
           className="bg-[#E2FF00] hover:bg-[#d8f500] text-black font-mono font-bold text-xs sm:text-sm px-6 uppercase tracking-wider transition-colors cursor-pointer shrink-0"
         >
-          Query
+          {t('ui.search.queryButton', lang)}
         </button>
       </form>
 
@@ -111,8 +116,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {results.length > 0 ? (
             <div>
               <div className="px-4 py-2 bg-white/5 font-mono text-[10px] text-[#E2FF00] font-bold uppercase tracking-wider border-b border-white/10 flex items-center justify-between">
-                <span>QUERY_MATCHES ({results.length})</span>
-                <span className="text-white/30 font-normal">[ PRESS_ENTER ]</span>
+                <span>{tf('ui.search.matches', lang, { n: results.length })}</span>
+                <span className="text-white/30 font-normal">{t('ui.search.pressEnter', lang)}</span>
               </div>
               <div className="divide-y divide-white/5">
                 {results.map((book) => (
@@ -129,7 +134,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                         {book.title}
                       </h4>
                       <p className="text-xs font-mono text-white/40 truncate">
-                        BY {book.author}
+                        {tf('ui.search.byAuthor', lang, { author: book.author })}
                       </p>
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-white/30 group-hover:text-[#E2FF00] shrink-0 transition-colors" />
@@ -139,7 +144,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             </div>
           ) : (
             <div className="p-6 text-center font-mono text-xs text-white/40">
-              [ NO_QUERY_MATCHES_FOUND ]
+              {t('ui.search.noMatches', lang)}
             </div>
           )}
         </div>

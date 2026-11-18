@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Download, Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import { appState } from '../../state/appState';
+import { localizeImportError, tTools, tfTools } from '../../data/i18n-tools';
 import {
   downloadTextFile,
   importJournalJson,
@@ -11,13 +12,14 @@ import {
 import type { JournalEntry } from '../../utils/toolsStorage';
 import { ToolsLayout } from './ToolsLayout';
 
-const DEVICE_NOTE = 'Everything you write here stays on this device. Nothing is sent anywhere.';
+
 
 /**
  * Reading-notes journal, device-only: add, edit and delete entries,
  * export as JSON, and import a JSON file (validated, then merged).
  */
 export const JournalView: React.FC = () => {
+  const lang = appState.settings.language;
   const [entries, setEntries] = useState<JournalEntry[]>(() => loadJournal());
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -38,7 +40,7 @@ export const JournalView: React.FC = () => {
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!title.trim() && !text.trim()) {
-      appState.showToast('Write a title or some text first', 'error');
+      appState.showToast(tTools('tools.journal.emptySubmit', lang), 'error');
       return;
     }
     const now = Date.now();
@@ -46,17 +48,17 @@ export const JournalView: React.FC = () => {
       persist(
         entries.map((entry) =>
           entry.id === editingId
-            ? { ...entry, title: title.trim() || 'Untitled note', text, updatedAt: now }
+            ? { ...entry, title: title.trim() || tTools('tools.common.untitledNote', lang), text, updatedAt: now }
             : entry,
         ),
       );
-      appState.showToast('Note updated', 'success');
+      appState.showToast(tTools('tools.journal.updated', lang), 'success');
     } else {
       persist([
-        { id: uid(), title: title.trim() || 'Untitled note', text, createdAt: now, updatedAt: now },
+        { id: uid(), title: title.trim() || tTools('tools.common.untitledNote', lang), text, createdAt: now, updatedAt: now },
         ...entries,
       ]);
-      appState.showToast('Note added', 'success');
+      appState.showToast(tTools('tools.journal.added', lang), 'success');
     }
     resetForm();
   };
@@ -70,12 +72,12 @@ export const JournalView: React.FC = () => {
   const remove = (id: string) => {
     persist(entries.filter((entry) => entry.id !== id));
     if (editingId === id) resetForm();
-    appState.showToast('Note deleted', 'info');
+    appState.showToast(tTools('tools.journal.deleted', lang), 'info');
   };
 
   const exportJson = () => {
     downloadTextFile('ilmeghayb-journal.json', JSON.stringify(entries, null, 2));
-    appState.showToast('Journal exported', 'success');
+    appState.showToast(tTools('tools.journal.exported', lang), 'success');
   };
 
   const onImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,14 +90,16 @@ export const JournalView: React.FC = () => {
       if (result.ok) {
         setEntries(loadJournal());
         appState.showToast(
-          `Imported ${result.imported?.journal ?? 0} note${result.imported?.journal === 1 ? '' : 's'}`,
+          (result.imported?.journal ?? 0) === 1
+            ? tTools('tools.journal.importedOne', lang)
+            : tfTools('tools.journal.importedMany', lang, { n: result.imported?.journal ?? 0 }),
           'success',
         );
       } else {
-        appState.showToast(result.error ?? 'That file could not be imported.', 'error');
+        appState.showToast(result.error ? localizeImportError(result.error, lang) : tTools('tools.common.importFail', lang), 'error');
       }
     };
-    reader.onerror = () => appState.showToast('That file could not be read.', 'error');
+    reader.onerror = () => appState.showToast(tTools('tools.common.readFail', lang), 'error');
     reader.readAsText(file);
   };
 
@@ -104,12 +108,12 @@ export const JournalView: React.FC = () => {
 
   return (
     <ToolsLayout
-      title="Journal — Reading Notes"
-      eyebrow="Reading Notes"
-      subtitle="Notes on what you read, kept on this device only."
+      title={tTools('tools.journal.title', lang)}
+      eyebrow={tTools('tools.journal.eyebrow', lang)}
+      subtitle={tTools('tools.journal.subtitle', lang)}
     >
       <p className="ms-note-box">
-        {DEVICE_NOTE}
+        {tTools('tools.journal.deviceNote', lang)}
       </p>
 
       <form
@@ -117,31 +121,31 @@ export const JournalView: React.FC = () => {
         className="ms-card space-y-3"
       >
         <h2 className="ms-h2">
-          {editingId ? 'Edit note' : 'New note'}
+          {editingId ? tTools('tools.journal.editNote', lang) : tTools('tools.journal.newNote', lang)}
         </h2>
         <div className="space-y-1.5">
           <label className="ms-label block" htmlFor="journal-title">
-            Title
+            {tTools('tools.journal.titleLabel', lang)}
           </label>
           <input
             id="journal-title"
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="What is this note about?"
+            placeholder={tTools('tools.journal.titlePlaceholder', lang)}
             className="ms-field w-full min-h-11 px-3.5 text-base"
           />
         </div>
         <div className="space-y-1.5">
           <label className="ms-label block" htmlFor="journal-text">
-            Note
+            {tTools('tools.journal.noteLabel', lang)}
           </label>
           <textarea
             id="journal-text"
             value={text}
             onChange={(event) => setText(event.target.value)}
             rows={4}
-            placeholder="Write what you learned, questions you have, or a quote to remember…"
+            placeholder={tTools('tools.journal.notePlaceholder', lang)}
             className="ms-field w-full px-3.5 py-3 text-base resize-y"
           />
         </div>
@@ -151,7 +155,7 @@ export const JournalView: React.FC = () => {
             className="ms-btn-gold"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
-            {editingId ? 'Save changes' : 'Add note'}
+            {editingId ? tTools('tools.journal.saveChanges', lang) : tTools('tools.journal.addNote', lang)}
           </button>
           {editingId ? (
             <button
@@ -159,7 +163,7 @@ export const JournalView: React.FC = () => {
               onClick={resetForm}
               className="ms-btn"
             >
-              Cancel
+              {tTools('tools.common.cancel', lang)}
             </button>
           ) : null}
         </div>
@@ -172,7 +176,7 @@ export const JournalView: React.FC = () => {
           className="ms-btn"
         >
           <Download className="w-4 h-4" aria-hidden="true" />
-          Export JSON
+          {tTools('tools.common.exportJson', lang)}
         </button>
         <button
           type="button"
@@ -180,14 +184,14 @@ export const JournalView: React.FC = () => {
           className="ms-btn"
         >
           <Upload className="w-4 h-4" aria-hidden="true" />
-          Import JSON
+          {tTools('tools.common.importJson', lang)}
         </button>
-        <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onImportFile} aria-label="Import journal JSON file" />
+        <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onImportFile} aria-label={tTools('tools.journal.importAria', lang)} />
       </div>
 
       {entries.length === 0 ? (
         <p className="ms-body ms-surface px-4 py-5 text-center">
-          No notes yet. Add your first note above.
+          {tTools('tools.journal.empty', lang)}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -198,14 +202,14 @@ export const JournalView: React.FC = () => {
                   <h3 className="font-medium ms-ink">{entry.title}</h3>
                   <p className="text-xs ms-muted">
                     {formatDate(entry.createdAt)}
-                    {entry.updatedAt !== entry.createdAt ? ` · edited ${formatDate(entry.updatedAt)}` : ''}
+                    {entry.updatedAt !== entry.createdAt ? ` · ${tfTools('tools.journal.edited', lang, { date: formatDate(entry.updatedAt) })}` : ''}
                   </p>
                 </div>
                 <div className="flex gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => startEdit(entry)}
-                    aria-label={`Edit ${entry.title}`}
+                    aria-label={tfTools('tools.journal.editAria', lang, { title: entry.title })}
                     className="p-2.5 rounded-xl ms-muted hover:text-[var(--ms-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)]"
                   >
                     <Pencil className="w-4 h-4" aria-hidden="true" />
@@ -213,7 +217,7 @@ export const JournalView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => remove(entry.id)}
-                    aria-label={`Delete ${entry.title}`}
+                    aria-label={tfTools('tools.journal.deleteAria', lang, { title: entry.title })}
                     className="p-2.5 rounded-xl ms-muted hover:text-[var(--ms-red)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)]"
                   >
                     <Trash2 className="w-4 h-4" aria-hidden="true" />

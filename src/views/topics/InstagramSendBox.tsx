@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { submitTopicRequest, type TopicRequestKind } from '../../services/topicRequests';
+import { tt, ttf } from '../../data/i18n-topics';
+import { appState } from '../../state/appState';
 
 /** Instagram DM to @ghayb.chronicles. Always offered as a fallback link. */
 export const INSTAGRAM_DM_URL = 'https://ig.me/m/ghayb.chronicles';
@@ -67,6 +69,7 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
   note,
   doneMessage,
 }) => {
+  const lang = appState.settings.language;
   const [instagramName, setInstagramName] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [message, setMessage] = useState('');
@@ -76,7 +79,11 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
   const canSend = message.trim().length > 0 && (anonymous || instagramName.trim().length > 0);
 
   const copyLabel =
-    kind === 'request' ? 'Topic I want' : kind === 'question' ? 'My question' : `Comment on ${topicLabel ?? 'this topic'}`;
+    kind === 'request'
+      ? tt('sendbox.topicWant', lang)
+      : kind === 'question'
+        ? tt('sendbox.myQuestion', lang)
+        : ttf('sendbox.commentOn', lang, { label: topicLabel ?? 'this topic' });
 
   const buildText = (name: string, text: string): string =>
     anonymous
@@ -115,7 +122,7 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
 
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor={`ig-name-${kind}-${topic}`}>
-          Your Instagram name (optional)
+          {tt('sendbox.instagramName', lang)}
         </label>
         <input
           id={`ig-name-${kind}-${topic}`}
@@ -137,7 +144,7 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
             }}
             className="w-4 h-4 accent-[var(--ms-gold)]"
           />
-          Post as anonymous
+          {tt('sendbox.postAnonymous', lang)}
         </label>
       </div>
 
@@ -156,24 +163,24 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
       </div>
 
       <button type="button" onClick={onSend} disabled={!canSend || status === 'sending'} className="ms-btn-gold">
-        {status === 'sending' ? 'Sending…' : 'Send'}
+        {status === 'sending' ? tt('sendbox.sending', lang) : tt('sendbox.send', lang)}
       </button>
 
       {status === 'saved' ? <p className="ms-body" role="status">{doneMessage}</p> : null}
       {status === 'copied' ? (
         <p className="ms-body" role="status">
-          Copied. Paste it in the Instagram chat that just opened.
+          {tt('sendbox.copied', lang)}
         </p>
       ) : null}
       {status === 'copy-failed' ? (
         <div className="space-y-2" role="status">
-          <p className="ms-body">Copy did not work on this device. Copy the text below and paste it in the Instagram chat.</p>
-          <textarea readOnly value={fallbackText} rows={4} className="ms-field w-full" aria-label="Text to copy" />
+          <p className="ms-body">{tt('sendbox.copyFailed', lang)}</p>
+          <textarea readOnly value={fallbackText} rows={4} className="ms-field w-full" aria-label={tt('sendbox.copyTextLabel', lang)} />
         </div>
       ) : null}
 
       <p className="ms-body text-sm">
-        Or send it on Instagram:{' '}
+        {tt('sendbox.orSend', lang)}
         <a
           href={INSTAGRAM_DM_URL}
           target="_blank"

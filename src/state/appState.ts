@@ -325,7 +325,13 @@ class AppState {
   public applySettingsToDOM() {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
-    const { appearance, accentColor, fontSize, animations } = this.settings;
+    const { appearance, accentColor, fontSize, animations, language } = this.settings;
+
+    // Language: the html lang attribute follows the Settings choice,
+    // so the browser (and screen readers) know the page language, and
+    // the Bengali font rules in index.css (html[lang="bn"]) apply.
+    // English is the default; Hinglish keeps the Latin fonts.
+    root.setAttribute('lang', language === 'hi' ? 'hi' : language === 'bn' ? 'bn' : 'en');
 
     // 1. Appearance / Dark-Light Mode
     let isDark = true;

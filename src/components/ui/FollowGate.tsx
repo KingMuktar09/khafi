@@ -3,6 +3,8 @@ import { Check, Instagram, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import { router } from '../../router/router';
 import { siteConfig } from '../../config/siteConfig';
 import { api, GateStatus, isGateKeySet } from '../../services/api';
+import { appState } from '../../state/appState';
+import { t } from '../../data/i18n';
 
 interface FollowGateProps {
   onUnlock: () => void;
@@ -25,6 +27,7 @@ export const INSTAGRAM_HANDLE = '@ghayb.chronicles';
  * localStorage). It is not a verified follow check, and the copy says so.
  */
 export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, categoryCount, loading = false }) => {
+  const lang = appState.settings.language;
   const [followed, setFollowed] = useState(false);
 
   // Gate key: shown only when the admin has set one. The key itself is
@@ -50,7 +53,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
     if (res.ok) {
       onUnlock();
     } else {
-      setGateError(res.error || 'Wrong key. Try again.');
+      setGateError(res.error || t('gate.wrongKey', lang));
       setGateKey('');
     }
   };
@@ -64,7 +67,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
           {/* Official logo, whole and centred in its square frame */}
           <img
             src={siteConfig.logo}
-            alt="Ilm-e-Ghayb Library logo — halftone gold arch doorway with a geometric star"
+            alt={t('home.logoAltLong', lang)}
             className="motion-breathe mx-auto w-16 h-16 rounded-2xl object-cover border border-[var(--gold)]/40 shadow-lg shadow-black/40"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
@@ -75,8 +78,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             Ilm-e-Ghayb Library
           </h1>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-md mx-auto">
-            Books on the Quran, the Prophet's life, Sufi wisdom and Islamic history. Every entry names its source.
-            Everyone is welcome, no account needed.
+            {t('gate.tagline', lang)}
           </p>
         </div>
 
@@ -87,9 +89,9 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
               <Instagram className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-sm">Follow us to enter the library</p>
+              <p className="font-semibold text-sm">{t('gate.followToEnter', lang)}</p>
               <p className="text-xs text-[var(--text-muted)]">
-                One follow unlocks every book on this device.
+                {t('gate.oneFollow', lang)}
               </p>
             </div>
           </div>
@@ -97,21 +99,21 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 0 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">{categoryCount}</p>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Collections</p>
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">{t('gate.collections', lang)}</p>
             </div>
             <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 1 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">{bookCount}</p>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Books</p>
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">{t('gate.books', lang)}</p>
             </div>
             <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 2 } as React.CSSProperties}>
-              <p className="font-bold text-lg text-[var(--gold)]">Free</p>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">After follow</p>
+              <p className="font-bold text-lg text-[var(--gold)]">{t('gate.free', lang)}</p>
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">{t('gate.afterFollow', lang)}</p>
             </div>
           </div>
 
           {loading && (
             <p className="text-[11px] text-[var(--text-muted)] text-center -mt-2" role="status">
-              Loading the library…
+              {t('gate.loading', lang)}
             </p>
           )}
 
@@ -124,7 +126,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             style={{ background: 'linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)' }}
           >
             <Instagram className="w-5 h-5" />
-            <span>Follow {INSTAGRAM_HANDLE} on Instagram</span>
+            <span>{t('gate.followOnInstagram', lang)}</span>
           </a>
 
           <button
@@ -133,14 +135,14 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             {followed ? <Check className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-            <span>I followed, unlock the library</span>
+            <span>{t('gate.followedUnlock', lang)}</span>
           </button>
 
           {isGateKeySet(gateStatus) && (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <span className="flex-1 h-px bg-[var(--border-main)]" aria-hidden="true" />
-                <span className="text-[11px] text-[var(--text-muted)]">or unlock with a key</span>
+                <span className="text-[11px] text-[var(--text-muted)]">{t('gate.orKey', lang)}</span>
                 <span className="flex-1 h-px bg-[var(--border-main)]" aria-hidden="true" />
               </div>
               <form onSubmit={handleKeyUnlock} className="flex gap-2">
@@ -149,8 +151,8 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
                   value={gateKey}
                   onChange={(e) => setGateKey(e.target.value)}
                   autoComplete="off"
-                  placeholder="Have a key? Enter it here"
-                  aria-label="Gate key"
+                  placeholder={t('gate.keyPlaceholder', lang)}
+                  aria-label={t('gate.keyLabel', lang)}
                   className="flex-1 min-w-0 px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)] text-sm"
                 />
                 <button
@@ -158,7 +160,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
                   disabled={checkingKey || !gateKey.trim()}
                   className="shrink-0 px-4 py-2.5 rounded-xl font-bold text-sm bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black cursor-pointer transition-all"
                 >
-                  {checkingKey ? 'Checking…' : 'Unlock'}
+                  {checkingKey ? t('gate.checking', lang) : t('gate.unlock', lang)}
                 </button>
               </form>
               {gateError && (
@@ -175,15 +177,14 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
               className="w-full flex items-center justify-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--gold)] underline underline-offset-2 cursor-pointer"
             >
               <Instagram className="w-3.5 h-3.5" />
-              <span>Join the broadcast channel to get the key</span>
+              <span>{t('gate.joinChannel', lang)}</span>
             </a>
           )}
 
           <p className="text-[11px] text-[var(--text-faint)] leading-relaxed text-center flex items-start justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-px text-[var(--gold)]" />
             <span>
-              This is a free library, so unlocking works on trust. It does not
-              check your Instagram account. Follow first, then tap unlock.
+              {t('gate.trustNote', lang)}
             </span>
           </p>
         </div>
@@ -192,14 +193,14 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
         <div className="mt-5 text-center space-y-2">
           <p className="text-[11px] text-[var(--text-faint)] flex items-center justify-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[var(--gold)]" />
-            <span>Islamic history and wisdom • Sufism and hidden knowledge, through art</span>
+            <span>{t('gate.footnote', lang)}</span>
           </p>
           <button
             type="button"
             onClick={() => router.navigate('admin')}
             className="text-[11px] text-[var(--text-muted)] hover:text-[var(--gold)] underline underline-offset-2 cursor-pointer"
           >
-            Library admin? Sign in here
+            {t('gate.adminSignIn', lang)}
           </button>
         </div>
       </div>
