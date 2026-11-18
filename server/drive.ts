@@ -1152,9 +1152,19 @@ export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[]
     };
 
   // Drop hidden folders (".obsidian" etc.) and anything below them.
+  // The Book of Wonders and Secrets notes were removed from the library
+  // (empty question stubs, not books) — never re-add them on sync.
+  const EXCLUDED_FOLDER_DRIVE_IDS = new Set([
+    "1xDAIcXjSqGaZU_od4yjbgDHu6fQ7RlTW",
+    "1FudMQnEuBuu-0b2DSqhmoGzEgOjP9yrY",
+  ]);
   const hiddenFolderIds = new Set<string>();
   const liveFolders = (live.folders || []).filter((f: any) => {
     if (typeof f?.name === "string" && f.name.trim().startsWith(".")) {
+      hiddenFolderIds.add(f.id);
+      return false;
+    }
+    if (EXCLUDED_FOLDER_DRIVE_IDS.has(f.id)) {
       hiddenFolderIds.add(f.id);
       return false;
     }
@@ -1198,6 +1208,7 @@ export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[]
     if (!SYNC_INCLUDE_EXTS.has(ext)) continue;
     const parentFolder = file.subfolderId ? liveFolderById.get(file.subfolderId) : null;
     if (parentFolder && isInHiddenTree(parentFolder.id, liveFolderById)) continue;
+    if (file.folderId && isInHiddenTree(file.folderId, liveFolderById)) continue;
     const saved = storedBookByDriveId.get(file.id);
     const isPdf = ext === "pdf";
     const isMd = ext === "md";

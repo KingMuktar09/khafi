@@ -102,17 +102,14 @@ export const JOURNEYS: Journey[] = [
     title: 'The Soul & Afterlife Journey',
     subtitle: 'Death, Barzakh and what comes after',
     description:
-      'The questions everyone asks, in order. What is the soul? What happens after death? What is Barzakh, the Resurrection, and the end of days?',
+      'The questions everyone asks, in order. What is the soul? What happens after death? What are the signs before the end, and the great trials?',
     level: 'Reflective',
     steps: [
-      { title: 'What Is the Soul', note: 'Step 1 — Start with the question itself: what is the soul?' },
+      { title: '7 Stages of Nafs', note: 'Step 1 — Start with the soul itself: its seven stages, from the commanding self to the contented one.' },
       { title: "The Soul's Journey After Death - Ibn al Qayyim", note: 'Step 2 — Ibn al-Qayyim on the soul\'s journey after death.' },
-      { title: '01 Death', note: 'Step 3 — Death, the first step of the journey.' },
-      { title: '02 The Soul After Death', note: 'Step 4 — Where the soul goes after death.' },
-      { title: '03 Barzakh', note: 'Step 5 — Barzakh, the life between death and Resurrection.' },
-      { title: '04 Resurrection', note: 'Step 6 — The Resurrection, when all will stand again.' },
-      { title: 'Book of The End Great Trials and Tribulations', note: 'Step 7 — The great trials before the end, and what they mean.' },
-      { title: 'Dajjal The False Messiah', note: 'Step 8 — The Dajjal, the false messiah of the end times.' },
+      { title: 'Signs Before Qiyamat by Ibn Kathir', note: 'Step 3 — The signs before the end, as Ibn Kathir collected them.' },
+      { title: 'Book of The End Great Trials and Tribulations', note: 'Step 4 — The great trials before the end, and what they mean.' },
+      { title: 'Dajjal The False Messiah', note: 'Step 5 — The Dajjal, the false messiah of the end times.' },
     ],
   },
 ];

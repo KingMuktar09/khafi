@@ -256,7 +256,7 @@ export function recommendBooks(books: Book[], answers: FinderAnswers): FinderPic
 
 // --- Magic Square Maker (Wafq) -----------------------------------------------
 
-/** Source Muktar named for the wafq tool. */
+/** Source label for the wafq tool. */
 export const SHAMS_SOURCE = 'Shams al-Ma‘arif, John Friend English version';
 /**
  * Honest source note: the catalog holds two Shams al-Ma'arif books —

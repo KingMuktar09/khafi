@@ -115,17 +115,21 @@ describe('Surprise Me (random book)', () => {
 });
 
 describe('Book Finder', () => {
-  it('recommends 3 real books for every mood, with reasons from topic/category', () => {
+  it('recommends up to 3 real books for every mood, with reasons from topic/category', () => {
     for (const mood of FINDER_MOODS) {
       const picks = recommendBooks(catalog.books, { moodId: mood.id, level: 'begin', format: 'any' });
-      expect(picks.length, `mood ${mood.id}`).toBe(3);
+      // A mood only has as many books as the library really holds on that
+      // topic (e.g. Dreams & the Unseen has 1 real book), so 1-3 picks.
+      expect(picks.length, `mood ${mood.id}`).toBeGreaterThanOrEqual(1);
+      expect(picks.length, `mood ${mood.id}`).toBeLessThanOrEqual(3);
       for (const pick of picks) {
         expect(titles.has(pick.book.title)).toBe(true);
         expect(pick.book.category).toBe(mood.category);
         expect(pick.reason).toContain(mood.category);
       }
       const deep = recommendBooks(catalog.books, { moodId: mood.id, level: 'deep', format: 'any' });
-      expect(deep.length, `mood ${mood.id} deep`).toBe(3);
+      expect(deep.length, `mood ${mood.id} deep`).toBeGreaterThanOrEqual(1);
+      expect(deep.length, `mood ${mood.id} deep`).toBeLessThanOrEqual(3);
       expect(deep.every((p) => titles.has(p.book.title))).toBe(true);
     }
   });

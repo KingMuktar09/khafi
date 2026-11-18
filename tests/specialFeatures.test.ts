@@ -90,8 +90,8 @@ describe('Static catalog fallback (Vercel = Cloudflare Pages)', () => {
       folders: unknown[];
       books: Book[];
     };
-    expect(pub.books.length).toBe(173);
-    expect(pub.folders.length).toBe(36);
+    expect(pub.books.length).toBe(137);
+    expect(pub.folders.length).toBe(27);
     expect(pub.books.map((b) => b.id).sort()).toEqual(
       catalog.books.map((b) => b.id).sort()
     );

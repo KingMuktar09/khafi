@@ -51,9 +51,6 @@ export const LibraryView: React.FC = () => {
   const q = (searchQuery || localSearch || '').trim().toLowerCase();
 
   const categories = appState.getCategories();
-  const topicsForCategory = selectedCategory
-    ? appState.getTopicsForCategory(selectedCategory)
-    : appState.getTopics();
   const authenticCount = appState.getVisibleBooks().filter((b) => b.isAuthentic).length;
 
   // Search matches title, author, category, topic, description and tags.
@@ -382,34 +379,6 @@ export const LibraryView: React.FC = () => {
           </select>
         </div>
 
-        {/* Topic chips */}
-        <div className="flex gap-2 flex-wrap items-center" role="group" aria-label="Topics">
-          <button
-            type="button"
-            onClick={() => setSelectedTopic(null)}
-            className={`tap-target px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer ${
-              selectedTopic === null
-                ? 'bg-[var(--gold-faint)] text-[var(--gold)] border-[var(--gold)]/50'
-                : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-main)]'
-            }`}
-          >
-            All topics
-          </button>
-          {topicsForCategory.map((topic) => (
-            <button
-              key={topic}
-              type="button"
-              onClick={() => setSelectedTopic(selectedTopic === topic ? null : topic)}
-              className={`tap-target px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer ${
-                selectedTopic === topic
-                  ? 'bg-[var(--gold-faint)] text-[var(--gold)] border-[var(--gold)]/50'
-                  : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-main)]'
-              }`}
-            >
-              {topic}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Books — grouped by category and topic, as book cards. */}

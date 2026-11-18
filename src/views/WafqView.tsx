@@ -22,7 +22,7 @@ import {
  * sum, and shows you the pattern. It makes no claim that a square has
  * supernatural power, and it gives no instructions to use one for harm.
  *
- * Source, as Muktar named it: "Shams al-Ma'arif, John Friend English
+ * Source label for the wafq tool: "Shams al-Ma'arif, John Friend English
  * version". The catalog holds two Shams al-Ma'arif books (linked
  * below), but no edition in the catalog is labelled as the John
  * Friend English version, so no square here is quoted from that
@@ -120,7 +120,7 @@ export const WafqView: React.FC = () => {
             them for hundreds of years, as maths and as history.
           </p>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Source: <span className="text-[var(--gold)] font-semibold">{SHAMS_SOURCE}</span> — as Muktar named it.
+            Source: <span className="text-[var(--gold)] font-semibold">{SHAMS_SOURCE}</span>.
             The catalog holds Shams al-Ma'arif books (linked below), but no edition there is labelled as the John
             Friend English version, so no square here is quoted from that edition. These are the classic,
             well-known magic squares of the wafq tradition.

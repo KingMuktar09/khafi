@@ -2,7 +2,7 @@ export const siteConfig = {
   appName: 'Ilm-e-Ghayb Library',
   brand: 'Ghayb Chronicles',
   /** Official logo: halftone gold arch doorway with a geometric star and
-   * light, on dark navy (1600x1600, sent by Muktar 18 Nov 2026).
+   * light, on dark navy (1600x1600, 18 Nov 2026).
    * Shown whole and centred everywhere (object-cover on a square box, so
    * nothing is cropped). public/favicon.png / apple-touch-icon.png are
    * the same image scaled down, also uncropped. */
@@ -17,8 +17,8 @@ export const siteConfig = {
    * whenever data/catalog.json is rebuilt with a different total.
    */
   catalogStats: {
-    totalFolders: 36,
-    totalBooks: 173,
+    totalFolders: 27,
+    totalBooks: 137,
   },
   instagram: {
     handle: '@ghayb.chronicles',

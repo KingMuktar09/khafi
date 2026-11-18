@@ -3,7 +3,7 @@ import { Book } from '../types';
 /**
  * Topic / category ordering, same-name versions, and Authentic helpers.
  *
- * Organising rule (from Muktar): books are arranged by their TOPIC and
+ * Organising rule: books are arranged by their TOPIC and
  * CATEGORY, not by their Drive folder. A folder only says where a file
  * lives; topic + category say what the book is about, and that is what
  * readers browse by. No folder digging is needed to find or move a book.
