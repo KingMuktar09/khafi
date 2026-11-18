@@ -84,6 +84,40 @@ body {
     radial-gradient(40% 60% at 85% 20%, rgba(38, 64, 120, 0.18), transparent 70%);
 }
 
+/* ---- Halftone dot texture, matching the official logo ----
+   The logo is a halftone print: gold dots on dark navy. The same dot
+   pattern, drawn in pure CSS (one radial-gradient tile, no image, no
+   extra download, no layout cost), is used as decoration in a few
+   places only: the home hero corner, the Ghayb Chronicles section
+   corner, and the top of the follow gate. Never under body text, and
+   always masked to fade out, so text stays readable and phones stay
+   smooth. In light theme the dots use the darker gold. */
+.halftone {
+  background-image: radial-gradient(circle, rgba(201, 162, 39, 0.14) 1px, transparent 1.5px);
+  background-size: 9px 9px;
+  pointer-events: none;
+}
+/* Dot field in a corner, fading away toward the content. */
+.halftone-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 15rem;
+  height: 15rem;
+  -webkit-mask-image: radial-gradient(ellipse 95% 95% at 100% 0%, black 0%, transparent 68%);
+  mask-image: radial-gradient(ellipse 95% 95% at 100% 0%, black 0%, transparent 68%);
+}
+/* Dot band across the top, fading down into the page. */
+.halftone-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12rem;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
 .gold-text {
   color: var(--gold);
 }

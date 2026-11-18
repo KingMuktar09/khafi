@@ -6,6 +6,7 @@ import {
   extractDriveId,
   getItemUrl,
   formatFileSize,
+  formatCatalogDate,
   extractTitleFromFilename,
   formatReadableDate,
   parseSizeBytes,
@@ -111,6 +112,27 @@ describe("formatFileSize", () => {
     expect(formatFileSize("not-a-size")).toBe("not-a-size");
     expect(formatFileSize("")).toBe("");
     expect(formatFileSize()).toBe("");
+  });
+
+  it("keeps suffixed catalog sizes as-is (was '2.3 B')", () => {
+    expect(formatFileSize("2.3 MB")).toBe("2.3 MB");
+    expect(formatFileSize("932.7 KB")).toBe("932.7 KB");
+    expect(formatFileSize("46.5 MB")).toBe("46.5 MB");
+    expect(formatFileSize("0 B")).toBe("");
+  });
+});
+
+describe("formatCatalogDate", () => {
+  it("hides the old catalog build stamp (same added and updated date)", () => {
+    expect(formatCatalogDate("2026-11-17T00:00:00.000Z", "2026-11-17T00:00:00.000Z")).toBe("");
+  });
+
+  it("shows a real Drive date when added and updated are the real modifiedTime", () => {
+    expect(formatCatalogDate("2026-06-21T11:00:05.000Z", "2026-06-21T11:00:05.000Z")).toBe("21 Jun 2026");
+  });
+
+  it("shows a real date when added and updated differ", () => {
+    expect(formatCatalogDate("2020-01-15T10:00:00Z", "2020-02-20T10:00:00Z")).toBe("20 Feb 2020");
   });
 });
 

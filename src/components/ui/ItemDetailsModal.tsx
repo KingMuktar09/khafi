@@ -28,7 +28,7 @@ import {
   getFileExtension,
   formatFileSize,
   formatCleanTitle,
-  formatReadableDate,
+  formatCatalogDate,
   downloadBookFile,
 } from '../../utils/fileUtils';
 
@@ -122,7 +122,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
                     <span>Created</span>
                   </span>
                   <p className="font-medium text-xs text-[var(--text-main)]">
-                    {formatReadableDate(folder.createdAt)}
+                    {formatCatalogDate(folder.createdAt, folder.updatedAt)}
                   </p>
                 </div>
               )}
@@ -307,7 +307,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, isOpen
                   <span>Date Added</span>
                 </span>
                 <p className="font-medium text-xs text-[var(--text-main)]">
-                  {formatReadableDate(book.addedDate)}
+                  {formatCatalogDate(book.addedDate, book.updatedDate) || '—'}
                 </p>
               </div>
             )}

@@ -14,6 +14,7 @@ import {
   Minimize2,
   Music as AudioIcon,
   RotateCcw,
+  Bookmark,
 } from 'lucide-react';
 import { appState } from '../state/appState';
 import { router } from '../router/router';
@@ -22,6 +23,7 @@ import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtens
 import { FilePreviewer, FitMode } from '../components/viewers/FilePreviewer';
 import { PdfZoomOverlay } from '../components/pdf/PdfZoomOverlay';
 import { PaidLockScreen } from '../components/books/PaidLockScreen';
+import { storage } from '../services/storage';
 
 export const PdfReaderView: React.FC = () => {
   const bookId = appState.route.bookId;
@@ -31,6 +33,31 @@ export const PdfReaderView: React.FC = () => {
   const [fitMode, setFitMode] = useState<FitMode>('width');
   const [isFitWidth, setIsFitWidth] = useState(true);
   const [retryNonce, setRetryNonce] = useState(0);
+  // Resume + bookmarks: the page the reader opens at (from saved progress),
+  // and the page the reader is on now. For local PDFs the canvas reader
+  // jumps to the saved page; for Drive books the Drive viewer cannot be
+  // jumped by the app, so the saved page is shown to jump to by hand.
+  const savedPage = bookId ? storage.getBookProgress(bookId)?.currentPage || 1 : 1;
+  const [resumePage, setResumePage] = useState(savedPage);
+  const [currentPage, setCurrentPage] = useState(savedPage);
+  const [jumpInput, setJumpInput] = useState('');
+
+  const bookmarks = bookId ? appState.getBookmarksForBook(bookId) : [];
+  const isBookmarked = bookmarks.includes(currentPage);
+
+  const jumpToPage = (page: number) => {
+    const total = book?.pageCount || appState.getReadingProgress(bookId!)?.totalPages;
+    const clamped = Math.max(1, total ? Math.min(total, page) : page);
+    setCurrentPage(clamped);
+    setResumePage(clamped);
+    setJumpInput('');
+    if (bookId) {
+      const pct = total ? Math.min(100, Math.round((clamped / total) * 100)) : appState.getReadingProgress(bookId)?.percentage || 0;
+      appState.setReadingProgress(bookId, pct, clamped, total);
+    }
+    // Remount the viewer so the canvas reader opens at the new page.
+    setRetryNonce((n) => n + 1);
+  };
 
   const handleZoomIn = () => {
     setFitMode('custom');
@@ -165,7 +192,7 @@ export const PdfReaderView: React.FC = () => {
         zoomLevel={zoomLevel}
         isFitWidth={isFitWidth}
         fitMode={fitMode}
-        initialPage={currentProgress?.currentPage || 1}
+        initialPage={resumePage}
         onZoomChange={(newZoom, newFit, newMode) => {
           setZoomLevel(newZoom);
           setIsFitWidth(newFit);
@@ -177,10 +204,11 @@ export const PdfReaderView: React.FC = () => {
             setFitMode('custom');
           }
         }}
-        onPageChange={(currentPage, totalPages) => {
+        onPageChange={(page, totalPages) => {
+          setCurrentPage(page);
           if (totalPages > 0) {
-            const calculatedPercentage = Math.min(100, Math.round((currentPage / totalPages) * 100));
-            appState.setReadingProgress(book.id, calculatedPercentage, currentPage, totalPages);
+            const calculatedPercentage = Math.min(100, Math.round((page / totalPages) * 100));
+            appState.setReadingProgress(book.id, calculatedPercentage, page, totalPages);
           }
         }}
         onRetry={() => setRetryNonce((n) => n + 1)}
@@ -337,6 +365,88 @@ export const PdfReaderView: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Bookmarks + jump to a page — works for every book. Local PDFs jump
+          in the reader; Drive books open in Drive, so the saved page is
+          shown here to jump to by hand in Drive. */}
+      {itemType === 'pdf' && (
+        <div className="bg-[var(--bg-main)] border-t border-[var(--border-main)] px-3 py-2 flex flex-wrap items-center gap-2 shrink-0 font-mono text-xs">
+          <button
+            type="button"
+            onClick={() => {
+              appState.toggleBookmark(book.id, currentPage);
+              appState.showToast(
+                isBookmarked ? `Removed bookmark on page ${currentPage}` : `Bookmarked page ${currentPage}`,
+                'success'
+              );
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded transition-colors cursor-pointer font-sans font-medium ${
+              isBookmarked
+                ? 'bg-[var(--gold)] text-black border-[var(--gold)] font-bold'
+                : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border-[var(--border-main)]'
+            }`}
+            title={isBookmarked ? 'Remove this bookmark' : 'Bookmark this page'}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-black' : ''}`} />
+            <span>{isBookmarked ? `Bookmarked p.${currentPage}` : `Bookmark p.${currentPage}`}</span>
+          </button>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const n = Number(jumpInput);
+              if (Number.isFinite(n) && n >= 1) jumpToPage(n);
+            }}
+            className="flex items-center gap-1.5"
+          >
+            <label className="text-[10px] text-[var(--text-muted)] uppercase font-bold" htmlFor="reader-jump-page">
+              Go to page:
+            </label>
+            <input
+              id="reader-jump-page"
+              type="number"
+              min={1}
+              value={jumpInput}
+              onChange={(e) => setJumpInput(e.target.value)}
+              placeholder={String(currentPage)}
+              className="w-16 px-2 py-1 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs border border-[var(--border-main)] rounded text-center font-mono focus:outline-none focus:border-[var(--gold)]"
+            />
+            <button
+              type="submit"
+              className="px-2.5 py-1 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] rounded text-xs font-bold cursor-pointer"
+            >
+              Go
+            </button>
+          </form>
+
+          {bookmarks.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold">Bookmarks:</span>
+              {bookmarks.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => jumpToPage(p)}
+                  className="px-2 py-1 bg-[var(--gold-faint)] text-[var(--gold)] border border-[var(--gold)]/40 rounded text-xs font-bold cursor-pointer hover:bg-[var(--gold)] hover:text-black transition-colors"
+                  title={`Jump to page ${p}`}
+                >
+                  p.{p}
+                </button>
+              ))}
+              {isDriveBook && (
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  Drive book — jump to the page in the Drive viewer.
+                </span>
+              )}
+            </div>
+          )}
+          {bookmarks.length === 0 && isDriveBook && (
+            <span className="text-[10px] text-[var(--text-muted)]">
+              This book opens in Drive — your last page is saved, bookmark a page to come back to it.
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Reader Bottom Toolbar for PDFs */}
       {itemType === 'pdf' && (

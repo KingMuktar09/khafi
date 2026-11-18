@@ -336,7 +336,14 @@ async function runDriveSyncCf(driveConfig: GoogleDriveConfig): Promise<any> {
     removedFolders: (previous.folders || []).filter((f: any) => !newFolderIds.has(f.id)).length,
     syncedAt: new Date().toISOString(),
   };
-  runtimeCatalog = { folders, books };
+  // A Drive sync rebuilds books from Drive — the admin's topic/category
+  // order is the library's own arrangement, so it is carried over.
+  runtimeCatalog = {
+    folders,
+    books,
+    ...(Array.isArray(previous.categoryOrder) ? { categoryOrder: previous.categoryOrder } : {}),
+    ...(Array.isArray(previous.topicOrder) ? { topicOrder: previous.topicOrder } : {}),
+  };
   try {
     await syncCatalogWithDriveCf(runtimeCatalog, driveConfig);
   } catch (err) {
@@ -540,9 +547,17 @@ function sanitizeCatalog(catalog: any) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
   const safeBooks = (catalog.books || []).map(sanitizeBook);
+  const categoryOrder = Array.isArray(catalog.categoryOrder)
+    ? catalog.categoryOrder.filter((n: any) => typeof n === 'string')
+    : undefined;
+  const topicOrder = Array.isArray(catalog.topicOrder)
+    ? catalog.topicOrder.filter((n: any) => typeof n === 'string')
+    : undefined;
   return {
     folders: safeFolders,
     books: safeBooks,
+    ...(categoryOrder ? { categoryOrder } : {}),
+    ...(topicOrder ? { topicOrder } : {}),
   };
 }
 
@@ -562,7 +577,16 @@ function sanitizeCatalog(catalog: any) {
     } else {
       const visibleFolders = (safeCatalog.folders || []).filter((f: any) => f.visible !== false);
       const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);
-      return jsonResponse({ folders: visibleFolders, books: visibleBooks }, 200, { "Cache-Control": "public, max-age=10" });
+      return jsonResponse(
+        {
+          folders: visibleFolders,
+          books: visibleBooks,
+          ...(safeCatalog.categoryOrder ? { categoryOrder: safeCatalog.categoryOrder } : {}),
+          ...(safeCatalog.topicOrder ? { topicOrder: safeCatalog.topicOrder } : {}),
+        },
+        200,
+        { 'Cache-Control': 'public, max-age=10' }
+      );
     }
   }
 
@@ -1013,6 +1037,43 @@ function sanitizeCatalog(catalog: any) {
       return jsonResponse({ success: true, ...result });
     } catch (err: any) {
       return jsonResponse({ success: false, error: `Drive sync failed: ${err?.message || err}` }, 500);
+    }
+  }
+
+  // 11d. Admin reorder: arrange books by topic/category in one call.
+  // Same shape as the Express twin in server/app.ts. Folders untouched.
+  if (path === '/api/admin/reorder' && method === 'POST') {
+    try {
+      const token = getAdminTokenFromRequest(request);
+      const isAdmin = await verifySessionToken(token, sessionSecret);
+      if (!isAdmin) {
+        return jsonResponse({ success: false, error: 'Unauthorized access. Administrator login required.' }, 401);
+      }
+      const body = (await request.json()) as any;
+      const catalog = await getCatalogData(driveConfig);
+      const bookOrders = Array.isArray(body?.bookOrders) ? body.bookOrders : [];
+      const byId = new Map((catalog.books || []).map((b: any) => [b.id, b]));
+      let updated = 0;
+      for (const order of bookOrders) {
+        const book: any = order && byId.get(order.id);
+        if (!book) continue;
+        if (typeof order.sortOrder === 'number') book.sortOrder = order.sortOrder;
+        if (typeof order.topic === 'string') book.topic = order.topic.trim();
+        if (typeof order.category === 'string' && order.category.trim()) book.category = order.category.trim();
+        if (typeof order.isAuthentic === 'boolean') book.isAuthentic = order.isAuthentic;
+        book.updatedDate = new Date().toISOString();
+        updated++;
+      }
+      if (Array.isArray(body?.categoryOrder)) {
+        catalog.categoryOrder = body.categoryOrder.filter((n: any) => typeof n === 'string');
+      }
+      if (Array.isArray(body?.topicOrder)) {
+        catalog.topicOrder = body.topicOrder.filter((n: any) => typeof n === 'string');
+      }
+      await saveCatalogData(catalog, driveConfig);
+      return jsonResponse({ success: true, updated });
+    } catch (err: any) {
+      return jsonResponse({ success: false, error: err.message || 'Failed to save the new order.' }, 500);
     }
   }
 

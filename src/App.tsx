@@ -1,19 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { appState } from './state/appState';
 import { storage } from './services/storage';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ToastContainer } from './components/ui/Toast';
 import { FollowGate } from './components/ui/FollowGate';
+import { siteConfig } from './config/siteConfig';
 
 // Import Views
 import { HomeView } from './views/HomeView';
 import { LibraryView } from './views/LibraryView';
 import { BookDetailsView } from './views/BookDetailsView';
-import { PdfReaderView } from './views/PdfReaderView';
 import { FavoritesView } from './views/FavoritesView';
 import { InfoView } from './views/InfoView';
-import { AdminView } from './views/AdminView';
+import { JourneysView } from './views/JourneysView';
+import { TimelineView } from './views/TimelineView';
+import { ShelfView } from './views/ShelfView';
+import { BookFinderView } from './views/BookFinderView';
+import { WafqView } from './views/WafqView';
+import { AmalsView } from './views/AmalsView';
+
+// Heavy views are lazy-loaded so the first paint stays light on mobile:
+// the PDF reader (pdf.js) and the admin dashboard only download when opened.
+const PdfReaderView = lazy(() => import('./views/PdfReaderView').then((m) => ({ default: m.PdfReaderView })));
+const AdminView = lazy(() => import('./views/AdminView').then((m) => ({ default: m.AdminView })));
+
+const ViewLoading: React.FC = () => (
+  <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-8 text-center max-w-md mx-auto my-12 animate-fade-in">
+    <p className="text-sm font-semibold text-[var(--text-main)]">Loading…</p>
+  </div>
+);
 
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
@@ -39,14 +55,23 @@ export default function App() {
     !followUnlocked && !isAdmin && appState.route.view !== 'admin';
 
   if (showGate) {
-    const books = appState.getVisibleBooks();
-    const roots = appState.getChildFolders(null);
-    const categories = roots.length === 1 ? appState.getChildFolders(roots[0].id).length : roots.length;
+    // Gate counts: total folders (36, incl. sub-collections) and total
+    // visible books (173). While the catalog is still loading, show the
+    // known totals from siteConfig instead of 0 — the catalog starts
+    // empty and only fills after the async /api/catalog fetch, so
+    // rendering the raw state here showed "0 Collections, 0 Books"
+    // on first paint (and forever to crawlers / slow connections).
+    const liveFolders = (appState.catalog.folders || []).filter((f) => f.visible !== false).length;
+    const liveBooks = appState.getVisibleBooks().length;
+    const catalogLoaded = !appState.loading && (liveFolders > 0 || liveBooks > 0);
+    const categoryCount = catalogLoaded ? liveFolders : siteConfig.catalogStats.totalFolders;
+    const bookCount = catalogLoaded ? liveBooks : siteConfig.catalogStats.totalBooks;
     return (
       <ErrorBoundary>
         <FollowGate
-          bookCount={books.length}
-          categoryCount={categories}
+          bookCount={bookCount}
+          categoryCount={categoryCount}
+          loading={!catalogLoaded}
           onUnlock={() => {
             storage.setFollowUnlocked();
             setFollowUnlocked(true);
@@ -67,13 +92,33 @@ export default function App() {
       case 'book':
         return <BookDetailsView />;
       case 'read':
-        return <PdfReaderView />;
+        return (
+          <Suspense fallback={<ViewLoading />}>
+            <PdfReaderView />
+          </Suspense>
+        );
       case 'favorites':
         return <FavoritesView />;
+      case 'journeys':
+        return <JourneysView />;
+      case 'timeline':
+        return <TimelineView />;
+      case 'shelf':
+        return <ShelfView />;
+      case 'finder':
+        return <BookFinderView />;
+      case 'wafq':
+        return <WafqView />;
+      case 'amals':
+        return <AmalsView />;
       case 'info':
         return <InfoView />;
       case 'admin':
-        return <AdminView />;
+        return (
+          <Suspense fallback={<ViewLoading />}>
+            <AdminView />
+          </Suspense>
+        );
       default:
         return <HomeView />;
     }

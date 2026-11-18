@@ -171,7 +171,8 @@ export function getDriveThumbnailUrl(item: Partial<Book>, width = 400): string |
  * undefined (the UI draws its generated title cover). Paid books get no
  * Drive id for visitors, so they never leak a thumbnail here.
  */
-export function getBookCoverUrl(book: Partial<Book>): string | undefined {
+export function getBookCoverUrl(book: Partial<Book> | null | undefined): string | undefined {
+  if (!book) return undefined;
   return getDriveThumbnailUrl(book) || book.thumbnailUrl || book.coverUrl || undefined;
 }
 

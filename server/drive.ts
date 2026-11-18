@@ -927,12 +927,15 @@ export async function fetchLiveDriveCatalog(storedCatalogMetadata?: any): Promis
             folderId: meta?.folderId || folderId,
             subfolderId: meta?.subfolderId || subfolderId,
             category: meta?.category || categoryName,
+            topic: meta?.topic || undefined,
             pdfUrl: `/api/files/${file.id}/preview`,
             fileUrl: `/api/files/${file.id}/preview`,
             fileType: meta?.fileType || fileType,
             mimeType: file.mimeType || "application/pdf",
             fileSize: formatBytes(sizeBytes),
             sizeBytes: sizeBytes,
+            sortOrder: meta?.sortOrder ?? undefined,
+            isAuthentic: meta?.isAuthentic === true,
             addedDate: file.createdTime || file.modifiedTime || new Date().toISOString(),
             updatedDate: file.modifiedTime || new Date().toISOString(),
             visible: meta?.visible !== undefined ? meta.visible : true,
@@ -1126,7 +1129,7 @@ function syncExt(name: string): string {
  * Folders whose name starts with "." (e.g. Obsidian's .obsidian config
  * folder) and their contents are skipped.
  */
-export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[] }, stored: any): { folders: any[]; books: any[] } {
+export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[] }, stored: any): { folders: any[]; books: any[]; categoryOrder?: string[]; topicOrder?: string[] } {
   const storedFolders: any[] = Array.isArray(stored?.folders) ? stored.folders : [];
   const storedBooks: any[] = Array.isArray(stored?.books) ? stored.books : [];
   const storedFolderById = new Map<string, any>(storedFolders.map((f: any) => [f.id, f]));
@@ -1205,6 +1208,7 @@ export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[]
       author: saved?.author || file.author || "",
       description: saved?.description || file.description || "",
       category: saved?.category || file.category || SYNC_ROOT_NAME,
+      topic: saved?.topic || undefined,
       folderId: file.folderId ? `f-${file.folderId}` : SYNC_ROOT_FOLDER_ID,
       subfolderId: file.subfolderId ? `f-${file.subfolderId}` : null,
       tags: saved?.tags || file.tags || [],
@@ -1216,6 +1220,8 @@ export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[]
       externalUrl: `https://drive.google.com/file/d/${file.id}/view?usp=drivesdk`,
       isPaid: saved?.isPaid === true,
       price: saved?.price ?? undefined,
+      sortOrder: saved?.sortOrder ?? undefined,
+      isAuthentic: saved?.isAuthentic === true,
       addedDate: saved?.addedDate || file.addedDate || new Date().toISOString(),
       updatedDate: new Date().toISOString(),
       featured: saved?.featured === true,
@@ -1223,7 +1229,20 @@ export function normalizeLiveCatalogToSaved(live: { folders: any[]; books: any[]
     });
   }
 
-  return { folders, books };
+  // Admin-chosen topic/category order survives a Drive sync — it is not
+  // a Drive fact, it is the library's own arrangement.
+  const categoryOrder = Array.isArray(stored?.categoryOrder)
+    ? stored.categoryOrder.filter((n: any) => typeof n === "string")
+    : undefined;
+  const topicOrder = Array.isArray(stored?.topicOrder)
+    ? stored.topicOrder.filter((n: any) => typeof n === "string")
+    : undefined;
+  return {
+    folders,
+    books,
+    ...(categoryOrder ? { categoryOrder } : {}),
+    ...(topicOrder ? { topicOrder } : {}),
+  };
 }
 
 export interface DriveSyncResult {

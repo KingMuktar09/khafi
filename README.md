@@ -1,3 +1,7 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-live-brightgreen)](https://ilmeghayb.vercel.app/)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-green)](package.json)
+
 # Ilm-e-Ghayb Library — by Ghayb Chronicles
 
 **A Private Space for Ilm** — a self-hosted digital library for discovering, organizing, reading, and preserving knowledge. Built with a particular interest in Islamic knowledge: Quran, Sunnah, spirituality, history, and philosophy — but structured to hold any collection of books and documents.
