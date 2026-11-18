@@ -112,6 +112,22 @@ class Router {
         return '/wafq';
       case 'amals':
         return '/amals';
+      case 'tools':
+        return '/tools';
+      case 'tools-huruf':
+        return '/tools/huruf';
+      case 'tools-asma':
+        return '/tools/asma';
+      case 'tools-bast':
+        return '/tools/bast';
+      case 'tools-journal':
+        return '/tools/journal';
+      case 'tools-wird':
+        return '/tools/wird';
+      case 'tools-grimoire':
+        return '/tools/grimoire';
+      case 'tools-method':
+        return '/tools/method';
       default:
         return '/';
     }
@@ -174,6 +190,38 @@ class Router {
 
     if (pathname === '/amals') {
       return { view: 'amals' };
+    }
+
+    if (pathname === '/tools') {
+      return { view: 'tools' };
+    }
+
+    if (pathname === '/tools/huruf') {
+      return { view: 'tools-huruf' };
+    }
+
+    if (pathname === '/tools/asma') {
+      return { view: 'tools-asma' };
+    }
+
+    if (pathname === '/tools/bast') {
+      return { view: 'tools-bast' };
+    }
+
+    if (pathname === '/tools/journal') {
+      return { view: 'tools-journal' };
+    }
+
+    if (pathname === '/tools/wird') {
+      return { view: 'tools-wird' };
+    }
+
+    if (pathname === '/tools/grimoire') {
+      return { view: 'tools-grimoire' };
+    }
+
+    if (pathname === '/tools/method') {
+      return { view: 'tools-method' };
     }
 
     return { view: 'home' };

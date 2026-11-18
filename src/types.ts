@@ -82,7 +82,7 @@ export interface Book {
 
 export type LibraryItem = Book;
 
-export type ViewName = 'home' | 'library' | 'favorites' | 'info' | 'book' | 'read' | 'admin' | 'journeys' | 'timeline' | 'shelf' | 'finder' | 'wafq' | 'amals';
+export type ViewName = 'home' | 'library' | 'favorites' | 'info' | 'book' | 'read' | 'admin' | 'journeys' | 'timeline' | 'shelf' | 'finder' | 'wafq' | 'amals' | 'tools' | 'tools-huruf' | 'tools-asma' | 'tools-bast' | 'tools-journal' | 'tools-wird' | 'tools-grimoire' | 'tools-method';
 
 export interface RouteState {
   view: ViewName;

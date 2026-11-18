@@ -166,6 +166,7 @@ const baseDataDir = isServerless ? "/tmp" : process.cwd();
 export const dataDir = isServerless ? path.join(baseDataDir, "khafi-data") : path.join(process.cwd(), "data");
 export const catalogFilePath = path.join(dataDir, "catalog.json");
 export const paymentSettingsFilePath = path.join(dataDir, "payment-settings.json");
+export const gateSettingsFilePath = path.join(dataDir, "gate-settings.json");
 export const uploadsDir = isServerless ? path.join(baseDataDir, "khafi-uploads") : path.join(process.cwd(), "public", "uploads");
 export const samplePdfDir = path.join(process.cwd(), "public", "sample-pdfs");
 export const uploadSessionsDir = path.join(dataDir, "upload-sessions");
@@ -596,6 +597,79 @@ export function writePaymentSettings(data: any) {
   }
 }
 
+// Gate key settings (admin-only writes; the public gate only learns whether
+// a key is set, never the key itself). Stored in data/gate-settings.json.
+// The key is shared by the admin in the Instagram broadcast channel; the
+// site never distributes it. Empty key by default, so the key field on the
+// gate stays hidden until the admin sets one.
+export const DEFAULT_BROADCAST_CHANNEL_URL = "https://www.instagram.com/channel/ZKdxHLW9r2VpKow7/";
+export const EMPTY_GATE_SETTINGS = { gateKey: "", channelUrl: DEFAULT_BROADCAST_CHANNEL_URL };
+
+export function readGateSettings() {
+  const pick = (filePath: string) => {
+    try {
+      if (fs.existsSync(filePath)) {
+        const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+        if (parsed && typeof parsed === "object") return parsed;
+      }
+    } catch (err) {
+      console.error("Error reading gate settings:", err);
+    }
+    return null;
+  };
+  const clean = (raw: any) => ({
+    gateKey: typeof raw?.gateKey === "string" ? raw.gateKey.trim().slice(0, 200) : "",
+    // An empty stored link falls back to the default broadcast channel.
+    channelUrl:
+      typeof raw?.channelUrl === "string" && raw.channelUrl.trim()
+        ? raw.channelUrl.trim().slice(0, 500)
+        : DEFAULT_BROADCAST_CHANNEL_URL,
+  });
+  const fromDataDir = pick(gateSettingsFilePath);
+  if (fromDataDir) return clean(fromDataDir);
+  const fromRoot = pick(path.join(process.cwd(), "data", "gate-settings.json"));
+  if (fromRoot) return clean(fromRoot);
+  return { ...EMPTY_GATE_SETTINGS };
+}
+
+export function writeGateSettings(data: any) {
+  const clean = {
+    gateKey: typeof data?.gateKey === "string" ? data.gateKey.trim().slice(0, 200) : "",
+    channelUrl: typeof data?.channelUrl === "string" ? data.channelUrl.trim().slice(0, 500) : "",
+  };
+  try {
+    fs.writeFileSync(gateSettingsFilePath, JSON.stringify(clean, null, 2), "utf8");
+    return clean;
+  } catch (err) {
+    console.error("Error writing gate settings:", err);
+    return null;
+  }
+}
+
+// Same durability as the payment settings: local write first, then a GitHub
+// commit when the token is configured. Never throws. Never logs the key.
+export async function saveGateSettingsDurably(data: any): Promise<CatalogSaveResult> {
+  const saved = writeGateSettings(data);
+  if (!saved) return { saved: false, durable: false };
+  if (!isGitHubSyncConfigured()) {
+    return { saved: true, durable: false, durableWarning: DURABLE_SAVE_WARNING };
+  }
+  const committed = await commitFileToGitHub(
+    "data/gate-settings.json",
+    JSON.stringify(saved, null, 2),
+    "Admin: update gate settings"
+  );
+  if (!committed.ok) {
+    console.warn("GitHub gate-settings commit failed:", committed.error);
+    return {
+      saved: true,
+      durable: false,
+      durableWarning: `Saved for now only — the permanent GitHub save failed (${committed.error || "unknown error"}). It will vanish on redeploy.`,
+    };
+  }
+  return { saved: true, durable: true };
+}
+
 // Helper to extract Google Drive file ID
 export function extractDriveFileId(urlOrId?: string): string | null {
   if (!urlOrId || typeof urlOrId !== "string") return null;
@@ -784,6 +858,67 @@ app.post(["/api/admin/payment-settings", "/admin/payment-settings"], requireAdmi
   res.json({
     success: true,
     settings: readPaymentSettings(),
+    durable: save.durable,
+    durableWarning: save.durableWarning,
+  });
+});
+
+// Public gate status: only whether a key is set, plus the broadcast channel
+// link. The key itself is never returned here.
+app.get(["/api/gate/status", "/gate/status"], (req, res) => {
+  const settings = readGateSettings();
+  res.json({ keySet: settings.gateKey.length > 0, channelUrl: settings.channelUrl });
+});
+
+// Public gate unlock: checks the key server-side, constant-time. The key is
+// never logged and never returned.
+app.post(["/api/gate/unlock", "/gate/unlock"], async (req, res) => {
+  const stored = readGateSettings();
+  if (!stored.gateKey) {
+    res.status(404).json({ error: "Gate key is not set." });
+    return;
+  }
+  const guess = typeof req.body?.key === "string" ? req.body.key : "";
+  if (!safeEqualSecret(guess, stored.gateKey)) {
+    await new Promise((r) => setTimeout(r, 600));
+    res.status(401).json({ error: "Wrong key. Check the key in the broadcast channel and try again." });
+    return;
+  }
+  res.json({ ok: true });
+});
+
+// Admin-only: gate settings, without the key value.
+app.get(["/api/admin/gate-settings", "/admin/gate-settings"], requireAdmin, (req, res) => {
+  const settings = readGateSettings();
+  res.json({ keySet: settings.gateKey.length > 0, channelUrl: settings.channelUrl });
+});
+
+// Admin-only: save gate settings. removeKey clears the key; a non-empty
+// gateKey sets a new one; an absent/empty gateKey with removeKey false keeps
+// the existing key (never wiped by accident). channelUrl, when provided as a
+// string, replaces the stored one (empty falls back to the default on read).
+app.post(["/api/admin/gate-settings", "/admin/gate-settings"], requireAdmin, async (req, res) => {
+  const body = req.body || {};
+  const current = readGateSettings();
+  const next = { gateKey: current.gateKey, channelUrl: current.channelUrl };
+  if (body.removeKey === true) {
+    next.gateKey = "";
+  } else if (typeof body.gateKey === "string" && body.gateKey.trim() !== "") {
+    next.gateKey = body.gateKey;
+  }
+  if (typeof body.channelUrl === "string") {
+    next.channelUrl = body.channelUrl;
+  }
+  const save = await saveGateSettingsDurably(next);
+  if (!save.saved) {
+    res.status(500).json({ error: "Failed to save gate settings." });
+    return;
+  }
+  const stored = readGateSettings();
+  res.json({
+    success: true,
+    keySet: stored.gateKey.length > 0,
+    channelUrl: stored.channelUrl,
     durable: save.durable,
     durableWarning: save.durableWarning,
   });

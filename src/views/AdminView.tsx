@@ -29,6 +29,7 @@ import {
   QrCode,
   Wallet,
   IndianRupee,
+  Key,
 } from 'lucide-react';
 import { appState } from '../state/appState';
 import { api } from '../services/api';
@@ -120,6 +121,18 @@ export const AdminView: React.FC = () => {
   // line so they stop taking up space on every admin visit.
   const [showPaySettings, setShowPaySettings] = useState(false);
 
+  // Gate key (admin only). The key is shared in the Instagram broadcast
+  // channel; followers enter it on the gate to unlock. The key value is
+  // never shown back here and never pre-filled — leave the field blank to
+  // keep the current key.
+  const [gateKeySet, setGateKeySet] = useState(false);
+  const [gateKeyInput, setGateKeyInput] = useState('');
+  const [gateChannelUrl, setGateChannelUrl] = useState('');
+  const [gateRemoveKey, setGateRemoveKey] = useState(false);
+  const [gateShowKey, setGateShowKey] = useState(false);
+  const [gateSaving, setGateSaving] = useState(false);
+  const [gateLoaded, setGateLoaded] = useState(false);
+
   // Poll AI pending proposals count on mount
   useEffect(() => {
     if (isAuthenticated) {
@@ -147,6 +160,19 @@ export const AdminView: React.FC = () => {
         .catch(() => setPayLoaded(true));
     }
   }, [isAuthenticated, payLoaded]);
+
+  // Load gate key settings when the admin signs in
+  useEffect(() => {
+    if (isAuthenticated && !gateLoaded) {
+      api.getGateSettings()
+        .then((s) => {
+          setGateKeySet(s.keySet);
+          setGateChannelUrl(s.channelUrl);
+          setGateLoaded(true);
+        })
+        .catch(() => setGateLoaded(true));
+    }
+  }, [isAuthenticated, gateLoaded]);
 
   // Whether live Drive storage is connected. When it is not, a file
   // uploaded from this device is stored only temporarily on the live
@@ -176,6 +202,25 @@ export const AdminView: React.FC = () => {
       appState.showToast(`Payment settings saved. ${durableSuffix(res)}`, durableToastType(res));
     } else {
       appState.showToast(res.error || 'Failed to save payment settings.', 'error');
+    }
+  };
+
+  const handleSaveGateSettings = async () => {
+    setGateSaving(true);
+    const res = await api.saveGateSettings({
+      gateKey: gateKeyInput.trim() ? gateKeyInput.trim() : undefined,
+      channelUrl: gateChannelUrl,
+      removeKey: gateRemoveKey,
+    });
+    setGateSaving(false);
+    if (res.success) {
+      setGateKeyInput('');
+      setGateRemoveKey(false);
+      if (typeof res.keySet === 'boolean') setGateKeySet(res.keySet);
+      if (typeof res.channelUrl === 'string') setGateChannelUrl(res.channelUrl);
+      appState.showToast(`Gate settings saved. ${durableSuffix(res)}`, durableToastType(res));
+    } else {
+      appState.showToast(res.error || 'Failed to save gate settings.', 'error');
     }
   };
 
@@ -1248,6 +1293,85 @@ export const AdminView: React.FC = () => {
         </div>
         </>
         )}
+      </div>
+
+      {/* Gate key — admin only */}
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-[var(--gold-faint)] border border-[var(--border-main)] flex items-center justify-center text-[var(--gold)] shrink-0">
+            <Key className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display font-semibold text-lg text-[var(--text-main)]">Gate key</h3>
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+              {gateKeySet
+                ? 'A key is set — followers can unlock the gate with it.'
+                : 'No key set yet — the key field on the gate is hidden.'}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+          Share the key in your Instagram broadcast channel — followers enter it on the gate to unlock.
+          The follow button still works too. The key never expires: once set, it keeps working until
+          you change it or remove it here.
+        </p>
+
+        <div>
+          <label className="block text-[var(--text-muted)] mb-1 font-medium text-xs">Key</label>
+          <div className="flex gap-2">
+            <input
+              type={gateShowKey ? 'text' : 'password'}
+              value={gateKeyInput}
+              onChange={(e) => setGateKeyInput(e.target.value)}
+              autoComplete="off"
+              className="flex-1 min-w-0 px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg focus:outline-none focus:border-[var(--gold)] text-sm"
+              placeholder={gateKeySet ? 'Key is set — leave blank to keep it, or type a new key' : 'Type a key, e.g. ghayb-2026'}
+            />
+            <button
+              type="button"
+              onClick={() => setGateShowKey((v) => !v)}
+              className="shrink-0 px-3 py-2.5 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-lg text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+            >
+              {gateShowKey ? 'Hide' : 'Show'}
+            </button>
+          </div>
+        </div>
+
+        <label className="flex items-center gap-2 text-xs text-[var(--text-muted)] cursor-pointer">
+          <input
+            type="checkbox"
+            checked={gateRemoveKey}
+            onChange={(e) => setGateRemoveKey(e.target.checked)}
+            className="w-4 h-4 accent-[var(--gold)]"
+          />
+          <span>Remove the key — the key field on the gate will be hidden</span>
+        </label>
+
+        <div>
+          <label className="block text-[var(--text-muted)] mb-1 font-medium text-xs">Broadcast channel link</label>
+          <input
+            type="url"
+            value={gateChannelUrl}
+            onChange={(e) => setGateChannelUrl(e.target.value)}
+            className="w-full px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-lg focus:outline-none focus:border-[var(--gold)] text-sm"
+            placeholder="https://www.instagram.com/channel/…"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={handleSaveGateSettings}
+            disabled={gateSaving}
+            className="tap-target px-5 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black font-bold text-sm rounded-xl cursor-pointer transition-all"
+          >
+            {gateSaving ? 'Saving…' : 'Save gate settings'}
+          </button>
+          <p className="text-[11px] text-[var(--text-faint)]">
+            Only you see this. The key is never shown back to anyone.
+          </p>
+        </div>
       </div>
 
       {/* Admin Toolbar */}

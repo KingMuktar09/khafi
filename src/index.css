@@ -73,6 +73,12 @@
   font-family: var(--font-sans);
 }
 
+/* Arabic text: Amiri (free, OFL) for Quranic names, letter tables and
+   unfolded text. Used with dir="rtl" on the element. */
+.font-arabic {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+}
+
 /* Premium polish: generous, calm surfaces */
 body {
   overflow-x: clip;

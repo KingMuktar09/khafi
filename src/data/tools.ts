@@ -257,13 +257,12 @@ export function recommendBooks(books: Book[], answers: FinderAnswers): FinderPic
 // --- Magic Square Maker (Wafq) -----------------------------------------------
 
 /** Source label for the wafq tool. */
-export const SHAMS_SOURCE = 'Shams al-Ma‘arif, John Friend English version';
+export const SHAMS_SOURCE = 'Shams al-Ma‘arif — The Sun of Knowledge, translated by Amina Inloes (Revelore Press, 2021)';
 /**
  * Honest source note: the catalog holds two Shams al-Ma'arif books —
- * "The Sun of Knowledge Al-Buni-Shams-Al-Ma-Arif" and the manuscript
- * "Al-buni Shams-al-maarif-manuscript-1500" — but no edition in the
- * catalog is labelled as the John Friend English version, so no square
- * here is quoted from that edition. The squares below are the
+ * "The Sun of Knowledge Al-Buni-Shams-Al-Ma-Arif" (the Amina Inloes
+ * translation, Revelore Press 2021) and the manuscript
+ * "Al-buni Shams-al-maarif-manuscript-1500". The squares below are the
  * classic, well-known magic squares of the wafq tradition.
  */
 export const SHAMS_BOOK_TITLES = [

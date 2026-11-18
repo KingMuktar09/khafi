@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, Instagram, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import { router } from '../../router/router';
 import { siteConfig } from '../../config/siteConfig';
+import { api, GateStatus, isGateKeySet } from '../../services/api';
 
 interface FollowGateProps {
   onUnlock: () => void;
@@ -25,6 +26,34 @@ export const INSTAGRAM_HANDLE = '@ghayb.chronicles';
  */
 export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, categoryCount, loading = false }) => {
   const [followed, setFollowed] = useState(false);
+
+  // Gate key: shown only when the admin has set one. The key itself is
+  // checked server-side; the browser never sees it.
+  const [gateStatus, setGateStatus] = useState<GateStatus | null>(null);
+  const [gateKey, setGateKey] = useState('');
+  const [gateError, setGateError] = useState('');
+  const [checkingKey, setCheckingKey] = useState(false);
+
+  useEffect(() => {
+    api.getGateStatus()
+      .then((status) => setGateStatus(status))
+      .catch(() => setGateStatus(null));
+  }, []);
+
+  const handleKeyUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gateKey.trim() || checkingKey) return;
+    setCheckingKey(true);
+    setGateError('');
+    const res = await api.unlockGate(gateKey);
+    setCheckingKey(false);
+    if (res.ok) {
+      onUnlock();
+    } else {
+      setGateError(res.error || 'Wrong key. Try again.');
+      setGateKey('');
+    }
+  };
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] font-sans flex items-center justify-center px-4 py-10 animate-fade-in">
@@ -106,6 +135,49 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             {followed ? <Check className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
             <span>I followed — unlock the library</span>
           </button>
+
+          {isGateKeySet(gateStatus) && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="flex-1 h-px bg-[var(--border-main)]" aria-hidden="true" />
+                <span className="text-[11px] text-[var(--text-muted)]">or unlock with a key</span>
+                <span className="flex-1 h-px bg-[var(--border-main)]" aria-hidden="true" />
+              </div>
+              <form onSubmit={handleKeyUnlock} className="flex gap-2">
+                <input
+                  type="password"
+                  value={gateKey}
+                  onChange={(e) => setGateKey(e.target.value)}
+                  autoComplete="off"
+                  placeholder="Have a key? Enter it here"
+                  aria-label="Gate key"
+                  className="flex-1 min-w-0 px-3 py-2.5 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)] text-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={checkingKey || !gateKey.trim()}
+                  className="shrink-0 px-4 py-2.5 rounded-xl font-bold text-sm bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black cursor-pointer transition-all"
+                >
+                  {checkingKey ? 'Checking…' : 'Unlock'}
+                </button>
+              </form>
+              {gateError && (
+                <p className="text-xs text-red-400 text-center" role="alert">{gateError}</p>
+              )}
+            </div>
+          )}
+
+          {gateStatus?.channelUrl && (
+            <a
+              href={gateStatus.channelUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full flex items-center justify-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--gold)] underline underline-offset-2 cursor-pointer"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+              <span>Join the broadcast channel to get the key</span>
+            </a>
+          )}
 
           <p className="text-[11px] text-[var(--text-faint)] leading-relaxed text-center flex items-start justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-px text-[var(--gold)]" />

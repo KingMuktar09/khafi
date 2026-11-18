@@ -106,6 +106,34 @@ async function fetchWithRetry(url: string, options?: RequestInit, retries = 2, d
 
 import { EMPTY_PAYMENT_SETTINGS, PaymentSettings } from '../types';
 
+// Gate key (follow gate): the key is shared by the admin in the Instagram
+// broadcast channel and checked server-side. The browser never sees it.
+export const DEFAULT_BROADCAST_CHANNEL_URL = 'https://www.instagram.com/channel/ZKdxHLW9r2VpKow7/';
+
+export interface GateSettings {
+  gateKey: string;
+  channelUrl: string;
+}
+
+export const EMPTY_GATE_SETTINGS: GateSettings = {
+  gateKey: '',
+  channelUrl: DEFAULT_BROADCAST_CHANNEL_URL,
+};
+
+export interface GateStatus {
+  keySet: boolean;
+  channelUrl: string;
+}
+
+export interface GateSettingsAdmin {
+  keySet: boolean;
+  channelUrl: string;
+}
+
+export function isGateKeySet(status: GateStatus | null | undefined): boolean {
+  return Boolean(status?.keySet);
+}
+
 let inFlightCatalogPromise: Promise<CatalogData> | null = null;
 let inFlightCheckAdminPromise: Promise<{ authenticated: boolean; username?: string }> | null = null;
 
@@ -215,6 +243,77 @@ export const api = {
       return { success: true, durable: parsed.data?.durable, durableWarning: parsed.data?.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to save payment settings.' };
+    }
+  },
+
+  /** Public gate status: whether a key is set, plus the broadcast channel link. */
+  async getGateStatus(): Promise<GateStatus> {
+    try {
+      const res = await fetch('/api/gate/status');
+      const parsed = await safeParseJson<GateStatus>(res);
+      if (parsed.ok && parsed.data) {
+        return {
+          keySet: Boolean(parsed.data.keySet),
+          channelUrl: parsed.data.channelUrl || DEFAULT_BROADCAST_CHANNEL_URL,
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load gate status:', err);
+    }
+    return { keySet: false, channelUrl: DEFAULT_BROADCAST_CHANNEL_URL };
+  },
+
+  /** Check a gate key server-side. The key is never compared in the browser. */
+  async unlockGate(key: string): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch('/api/gate/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key }),
+      });
+      const parsed = await safeParseJson<{ ok?: boolean; error?: string }>(res);
+      if (parsed.ok && parsed.data?.ok) return { ok: true };
+      return { ok: false, error: parsed.error || parsed.data?.error || 'Wrong key. Try again.' };
+    } catch (err: any) {
+      return { ok: false, error: err.message || 'Failed to check the key.' };
+    }
+  },
+
+  /** Admin gate settings (keySet only — the key value is never sent). */
+  async getGateSettings(): Promise<GateSettingsAdmin> {
+    try {
+      const res = await fetch('/api/admin/gate-settings', { headers: getAuthHeaders() });
+      const parsed = await safeParseJson<GateSettingsAdmin>(res);
+      if (parsed.ok && parsed.data) {
+        return {
+          keySet: Boolean(parsed.data.keySet),
+          channelUrl: parsed.data.channelUrl || DEFAULT_BROADCAST_CHANNEL_URL,
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load gate settings:', err);
+    }
+    return { keySet: false, channelUrl: DEFAULT_BROADCAST_CHANNEL_URL };
+  },
+
+  async saveGateSettings(input: { gateKey?: string; channelUrl?: string; removeKey?: boolean }): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; keySet?: boolean; channelUrl?: string; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/gate-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(input),
+      });
+      const parsed = await safeParseJson<{ success: boolean; durable?: boolean; durableWarning?: string; keySet?: boolean; channelUrl?: string; error?: string }>(res);
+      if (!parsed.ok) return { success: false, error: parsed.error || 'Failed to save gate settings.' };
+      return {
+        success: true,
+        durable: parsed.data?.durable,
+        durableWarning: parsed.data?.durableWarning,
+        keySet: parsed.data?.keySet,
+        channelUrl: parsed.data?.channelUrl,
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save gate settings.' };
     }
   },
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Sun, Moon, Lock, ShieldCheck, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram, Compass, Map as MapIcon, Bookmark, Grid3X3, MoonStar } from 'lucide-react';
+import { Search, Sun, Moon, Lock, ShieldCheck, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram, Compass, Map as MapIcon, Bookmark, Grid3X3, MoonStar, Calculator } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
 import { siteConfig } from '../../config/siteConfig';
@@ -203,6 +203,18 @@ export const Navbar: React.FC = () => {
             </button>
 
             <button
+              onClick={() => handleNav('tools')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'tools' || currentView.startsWith('tools-')
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Calculator className="w-4 h-4 text-[var(--gold)]" />
+              <span>Study Tools</span>
+            </button>
+
+            <button
               onClick={() => handleNav('favorites')}
               className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
                 currentView === 'favorites'
@@ -384,6 +396,15 @@ export const Navbar: React.FC = () => {
             }`}
           >
             Amals
+          </button>
+
+          <button
+            onClick={() => handleNav('tools')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              currentView === 'tools' || currentView.startsWith('tools-') ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            Study Tools
           </button>
 
           <button

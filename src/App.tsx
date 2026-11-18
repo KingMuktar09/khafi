@@ -20,6 +20,16 @@ import { BookFinderView } from './views/BookFinderView';
 import { WafqView } from './views/WafqView';
 import { AmalsView } from './views/AmalsView';
 
+// Study tools (Phase 1): calculators + device-only tools, behind the gate.
+import { ToolsHubView } from './views/tools/ToolsHubView';
+import { HurufView } from './views/tools/HurufView';
+import { AsmaView } from './views/tools/AsmaView';
+import { BastView } from './views/tools/BastView';
+import { JournalView } from './views/tools/JournalView';
+import { WirdView } from './views/tools/WirdView';
+import { GrimoireView } from './views/tools/GrimoireView';
+import { MethodView } from './views/tools/MethodView';
+
 // Heavy views are lazy-loaded so the first paint stays light on mobile:
 // the PDF reader (pdf.js) and the admin dashboard only download when opened.
 const PdfReaderView = lazy(() => import('./views/PdfReaderView').then((m) => ({ default: m.PdfReaderView })));
@@ -111,6 +121,22 @@ export default function App() {
         return <WafqView />;
       case 'amals':
         return <AmalsView />;
+      case 'tools':
+        return <ToolsHubView />;
+      case 'tools-huruf':
+        return <HurufView />;
+      case 'tools-asma':
+        return <AsmaView />;
+      case 'tools-bast':
+        return <BastView />;
+      case 'tools-journal':
+        return <JournalView />;
+      case 'tools-wird':
+        return <WirdView />;
+      case 'tools-grimoire':
+        return <GrimoireView />;
+      case 'tools-method':
+        return <MethodView />;
       case 'info':
         return <InfoView />;
       case 'admin':

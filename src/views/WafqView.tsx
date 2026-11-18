@@ -22,12 +22,10 @@ import {
  * sum, and shows you the pattern. It makes no claim that a square has
  * supernatural power, and it gives no instructions to use one for harm.
  *
- * Source label for the wafq tool: "Shams al-Ma'arif, John Friend English
- * version". The catalog holds two Shams al-Ma'arif books (linked
- * below), but no edition in the catalog is labelled as the John
- * Friend English version, so no square here is quoted from that
- * edition — the squares are the classic, well-known magic squares
- * of the wafq tradition, verified by addition.
+ * Source label for the wafq tool: "Shams al-Ma'arif — The Sun of Knowledge,
+ * translated by Amina Inloes (Revelore Press, 2021)". The catalog holds two
+ * Shams al-Ma'arif books (linked below). The squares here are the classic,
+ * well-known magic squares of the wafq tradition, verified by addition.
  */
 const SIZES = [3, 4, 5, 7];
 
