@@ -123,10 +123,12 @@ export const BookDetailsView: React.FC = () => {
   const isFav = appState.isFavorite(book.id);
   const isAdmin = appState.adminAuthenticated;
   // Paid books are FREE for followers: a gate-unlocked visitor (follow tap
-  // or gate key) reads them like any free book. Only a locked visitor sees
-  // the followers-only lock screen.
+  // or gate key) reads them like any free book. A visitor holding the
+  // book's own unlock key reads it too, even without the gate. Only a
+  // locked visitor sees the lock screen.
   const isFollowUnlocked = storage.hasFollowUnlocked();
-  const isPaidForVisitor = Boolean(book.isPaid) && !isAdmin && !isFollowUnlocked;
+  const hasKeyUnlock = storage.hasBookKey(book.id);
+  const isPaidForVisitor = Boolean(book.isPaid) && !isAdmin && !isFollowUnlocked && !hasKeyUnlock;
   // Honest static-fallback case: when the live catalog did not load, the
   // client falls back to public/catalog.json, whose paid-book links are
   // always stripped. An unlocked follower then sees the book with no links
@@ -329,7 +331,9 @@ export const BookDetailsView: React.FC = () => {
                 <span>
                   {isFollowUnlocked || isAdmin
                     ? 'Paid book — free for followers'
-                    : 'Paid book — followers only'}
+                    : hasKeyUnlock
+                      ? 'Paid book — unlocked with your key'
+                      : 'Paid book — followers only'}
                 </span>
               </p>
             ) : (
@@ -357,7 +361,13 @@ export const BookDetailsView: React.FC = () => {
           {/* Actions */}
           <div className="p-4 ms-panel rounded-xl space-y-3 text-sm">
             {isPaidForVisitor ? (
-              <PaidLockScreen book={book} />
+              <PaidLockScreen
+                book={book}
+                onUnlocked={async () => {
+                  await appState.loadCatalog();
+                  setRetryingCatalog(false);
+                }}
+              />
             ) : (
               <>
                 {isAdmin && book.isPaid && (
@@ -386,9 +396,14 @@ export const BookDetailsView: React.FC = () => {
                     </button>
                   </div>
                 )}
-                {!isAdmin && book.isPaid && !paidLinksMissing && (
+                {!isAdmin && book.isPaid && !paidLinksMissing && isFollowUnlocked && (
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
                     Free for followers. No payment needed.
+                  </p>
+                )}
+                {!isAdmin && book.isPaid && !paidLinksMissing && !isFollowUnlocked && hasKeyUnlock && (
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
+                    Unlocked with your key on this device.
                   </p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

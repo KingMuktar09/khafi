@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import mammoth from 'mammoth';
 import { Download, ExternalLink, RefreshCw, ZoomIn, ZoomOut, FileText, AlertCircle } from 'lucide-react';
-import { getFollowUnlockHeaders } from '../../services/api';
+import { getPaidBookHeaders } from '../../services/api';
 
 interface DocxViewerProps {
   fileUrl: string;
@@ -28,7 +28,7 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ fileUrl, title, onDownlo
     try {
       // Paid books are free for followers: send the unlock flag so the
       // server serves a paid file instead of 402 (see services/api).
-      const response = await fetch(fileUrl, { headers: getFollowUnlockHeaders() });
+      const response = await fetch(fileUrl, { headers: getPaidBookHeaders() });
       if (!response.ok) {
         throw new Error(`Failed to fetch document: ${response.statusText}`);
       }

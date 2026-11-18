@@ -5,6 +5,8 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ToastContainer } from './components/ui/Toast';
 import { FollowGate } from './components/ui/FollowGate';
+import { MaintenancePage } from './components/ui/MaintenancePage';
+import { api } from './services/api';
 import { siteConfig } from './config/siteConfig';
 
 // Import Views
@@ -104,6 +106,7 @@ import { isTopicsView } from './data/topicsContent';
 export default function App() {
   const [, setTick] = useState(0);
   const [followUnlocked, setFollowUnlocked] = useState(() => storage.hasFollowUnlocked());
+  const [maintenance, setMaintenance] = useState<{ enabled: boolean; message: string }>({ enabled: false, message: '' });
 
   useEffect(() => {
     const unsubscribeState = appState.subscribe(() => {
@@ -115,17 +118,39 @@ export default function App() {
     };
   }, []);
 
+  // Maintenance mode (admin toggle): fetch once on load. Visitors see the
+  // maintenance page; the admin still browses normally.
+  useEffect(() => {
+    let cancelled = false;
+    api.getSiteSettings().then((s) => {
+      if (!cancelled) setMaintenance(s.maintenance);
+    }).catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Instagram follow gate: first screen for new visitors. Admins and the
   // admin sign-in page bypass it; everyone else unlocks by following
   // @ghayb.chronicles and tapping unlock (remembered on this device).
   // Topics stays open without the gate, so anyone can read the topics.
   const isAdmin = appState.adminAuthenticated;
+  // Maintenance mode: visitors see the maintenance page (with an admin
+  // sign-in button) instead of any view. The admin and the admin sign-in
+  // page bypass it, so Muktar can turn it off again.
+  if (maintenance.enabled && !isAdmin && appState.route.view !== 'admin') {
+    return (
+      <ErrorBoundary>
+        <MaintenancePage message={maintenance.message} />
+      </ErrorBoundary>
+    );
+  }
   const showGate =
     !followUnlocked && !isAdmin && appState.route.view !== 'admin' && !isTopicsView(appState.route.view);
 
   if (showGate) {
     // Gate counts: total folders (27, incl. sub-collections) and total
-    // visible books (137). While the catalog is still loading, show the
+    // visible books (138). While the catalog is still loading, show the
     // known totals from siteConfig instead of 0 — the catalog starts
     // empty and only fills after the async /api/catalog fetch, so
     // rendering the raw state here showed "0 Collections, 0 Books"

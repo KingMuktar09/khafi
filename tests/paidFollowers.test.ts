@@ -17,18 +17,21 @@ import { getPaidBadgeLabel } from '../src/utils/fileUtils';
 import {
   FOLLOW_UNLOCK_HEADER,
   getFollowUnlockHeaders,
+  getBookKeyHeaders,
+  BOOK_KEYS_HEADER,
   api,
 } from '../src/services/api';
 
-// Paid books are FREE for followers. These tests pin the rule on both
-// servers (Express/Vercel in server/app.ts, Cloudflare/pages.dev in
+// Paid books are FREE for followers, and they can also be opened with
+// their own unlock key. These tests pin the rule on both servers
+// (Express/Vercel in server/app.ts, Cloudflare/pages.dev in
 // server/cf-api-handler.ts, which must stay in sync):
-//   locked visitor  -> paid links stripped, file endpoints 402
-//   admin           -> links kept, files served
-//   gate-unlocked follower (x-follow-unlocked: 1) -> links kept, files
-//     served, no payment anywhere
-// The unlock is TRUST-BASED, like the gate itself: the header carries
-// only the boolean flag, never the gate key or any secret.
+//   locked visitor        -> paid links stripped, file endpoints 402
+//   admin                 -> links kept, files served
+//   gate-unlocked follower (x-follow-unlocked: 1) -> paid books open free
+//   visitor with the key  -> only THAT book's links kept, files served
+// A key unlocks ONE paid book only — never a different paid book. No
+// money anywhere: no price, no UPI, no payment step.
 
 const PAID_BOOK = {
   id: 'b-bulhan',
@@ -49,13 +52,16 @@ const FREE_BOOK = {
   id: 'b-free',
   title: 'A Free Book',
   isPaid: false,
+  price: undefined,
 };
 
 describe('isPaidBookLocked (server/app.ts)', () => {
-  it('is true only for a paid book with neither admin nor follow unlock', () => {
+  it('is true only for a paid book with neither admin, gate unlock, nor its own key', () => {
     expect(isPaidBookLocked(PAID_BOOK, false, false)).toBe(true);
+    expect(isPaidBookLocked(PAID_BOOK, false, false, false)).toBe(true);
     expect(isPaidBookLocked(PAID_BOOK, true, false)).toBe(false);
     expect(isPaidBookLocked(PAID_BOOK, false, true)).toBe(false);
+    expect(isPaidBookLocked(PAID_BOOK, false, false, true)).toBe(false);
     expect(isPaidBookLocked(PAID_BOOK, true, true)).toBe(false);
     expect(isPaidBookLocked(FREE_BOOK, false, false)).toBe(false);
     expect(isPaidBookLocked(FREE_BOOK, false, true)).toBe(false);
@@ -67,8 +73,10 @@ describe('isPaidBookLocked (server/app.ts)', () => {
 describe('isPaidBookLocked (server/cf-api-handler.ts)', () => {
   it('matches the Express rule exactly', () => {
     expect(isPaidBookLockedCf(PAID_BOOK, false, false)).toBe(true);
+    expect(isPaidBookLockedCf(PAID_BOOK, false, false, false)).toBe(true);
     expect(isPaidBookLockedCf(PAID_BOOK, true, false)).toBe(false);
     expect(isPaidBookLockedCf(PAID_BOOK, false, true)).toBe(false);
+    expect(isPaidBookLockedCf(PAID_BOOK, false, false, true)).toBe(false);
     expect(isPaidBookLockedCf(FREE_BOOK, false, false)).toBe(false);
   });
 });
@@ -77,15 +85,22 @@ describe('sanitizeBook (server/app.ts)', () => {
   it('strips paid links for a locked visitor', () => {
     const out = sanitizeBook(PAID_BOOK, false, false);
     expect(out.isPaid).toBe(true);
-    expect(out.title).toBe('Kitab Al Bulhan');
     expect(out.driveFileId).toBeUndefined();
     expect(out.externalUrl).toBeUndefined();
     expect(out.fileUrl).toBe('');
     expect(out.pdfUrl).toBe('');
   });
 
-  it('keeps paid links for a gate-unlocked follower', () => {
+  it('keeps paid links for a visitor holding that book’s own key', () => {
     const out = sanitizeBook(PAID_BOOK, false, true);
+    expect(out.driveFileId).toBe(PAID_BOOK.driveFileId);
+    expect(out.externalUrl).toBe(PAID_BOOK.externalUrl);
+    expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
+    expect(out.pdfUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
+  });
+
+  it('keeps paid links for a gate-unlocked follower (free for followers)', () => {
+    const out = sanitizeBook(PAID_BOOK, false, false, true);
     expect(out.driveFileId).toBe(PAID_BOOK.driveFileId);
     expect(out.externalUrl).toBe(PAID_BOOK.externalUrl);
     expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
@@ -119,10 +134,30 @@ describe('sanitizeCatalog (server/app.ts)', () => {
     expect(out.books[1].driveFileId).toBe(FREE_BOOK.driveFileId);
   });
 
-  it('keeps the paid book for a gate-unlocked follower', () => {
-    const out = sanitizeCatalog(catalog, false, true);
+  it('keeps only the key-unlocked book when given a Set of unlocked ids', () => {
+    const otherPaid = { ...PAID_BOOK, id: 'b-other', title: 'Other Paid Book' };
+    const out = sanitizeCatalog(
+      { folders: [], books: [PAID_BOOK, otherPaid, FREE_BOOK] },
+      false,
+      new Set(['b-bulhan'])
+    );
     expect(out.books[0].driveFileId).toBe(PAID_BOOK.driveFileId);
-    expect(out.books[0].externalUrl).toBe(PAID_BOOK.externalUrl);
+    expect(out.books[1].driveFileId).toBeUndefined();
+    expect(out.books[1].fileUrl).toBe('');
+    expect(out.books[2].driveFileId).toBe(FREE_BOOK.driveFileId);
+  });
+
+  it('keeps all paid links for a gate-unlocked follower', () => {
+    const otherPaid = { ...PAID_BOOK, id: 'b-other', title: 'Other Paid Book' };
+    const out = sanitizeCatalog(
+      { folders: [], books: [PAID_BOOK, otherPaid, FREE_BOOK] },
+      false,
+      new Set(),
+      true
+    );
+    expect(out.books[0].driveFileId).toBe(PAID_BOOK.driveFileId);
+    expect(out.books[1].driveFileId).toBe(otherPaid.driveFileId);
+    expect(out.books[2].driveFileId).toBe(FREE_BOOK.driveFileId);
   });
 });
 
@@ -145,8 +180,15 @@ describe('sanitizeBook (server/cf-api-handler.ts)', () => {
     expect(out.pdfUrl).toBe('');
   });
 
-  it('keeps paid links for a gate-unlocked follower', () => {
+  it('keeps paid links for a visitor holding that book’s own key', () => {
     const out = sanitizeBookCf(PAID_BOOK, false, true);
+    expect(out.driveFileId).toBe(PAID_BOOK.driveFileId);
+    expect(out.externalUrl).toBe(PAID_BOOK.externalUrl);
+    expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
+  });
+
+  it('keeps paid links for a gate-unlocked follower (free for followers)', () => {
+    const out = sanitizeBookCf(PAID_BOOK, false, false, true);
     expect(out.driveFileId).toBe(PAID_BOOK.driveFileId);
     expect(out.externalUrl).toBe(PAID_BOOK.externalUrl);
     expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
@@ -164,7 +206,7 @@ describe('sanitizeBook (server/cf-api-handler.ts)', () => {
 });
 
 describe('Cloudflare catalog endpoint', () => {
-  it('sets Vary on the admin token and the follow-unlock flag', async () => {
+  it('sets Vary on the admin token and the book-keys flag', async () => {
     const res = await handleCloudflareApiRequest(
       new Request('https://example.com/api/catalog'),
       {}
@@ -172,7 +214,7 @@ describe('Cloudflare catalog endpoint', () => {
     expect(res.status).toBe(200);
     const vary = res.headers.get('Vary') || '';
     expect(vary).toContain('x-admin-token');
-    expect(vary).toContain('x-follow-unlocked');
+    expect(vary).toContain('x-book-keys');
     const body = (await res.json()) as any;
     expect(Array.isArray(body.books)).toBe(true);
     expect(body.books.length).toBeGreaterThan(0);
@@ -180,17 +222,17 @@ describe('Cloudflare catalog endpoint', () => {
 });
 
 describe('PaidLockScreen (locked visitor screen)', () => {
-  it('tells followers the book is free, with no payment screen, UPI, QR or price', () => {
+  it('says free for followers and offers the key entry — never a price or UPI', () => {
     const html = renderToStaticMarkup(
       React.createElement(PaidLockScreen, { book: PAID_BOOK as any })
     );
     expect(html).toContain('free for followers');
-    expect(html).toContain('Follow @ghayb.chronicles');
+    expect(html).toContain('Enter your key');
+    expect(html).toContain('Unlock');
+    expect(html).not.toContain('Rs 99');
+    expect(html).not.toContain('Rs ');
     expect(html).not.toContain('UPI');
     expect(html).not.toContain('Pay by');
-    expect(html).not.toContain('₹');
-    expect(html).not.toContain('payment proof');
-    expect(html).not.toContain('QR');
   });
 });
 
@@ -246,7 +288,46 @@ describe('getFollowUnlockHeaders (client)', () => {
   });
 });
 
-describe('api.getCatalog sends the unlock header only when unlocked', () => {
+describe('getBookKeyHeaders (client)', () => {
+  const realLocalStorage = (globalThis as any).localStorage;
+  let store: Record<string, string> = {};
+
+  const stubLocalStorage = () => {
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => (k in store ? store[k] : null),
+      setItem: (k: string, v: string) => {
+        store[k] = v;
+      },
+      removeItem: (k: string) => {
+        delete store[k];
+      },
+    };
+  };
+
+  afterEach(() => {
+    (globalThis as any).localStorage = realLocalStorage;
+    store = {};
+  });
+
+  it('sends nothing when no key is held', () => {
+    stubLocalStorage();
+    expect(getBookKeyHeaders()).toEqual({});
+    expect(BOOK_KEYS_HEADER).toBe('x-book-keys');
+  });
+
+  it('sends the held keys as a base64url JSON header, one per book', () => {
+    stubLocalStorage();
+    store['ilmeghayb_book_keys'] = JSON.stringify({ 'b-bulhan': 'ABCDE-FGHIJ-KLMNO-PQRST' });
+    const headers = getBookKeyHeaders();
+    expect(headers[BOOK_KEYS_HEADER]).toBeTruthy();
+    const decoded = JSON.parse(
+      Buffer.from(headers[BOOK_KEYS_HEADER].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
+    );
+    expect(decoded).toEqual({ 'b-bulhan': 'ABCDE-FGHIJ-KLMNO-PQRST' });
+  });
+});
+
+describe('api.getCatalog sends the unlock headers', () => {
   const realFetch = (globalThis as any).fetch;
   const realLocalStorage = (globalThis as any).localStorage;
   let store: Record<string, string> = {};
@@ -295,5 +376,12 @@ describe('api.getCatalog sends the unlock header only when unlocked', () => {
     expect(seenHeaders).not.toBeNull();
     expect((seenHeaders as any)?.['x-follow-unlocked']).toBeUndefined();
     expect(Object.keys(seenHeaders || {})).not.toContain('x-follow-unlocked');
+  });
+
+  it('includes x-book-keys when a key is held', async () => {
+    stubAll();
+    store['ilmeghayb_book_keys'] = JSON.stringify({ b1: 'KEY-12345-ABCDE-67890' });
+    await api.reloadCatalog();
+    expect((seenHeaders as any)?.['x-book-keys']).toBeTruthy();
   });
 });

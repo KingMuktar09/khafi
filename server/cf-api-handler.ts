@@ -19,6 +19,13 @@ import {
 import bundledCatalog from "../data/catalog.json" with { type: "json" };
 import bundledPaymentSettings from "../data/payment-settings.json" with { type: "json" };
 import bundledGateSettings from "../data/gate-settings.json" with { type: "json" };
+// Paid-book keys (hashes only — never plain keys) and site settings
+// (maintenance mode), bundled at build time. The worker has no disk, so
+// admin-generated keys and usage counts live only in this isolate's
+// memory; the durable copy is data/book-keys.json in the repo, and the
+// Vercel/Express totals are the authoritative usage monitor.
+import bundledBookKeys from "../data/book-keys.json" with { type: "json" };
+import bundledSiteSettings from "../data/site-settings.json" with { type: "json" };
 import type { Book, Folder } from "../src/types";
 
 // In-memory catalog state for edge worker runtime
@@ -29,6 +36,151 @@ const activeTokens = new Set<string>();
 // bundled data/payment-settings.json in the repo; admin edits here do not
 // survive a redeploy or a different isolate, same as Vercel /tmp writes.
 let runtimePaymentSettings: any = null;
+
+// Paid-book keys in memory (per isolate), seeded from the bundled
+// data/book-keys.json (hashes only). Same key rules as server/app.ts —
+// keep in sync: one key unlocks ONE paid book, maxUses set by the admin
+// (default 100), revoked keys never unlock. Usage counts here reset when
+// the isolate recycles; the Vercel totals are authoritative.
+let runtimeBookKeys: any[] | null = null;
+
+function getBookKeys(): any[] {
+  if (!runtimeBookKeys) {
+    const src: any = bundledBookKeys || {};
+    const keys = Array.isArray(src.keys) ? src.keys : [];
+    runtimeBookKeys = keys
+      .filter((k: any) => k && typeof k.id === "string" && typeof k.bookId === "string" && typeof k.keyHash === "string")
+      .map((k: any) => ({
+        id: k.id,
+        bookId: k.bookId,
+        label: typeof k.label === "string" ? k.label : undefined,
+        salt: typeof k.salt === "string" ? k.salt : "",
+        keyHash: k.keyHash,
+        maxUses: Number.isFinite(k.maxUses) ? k.maxUses : 100,
+        uses: Number.isFinite(k.uses) ? k.uses : 0,
+        createdAt: typeof k.createdAt === "string" ? k.createdAt : new Date().toISOString(),
+        lastUsedAt: typeof k.lastUsedAt === "string" ? k.lastUsedAt : null,
+        revoked: Boolean(k.revoked),
+      }));
+  }
+  return runtimeBookKeys;
+}
+
+function publicKeyViewCf(record: any): Record<string, unknown> {
+  return {
+    id: record.id,
+    bookId: record.bookId,
+    label: record.label || "",
+    maxUses: record.maxUses,
+    uses: record.uses,
+    usesLeft: Math.max(0, record.maxUses - record.uses),
+    createdAt: record.createdAt,
+    lastUsedAt: record.lastUsedAt,
+    revoked: record.revoked,
+    usable: !record.revoked && record.uses < record.maxUses,
+  };
+}
+
+function keyMonitorTotalsCf(keys: any[]): any {
+  const byBook: Record<string, { keys: number; uses: number; usesLeft: number }> = {};
+  let totalUses = 0;
+  let totalUsesLeft = 0;
+  let activeKeys = 0;
+  let revokedKeys = 0;
+  for (const k of keys) {
+    if (k.revoked) revokedKeys++;
+    else activeKeys++;
+    totalUses += k.uses;
+    totalUsesLeft += Math.max(0, k.maxUses - k.uses);
+    const e = byBook[k.bookId] || { keys: 0, uses: 0, usesLeft: 0 };
+    e.keys++;
+    e.uses += k.uses;
+    e.usesLeft += Math.max(0, k.maxUses - k.uses);
+    byBook[k.bookId] = e;
+  }
+  return { totalKeys: keys.length, activeKeys, revokedKeys, totalUses, totalUsesLeft, byBook };
+}
+
+function normalizeBookKeyCf(raw: unknown): string {
+  return String(raw ?? "").replace(/[\s-]/g, "").trim();
+}
+
+async function hashBookKeyCf(key: string, salt: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}:${normalizeBookKeyCf(key)}`));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function verifyBookKeyCf(record: any, candidate: unknown): Promise<boolean> {
+  const normalized = normalizeBookKeyCf(candidate);
+  if (!normalized || !record?.keyHash || !record?.salt) return false;
+  const candidateHash = await hashBookKeyCf(normalized, record.salt);
+  // Constant-time-ish compare via double SHA-256 (same helper as passwords).
+  return (await safeEqualSecretCf(candidateHash, record.keyHash)) === true;
+}
+
+function generateBookKeyCf(): string {
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*";
+  const bytes = crypto.getRandomValues(new Uint8Array(20));
+  const chars = Array.from(bytes, (b) => alphabet[b % alphabet.length]);
+  return [0, 1, 2, 3].map((g) => chars.slice(g * 5, g * 5 + 5).join("")).join("-");
+}
+
+/** Which book ids in this request carry a valid, usable key? Parses the
+ *  `x-book-keys` header (base64url JSON of { bookId: plainKey }). */
+async function keyUnlockedBookIdsCf(request: Request): Promise<Set<string>> {
+  const out = new Set<string>();
+  try {
+    const raw = (request.headers.get("x-book-keys") || "").trim();
+    if (!raw) return out;
+    const json = atob(raw.replace(/-/g, "+").replace(/_/g, "/"));
+    const supplied = JSON.parse(json);
+    if (!supplied || typeof supplied !== "object") return out;
+    const keys = getBookKeys();
+    for (const [bookId, key] of Object.entries(supplied)) {
+      if (typeof key !== "string" || !key.trim()) continue;
+      const record = keys.find((k: any) => k.bookId === bookId && !k.revoked && k.uses < k.maxUses);
+      if (record && (await verifyBookKeyCf(record, key))) out.add(bookId);
+    }
+  } catch {}
+  return out;
+}
+
+// Wrong-key attempts, rate-limited per IP + book: 10 failed tries in
+// 15 minutes, then 429. In-memory per isolate.
+const keyAttemptLogCf = new Map<string, number[]>();
+
+function isKeyVerifyRateLimitedCf(ip: string, bookId: string): boolean {
+  const now = Date.now();
+  const key = `${ip}::${bookId}`;
+  const attempts = (keyAttemptLogCf.get(key) || []).filter((t) => now - t < 15 * 60 * 1000);
+  keyAttemptLogCf.set(key, attempts);
+  return attempts.length >= 10;
+}
+
+function recordKeyVerifyFailureCf(ip: string, bookId: string): void {
+  const key = `${ip}::${bookId}`;
+  const attempts = keyAttemptLogCf.get(key) || [];
+  attempts.push(Date.now());
+  keyAttemptLogCf.set(key, attempts);
+}
+
+// Site settings (maintenance mode) in memory (per isolate), seeded from
+// the bundled data/site-settings.json. Same shape as server/app.ts.
+let runtimeSiteSettings: any = null;
+
+function getSiteSettingsCf(): { maintenance: { enabled: boolean; message: string } } {
+  if (!runtimeSiteSettings) {
+    const src: any = bundledSiteSettings || {};
+    const m = src?.maintenance || {};
+    runtimeSiteSettings = {
+      maintenance: {
+        enabled: Boolean(m.enabled),
+        message: typeof m.message === "string" ? m.message.slice(0, 500) : "",
+      },
+    };
+  }
+  return runtimeSiteSettings;
+}
 
 // Gate key settings in memory (per isolate). The durable copy is the
 // bundled data/gate-settings.json in the repo; admin edits here do not
@@ -216,11 +368,15 @@ function getAdminTokenFromRequest(req: Request): string | null {
   return null;
 }
 
-// Paid books are FREE for followers: a visitor who unlocked the library
-// gate (follow tap or gate key) sends `x-follow-unlocked: 1` with catalog
-// and file requests, and the server believes it. TRUST-BASED, exactly like
-// the gate itself — the header carries only a boolean, never the gate key
-// or any secret, and anyone can send it. It is NOT a verified check.
+// Paid books are FREE for followers, and they can also be opened with
+// their own per-book key. A visitor who unlocked the library gate (follow
+// tap or gate key) sends `x-follow-unlocked: 1` with catalog and file
+// requests, and the server believes it. TRUST-BASED, exactly like the gate
+// itself. That flag opens the library, all FREE books, and paid books
+// too — no money anywhere. A paid book ALSO opens for a visitor who
+// entered that book's own key (see the `x-book-keys` header), even if
+// they never unlocked the gate. The admin always opens paid books. No
+// payment step exists anywhere in this flow. Same rule as server/app.ts.
 const FOLLOW_UNLOCK_HEADER = "x-follow-unlocked";
 
 function isFollowUnlocked(request: Request): boolean {
@@ -228,14 +384,15 @@ function isFollowUnlocked(request: Request): boolean {
 }
 
 // One predicate for the paid-book rule, used by sanitizeBook and by the
-// stream/download guards: a paid book is locked only for a visitor who is
-// neither the admin nor a gate-unlocked follower. Same rule as
-// server/app.ts — keep in sync.
-export function isPaidBookLocked(book: any, isAdmin: boolean, isFollowUnlockedFlag: boolean): boolean {
-  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlockedFlag;
+// stream/download guards: a paid book is locked for everyone except the
+// admin, a gate-unlocked follower (free for followers), and a visitor
+// holding that book's own unlock key. `hasKeyUnlock` is per-book. Same
+// rule as server/app.ts — keep in sync.
+export function isPaidBookLocked(book: any, isAdmin: boolean, hasKeyUnlock: boolean, isFollowUnlocked = false): boolean {
+  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlocked && !hasKeyUnlock;
 }
 
-export function sanitizeBook(book: any, isAdmin = false, isFollowUnlocked = false) {
+export function sanitizeBook(book: any, isAdmin = false, hasKeyUnlock = false, isFollowUnlocked = false) {
   if (!book) return book;
   const {
     driveUrl,
@@ -253,10 +410,11 @@ export function sanitizeBook(book: any, isAdmin = false, isFollowUnlocked = fals
 
   // Paid books: a locked visitor must never be handed a working open or
   // download link. Admins keep the links (they read paid books directly),
-  // and so do followers — paid books are FREE for gate-unlocked visitors,
-  // no payment at all. The lock screen is the only thing a locked visitor
-  // sees for a paid book. (Same rule as server/app.ts — keep in sync.)
-  if (isPaidBookLocked(rest, isAdmin, isFollowUnlocked)) {
+  // and so does a gate-unlocked follower (paid books are free for
+  // followers) and a visitor holding that book's own unlock key. The lock
+  // screen is the only thing a locked visitor sees for a paid book. (Same
+  // rule as server/app.ts — keep in sync.)
+  if (isPaidBookLocked(rest, isAdmin, hasKeyUnlock, isFollowUnlocked)) {
     const { driveFileId, externalUrl, fileUrl, pdfUrl, ...paidRest } = rest;
     return { ...paidRest, fileUrl: '', pdfUrl: '' };
   }
@@ -301,10 +459,12 @@ function sanitizeFolder(folder: any) {
   return folderRest;
 }
 
-function sanitizeCatalog(catalog: any, isAdmin = false, isFollowUnlocked = false) {
+function sanitizeCatalog(catalog: any, isAdmin = false, keyUnlocked: Set<string> | boolean = false, isFollowUnlocked = false) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
-  const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin, isFollowUnlocked));
+  const safeBooks = (catalog.books || []).map((b: any) =>
+    sanitizeBook(b, isAdmin, keyUnlocked instanceof Set ? keyUnlocked.has(b?.id) : keyUnlocked, isFollowUnlocked)
+  );
   const categoryOrder = Array.isArray(catalog.categoryOrder)
     ? catalog.categoryOrder.filter((n: any) => typeof n === 'string')
     : undefined;
@@ -623,18 +783,18 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
   if (path === "/api/catalog" && method === "GET") {
     const token = getAdminTokenFromRequest(request);
     const isAdmin = await verifySessionToken(token, sessionSecret);
-    const followUnlocked = isFollowUnlocked(request);
+    const keyUnlocked = await keyUnlockedBookIdsCf(request);
     const catalog = await getCatalogData(driveConfig);
-    const safeCatalog = sanitizeCatalog(catalog, isAdmin, followUnlocked);
+    const safeCatalog = sanitizeCatalog(catalog, isAdmin, keyUnlocked, isFollowUnlocked(request));
 
     const totalFolders = (safeCatalog.folders || []).length;
     const totalBooks = (safeCatalog.books || []).length;
     console.log(`[API /api/catalog] Returning catalog: ${totalFolders} folders, ${totalBooks} books (isAdmin=${isAdmin})`);
 
-    // Vary on the admin token and the follow-unlock flag so an admin or
-    // unlocked response is never served to a locked visitor (and vice
+    // Vary on the admin token and the book-keys flag so an admin or
+    // key-unlocked response is never served to a locked visitor (and vice
     // versa). Same rule as server/app.ts — keep in sync.
-    const varyHeaders = { Vary: "x-admin-token, x-follow-unlocked" };
+    const varyHeaders = { Vary: "x-admin-token, x-follow-unlocked, x-book-keys" };
     if (isAdmin) {
       return jsonResponse(safeCatalog, 200, { "Cache-Control": "public, max-age=10", ...varyHeaders });
     } else {
@@ -725,6 +885,65 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     return jsonResponse({ ok: true });
   }
 
+  // 7c4. Public site settings: maintenance flag + message only. Mirrors
+  // the Express twin in server/app.ts.
+  if (path === "/api/site-settings" && method === "GET") {
+    const settings = getSiteSettingsCf();
+    return jsonResponse({ maintenance: settings.maintenance });
+  }
+
+  // 7c5. Key unlock: enter the key the admin shared for ONE paid book.
+  // A successful entry counts one use of that key (maxUses, default 100)
+  // and unlocks that book — and only that book. A wrong key, a key for
+  // another book, a revoked key, or a used-up key all get the same generic
+  // answer. Usage counts here are per-isolate; the Vercel totals are
+  // authoritative. Mirrors server/app.ts. No money is involved: the key
+  // is free, shared by the admin with a follower.
+  if (path === "/api/book-keys/verify" && method === "POST") {
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+    const bookId = typeof body?.bookId === "string" ? body.bookId.trim() : "";
+    const key = typeof body?.key === "string" ? body.key : "";
+    const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "unknown";
+    if (!bookId || !key) {
+      return jsonResponse({ ok: false, error: "Book and key are required." }, 400);
+    }
+    const catalog = await getCatalogData(driveConfig);
+    const book = (catalog.books || []).find((b: any) => b.id === bookId);
+    if (!book || !book.isPaid) {
+      return jsonResponse({ ok: false, error: "Wrong key. Check the key and try again." }, 400);
+    }
+    if (isKeyVerifyRateLimitedCf(ip, bookId)) {
+      return jsonResponse({ ok: false, error: "Too many wrong tries. Wait 15 minutes and try again." }, 429);
+    }
+    const keys = getBookKeys();
+    const candidates = keys.filter((k: any) => k.bookId === bookId);
+    let record: any = null;
+    for (const candidate of candidates) {
+      if (await verifyBookKeyCf(candidate, key)) {
+        record = candidate;
+        break;
+      }
+    }
+    if (!record || record.revoked || record.uses >= record.maxUses) {
+      recordKeyVerifyFailureCf(ip, bookId);
+      return jsonResponse({ ok: false, error: "Wrong key. Check the key and try again." }, 400);
+    }
+    record.uses += 1;
+    record.lastUsedAt = new Date().toISOString();
+    return jsonResponse({
+      ok: true,
+      bookId,
+      uses: record.uses,
+      usesLeft: Math.max(0, record.maxUses - record.uses),
+      maxUses: record.maxUses,
+    });
+  }
+
   // 7d. Daily auto-sync for Cron Triggers (wrangler.jsonc triggers.crons,
   // 02:00 UTC). Requires CRON_SECRET as a secret; an unprotected trigger
   // would let anyone rebuild the catalog.
@@ -786,13 +1005,15 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     }
 
     // Paid gate (same rule as server/app.ts — keep in sync): a paid book
-    // is never streamed to a locked visitor. Admins and gate-unlocked
-    // followers stream it free — paid books are free for followers.
+    // is never streamed to a locked visitor. Admins stream it directly,
+    // and so does a gate-unlocked follower (paid books are free for
+    // followers) and a visitor holding that book's own unlock key.
     {
       const streamToken = getAdminTokenFromRequest(request);
       const streamIsAdmin = await verifySessionToken(streamToken, sessionSecret);
-      if (isPaidBookLocked(book, streamIsAdmin, isFollowUnlocked(request))) {
-        return jsonResponse({ error: "This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it." }, 402);
+      const streamKeyUnlocked = await keyUnlockedBookIdsCf(request);
+      if (isPaidBookLocked(book, streamIsAdmin, streamKeyUnlocked.has(book?.id), isFollowUnlocked(request))) {
+        return jsonResponse({ error: "This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin." }, 402);
       }
     }
 
@@ -907,13 +1128,15 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
 
     const driveFileId = book?.driveFileId || fileIdFromPath || extractDriveFileId(book?.fileUrl || book?.pdfUrl);
     // Paid gate (same rule as server/app.ts — keep in sync): a paid book
-    // is never downloadable by a locked visitor. Admins and gate-unlocked
-    // followers download it free.
+    // is never downloadable by a locked visitor. Admins download it
+    // directly, and so does a gate-unlocked follower (paid books are free
+    // for followers) and a visitor holding that book's own unlock key.
     {
       const dlToken = getAdminTokenFromRequest(request);
       const dlIsAdmin = await verifySessionToken(dlToken, sessionSecret);
-      if (isPaidBookLocked(book, dlIsAdmin, isFollowUnlocked(request))) {
-        return jsonResponse({ error: "This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it." }, 402);
+      const dlKeyUnlocked = await keyUnlockedBookIdsCf(request);
+      if (isPaidBookLocked(book, dlIsAdmin, dlKeyUnlocked.has(book?.id), isFollowUnlocked(request))) {
+        return jsonResponse({ error: "This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin." }, 402);
       }
     }
     if (driveFileId && isDriveConfigured(driveConfig)) {
@@ -1177,6 +1400,119 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     } catch (err: any) {
       return jsonResponse({ success: false, error: err.message || "Failed to save gate settings." }, 500);
     }
+  }
+
+  // 11b3. Admin site settings (maintenance mode): POST
+  // /api/admin/site-settings. Lives only in this isolate's memory — the
+  // durable copy is data/site-settings.json in the repo. Mirrors
+  // server/app.ts.
+  if (path === "/api/admin/site-settings" && method === "POST") {
+    try {
+      const body: any = await request.json();
+      const m = body?.maintenance || {};
+      runtimeSiteSettings = {
+        maintenance: {
+          enabled: Boolean(m.enabled),
+          message: typeof m.message === "string" ? m.message.trim().slice(0, 500) : "",
+        },
+      };
+      return jsonResponse({
+        success: true,
+        maintenance: runtimeSiteSettings.maintenance,
+        durable: false,
+        durableWarning:
+          "Saved for now only — Cloudflare Workers have no disk, so this will not survive a redeploy. The durable copy is data/site-settings.json in the repo.",
+      });
+    } catch (err: any) {
+      return jsonResponse({ success: false, error: err.message || "Failed to save site settings." }, 500);
+    }
+  }
+
+  // 11b4. Admin book keys: list (monitor), generate, revoke, delete.
+  // Plain keys and hashes are NEVER returned by the list — only counts,
+  // limits and last-used times. The plain key is returned ONCE, in the
+  // generate response. Keys generated here live only in this isolate's
+  // memory; the durable copy is data/book-keys.json in the repo, and the
+  // Vercel totals are the authoritative usage monitor. Mirrors
+  // server/app.ts.
+  if (path === "/api/admin/book-keys" && method === "GET") {
+    const keys = getBookKeys();
+    const catalog = await getCatalogData(driveConfig);
+    const titleById = new Map((catalog.books || []).map((b: any) => [b.id, b.title]));
+    return jsonResponse({
+      keys: keys.map((k: any) => ({ ...publicKeyViewCf(k), bookTitle: titleById.get(k.bookId) || k.bookId })),
+      totals: keyMonitorTotalsCf(keys),
+    });
+  }
+
+  if (path === "/api/admin/book-keys" && method === "POST") {
+    try {
+      const body: any = await request.json();
+      const bookId = typeof body?.bookId === "string" ? body.bookId.trim() : "";
+      const label = typeof body?.label === "string" ? body.label : "";
+      const maxUses =
+        body?.maxUses === undefined ? 100 : Math.min(10000, Math.max(1, Math.floor(Number(body.maxUses)) || 100));
+      const catalog = await getCatalogData(driveConfig);
+      const book = (catalog.books || []).find((b: any) => b.id === bookId);
+      if (!book) {
+        return jsonResponse({ error: "Book not found." }, 404);
+      }
+      if (!book.isPaid) {
+        return jsonResponse({ error: "Keys are only for paid books. This book is free and needs no key." }, 400);
+      }
+      const plainKey = generateBookKeyCf();
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      const keyHash = await hashBookKeyCf(plainKey, salt);
+      const record: any = {
+        id: `k_${Array.from(crypto.getRandomValues(new Uint8Array(8)))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("")}`,
+        bookId,
+        label: label.trim().slice(0, 120) || undefined,
+        salt,
+        keyHash,
+        maxUses,
+        uses: 0,
+        createdAt: new Date().toISOString(),
+        lastUsedAt: null,
+        revoked: false,
+      };
+      getBookKeys().push(record);
+      return jsonResponse({
+        success: true,
+        key: { ...publicKeyViewCf(record), bookTitle: book.title },
+        plainKey,
+        durable: false,
+        durableWarning:
+          "Saved for now only — Cloudflare Workers have no disk, so this key will not survive a redeploy. Generate keys on the Vercel site for durable keys, or add the hash to data/book-keys.json in the repo.",
+      });
+    } catch (err: any) {
+      return jsonResponse({ success: false, error: err.message || "Failed to generate key." }, 500);
+    }
+  }
+
+  if (path.startsWith("/api/admin/book-keys/") && path.endsWith("/revoke") && method === "POST") {
+    const keyId = path.split("/")[4];
+    const record = getBookKeys().find((k: any) => k.id === keyId);
+    if (!record) {
+      return jsonResponse({ error: "Key not found." }, 404);
+    }
+    record.revoked = true;
+    return jsonResponse({ success: true, key: publicKeyViewCf(record) });
+  }
+
+  if (path.startsWith("/api/admin/book-keys/") && method === "DELETE") {
+    const keyId = path.split("/")[4];
+    const keys = getBookKeys();
+    const before = keys.length;
+    const remaining = keys.filter((k: any) => k.id !== keyId);
+    if (remaining.length === before) {
+      return jsonResponse({ error: "Key not found." }, 404);
+    }
+    runtimeBookKeys = remaining;
+    return jsonResponse({ success: true });
   }
 
   // 11c. Admin "Sync now": POST /api/admin/sync. Rebuilds the saved

@@ -19,7 +19,7 @@ export const siteConfig = {
    */
   catalogStats: {
     totalFolders: 27,
-    totalBooks: 137,
+    totalBooks: 138,
   },
   instagram: {
     handle: '@ghayb.chronicles',

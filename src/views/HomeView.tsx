@@ -39,7 +39,9 @@ export const HomeView: React.FC = () => {
 
   // Recent books (sorted by id or added date if available)
   const recentBooks = [...allBooks].slice(0, 5);
-  const shownCategories = categories.slice(0, 9);
+  // Show every category as its own card — including the Ahmad al-Buni
+  // Collection — so no collection hides behind a "view all" button.
+  const shownCategories = categories;
   const [homeSearch, setHomeSearch] = useState('');
 
   const submitHomeSearch = (e: React.FormEvent) => {

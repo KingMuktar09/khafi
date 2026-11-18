@@ -40,6 +40,22 @@ import { initialCatalog } from "./initial-catalog.js";
 // itself. This is the catalog-links Drive connection: books open in Drive via
 // their webViewLink/externalUrl, no service account needed.
 import bundledCatalog from "../data/catalog.json" with { type: "json" };
+import bundledBookKeys from "../data/book-keys.json" with { type: "json" };
+import bundledSiteSettings from "../data/site-settings.json" with { type: "json" };
+import {
+  loadBookKeyStore,
+  saveBookKeyStore,
+  createBookKeyRecord,
+  verifyBookKey,
+  isKeyUsable,
+  keyUsesLeft,
+  publicKeyView,
+  keyMonitorTotals,
+  keyUnlockedBookIds,
+  parseBookKeysHeader,
+  DEFAULT_KEY_MAX_USES,
+  type BookKeyStore,
+} from "./bookKeys.js";
 import {
   probeRemoteUrl,
   downloadRemoteFileStream,
@@ -159,11 +175,15 @@ export function verifyAdminRequest(req: express.Request): boolean {
   return verifySessionToken(token);
 }
 
-// Paid books are FREE for followers: a visitor who unlocked the library
-// gate (follow tap or gate key) sends `x-follow-unlocked: 1` with catalog
-// and file requests, and the server believes it. TRUST-BASED, exactly like
-// the gate itself — the header carries only a boolean, never the gate key
-// or any secret, and anyone can send it. It is NOT a verified check.
+// Paid books are FREE for followers, and they can also be opened with
+// their own per-book key. A visitor who unlocked the library gate (follow
+// tap or gate key) sends `x-follow-unlocked: 1` with catalog and file
+// requests, and the server believes it — TRUST-BASED, exactly like the
+// gate itself. That flag opens the library, all FREE books, and paid
+// books too — no money anywhere. A paid book ALSO opens for a visitor
+// who entered that book's own key (see server/bookKeys.ts and the
+// `x-book-keys` header), even if they never unlocked the gate. The admin
+// always opens paid books. No payment step exists anywhere in this flow.
 export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
 
 export function hasFollowUnlocked(req: express.Request): boolean {
@@ -171,10 +191,173 @@ export function hasFollowUnlocked(req: express.Request): boolean {
 }
 
 // One predicate for the paid-book rule, used by sanitizeBook and by the
-// stream/download guards: a paid book is locked only for a visitor who is
-// neither the admin nor a gate-unlocked follower.
-export function isPaidBookLocked(book: any, isAdmin: boolean, isFollowUnlocked: boolean): boolean {
-  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlocked;
+// stream/download guards: a paid book is locked for everyone except the
+// admin, a gate-unlocked follower (free for followers), and a visitor
+// holding that book's own unlock key.
+// `hasKeyUnlock` is per-book: true only when the request carried a valid,
+// usable key for THIS book (see getKeyUnlockedBookIds).
+// `isFollowUnlocked` is the gate flag: true when the request carried
+// `x-follow-unlocked: 1` (follow tap or gate key).
+export function isPaidBookLocked(book: any, isAdmin: boolean, hasKeyUnlock: boolean, isFollowUnlocked = false): boolean {
+  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlocked && !hasKeyUnlock;
+}
+
+// Book-key store (data/book-keys.json — hashes only, never plain keys).
+// On serverless the durable copy is the file bundled in the repo; writes
+// go to the data dir and are also committed to GitHub when configured,
+// exactly like the catalog (see saveBookKeyStoreDurably).
+export function getBookKeysFilePath(): string {
+  return path.join(dataDir, "book-keys.json");
+}
+export function getBundledBookKeysFilePath(): string {
+  return path.join(process.cwd(), "data", "book-keys.json");
+}
+
+let runtimeBookKeys: BookKeyStore | null = null;
+
+export function getBookKeyStore(): BookKeyStore {
+  if (!runtimeBookKeys) {
+    let store = loadBookKeyStore(getBookKeysFilePath());
+    if (store.keys.length === 0) {
+      const bundled = loadBookKeyStore(getBundledBookKeysFilePath());
+      if (bundled.keys.length > 0) store = bundled;
+      // Also seed from the bundled import (Vercel file tracing): the
+      // imported JSON is always in the function bundle.
+      if (store.keys.length === 0 && Array.isArray((bundledBookKeys as any)?.keys)) {
+        store = loadBookKeyStoreFromObject(bundledBookKeys as any);
+      }
+    }
+    runtimeBookKeys = store;
+  }
+  return runtimeBookKeys;
+}
+
+function loadBookKeyStoreFromObject(obj: any): BookKeyStore {
+  try {
+    const keys = Array.isArray(obj?.keys) ? obj.keys : [];
+    return {
+      keys: keys.filter(
+        (k: any) => k && typeof k.id === "string" && typeof k.bookId === "string" && typeof k.keyHash === "string"
+      ),
+    };
+  } catch {
+    return { keys: [] };
+  }
+}
+
+export async function saveBookKeyStoreDurably(): Promise<{ saved: boolean; durable: boolean; durableWarning?: string }> {
+  const store = getBookKeyStore();
+  const saved = saveBookKeyStore(getBookKeysFilePath(), store);
+  if (!saved) return { saved: false, durable: false };
+  if (!isGitHubSyncConfigured()) {
+    return { saved: true, durable: false, durableWarning: DURABLE_SAVE_WARNING };
+  }
+  const committed = await commitFileToGitHub(
+    "data/book-keys.json",
+    JSON.stringify(store, null, 2),
+    "Admin: update paid-book keys"
+  );
+  if (!committed.ok) {
+    console.warn("GitHub book-keys commit failed:", committed.error);
+    return {
+      saved: true,
+      durable: false,
+      durableWarning: `Saved for now only — the permanent GitHub save failed (${committed.error || "unknown error"}). It will vanish on redeploy.`,
+    };
+  }
+  return { saved: true, durable: true };
+}
+
+/** Book ids in this request that carry a valid, usable key (from the
+ *  `x-book-keys` header the browser sends). One key unlocks one book. */
+export function getKeyUnlockedBookIds(req: express.Request): Set<string> {
+  return keyUnlockedBookIds(getBookKeyStore(), req.headers["x-book-keys"]);
+}
+
+/** Wrong-key attempts, rate-limited per IP + book so a key cannot be
+ *  brute-forced: 10 failed tries in 15 minutes, then 429 until the window
+ *  passes. Successful entries are never rate-limited. */
+const keyAttemptLog = new Map<string, number[]>();
+const KEY_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const KEY_ATTEMPT_MAX = 10;
+
+export function isKeyVerifyRateLimited(ip: string, bookId: string): boolean {
+  const now = Date.now();
+  const key = `${ip}::${bookId}`;
+  const attempts = (keyAttemptLog.get(key) || []).filter((t) => now - t < KEY_ATTEMPT_WINDOW_MS);
+  keyAttemptLog.set(key, attempts);
+  return attempts.length >= KEY_ATTEMPT_MAX;
+}
+
+export function recordKeyVerifyFailure(ip: string, bookId: string): void {
+  const key = `${ip}::${bookId}`;
+  const attempts = keyAttemptLog.get(key) || [];
+  attempts.push(Date.now());
+  keyAttemptLog.set(key, attempts);
+}
+
+// Site settings (data/site-settings.json): maintenance mode. The public
+// endpoint only ever exposes the maintenance flag + message — nothing else.
+export function getSiteSettingsFilePath(): string {
+  return path.join(dataDir, "site-settings.json");
+}
+export function getBundledSiteSettingsFilePath(): string {
+  return path.join(process.cwd(), "data", "site-settings.json");
+}
+
+export interface SiteSettings {
+  maintenance: { enabled: boolean; message: string };
+}
+
+let runtimeSiteSettings: SiteSettings | null = null;
+
+export function getSiteSettings(): SiteSettings {
+  if (!runtimeSiteSettings) {
+    const read = (p: string): any => {
+      try {
+        if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, "utf8"));
+      } catch {}
+      return null;
+    };
+    const fromDisk = read(getSiteSettingsFilePath()) || read(getBundledSiteSettingsFilePath()) || (bundledSiteSettings as any);
+    const m = fromDisk?.maintenance;
+    runtimeSiteSettings = {
+      maintenance: {
+        enabled: Boolean(m?.enabled),
+        message: typeof m?.message === "string" ? m.message.slice(0, 500) : "",
+      },
+    };
+  }
+  return runtimeSiteSettings;
+}
+
+export async function saveSiteSettingsDurably(settings: SiteSettings): Promise<{ saved: boolean; durable: boolean; durableWarning?: string }> {
+  runtimeSiteSettings = settings;
+  let saved = false;
+  try {
+    fs.writeFileSync(getSiteSettingsFilePath(), JSON.stringify(settings, null, 2) + "\n", "utf8");
+    saved = true;
+  } catch {
+    saved = false;
+  }
+  if (!saved) return { saved: false, durable: false };
+  if (!isGitHubSyncConfigured()) {
+    return { saved: true, durable: false, durableWarning: DURABLE_SAVE_WARNING };
+  }
+  const committed = await commitFileToGitHub(
+    "data/site-settings.json",
+    JSON.stringify(settings, null, 2),
+    "Admin: update site settings (maintenance mode)"
+  );
+  if (!committed.ok) {
+    console.warn("GitHub site-settings commit failed:", committed.error);
+    return {
+      saved: true,
+      durable: false,
+      durableWarning: `Saved for now only — the permanent GitHub save failed (${committed.error || "unknown error"}). It will vanish on redeploy.`,
+    };
+  }
+  return { saved: true, durable: true };
 }
 
 // Ensure data and uploads directories exist (using /tmp on serverless environments like Vercel)
@@ -942,6 +1125,158 @@ app.post(["/api/admin/gate-settings", "/admin/gate-settings"], requireAdmin, asy
   });
 });
 
+// ---------------------------------------------------------------------------
+// Site settings + paid-book keys (see server/bookKeys.ts).
+//
+// Site settings are public-read (maintenance flag + message only) so the
+// site can show the maintenance page; only the admin can change them.
+// Book keys are admin-only to manage; the plain key is returned ONCE, at
+// generation time, and never again by any endpoint.
+// ---------------------------------------------------------------------------
+app.get(["/api/site-settings", "/site-settings"], (req, res) => {
+  const settings = getSiteSettings();
+  res.json({ maintenance: settings.maintenance });
+});
+
+app.post(["/api/admin/site-settings", "/admin/site-settings"], requireAdmin, async (req, res) => {
+  const body = req.body || {};
+  const m = body.maintenance || {};
+  const settings: SiteSettings = {
+    maintenance: {
+      enabled: Boolean(m.enabled),
+      message: typeof m.message === "string" ? m.message.trim().slice(0, 500) : "",
+    },
+  };
+  const save = await saveSiteSettingsDurably(settings);
+  if (!save.saved) {
+    res.status(500).json({ error: "Failed to save site settings." });
+    return;
+  }
+  res.json({ success: true, maintenance: settings.maintenance, durable: save.durable, durableWarning: save.durableWarning });
+});
+
+// Key unlock: enter the key the admin shared for ONE paid book. A
+// successful entry counts one use of that key (maxUses, default 100) and
+// unlocks that book — and only that book — on this device. A wrong key,
+// a key for another book, a revoked key, or a used-up key all get the same
+// generic answer, so nothing leaks about which one it was. No money is
+// involved: the key is free, shared by the admin with a follower.
+app.post(["/api/book-keys/verify", "/book-keys/verify"], async (req, res) => {
+  const body = req.body || {};
+  const bookId = typeof body.bookId === "string" ? body.bookId.trim() : "";
+  const key = typeof body.key === "string" ? body.key : "";
+  const ip = (req.ip || req.socket?.remoteAddress || "unknown").toString();
+  if (!bookId || !key) {
+    res.status(400).json({ ok: false, error: "Book and key are required." });
+    return;
+  }
+  const catalog = readCatalog();
+  const book = (catalog.books || []).find((b: any) => b.id === bookId);
+  if (!book || !book.isPaid) {
+    // Same generic answer as a wrong key: do not reveal whether the book
+    // exists or is paid.
+    res.status(400).json({ ok: false, error: "Wrong key. Check the key and try again." });
+    return;
+  }
+  if (isKeyVerifyRateLimited(ip, bookId)) {
+    res.status(429).json({ ok: false, error: "Too many wrong tries. Wait 15 minutes and try again." });
+    return;
+  }
+  const store = getBookKeyStore();
+  const candidates = store.keys.filter((k) => k.bookId === bookId);
+  const record = candidates.find((k) => verifyBookKey(k, key));
+  if (!record || !isKeyUsable(record)) {
+    recordKeyVerifyFailure(ip, bookId);
+    res.status(400).json({ ok: false, error: "Wrong key. Check the key and try again." });
+    return;
+  }
+  record.uses += 1;
+  record.lastUsedAt = new Date().toISOString();
+  const save = await saveBookKeyStoreDurably();
+  res.json({
+    ok: true,
+    bookId,
+    uses: record.uses,
+    usesLeft: keyUsesLeft(record),
+    maxUses: record.maxUses,
+    durable: save.durable,
+    durableWarning: save.durableWarning,
+  });
+});
+
+// Admin: list all keys (monitor view). Plain keys and hashes are NEVER
+// returned here — only counts, limits and last-used times.
+app.get(["/api/admin/book-keys", "/admin/book-keys"], requireAdmin, (req, res) => {
+  const store = getBookKeyStore();
+  const catalog = readCatalog();
+  const titleById = new Map((catalog.books || []).map((b: any) => [b.id, b.title]));
+  const keys = store.keys.map((k) => ({ ...publicKeyView(k), bookTitle: titleById.get(k.bookId) || k.bookId }));
+  const totals = keyMonitorTotals(store.keys);
+  res.json({ keys, totals });
+});
+
+// Admin: generate a key for one paid book. The plain key is in this ONE
+// response only — copy it and share it with the follower now; it cannot be
+// shown again. maxUses is set by the admin (default 100).
+app.post(["/api/admin/book-keys", "/admin/book-keys"], requireAdmin, async (req, res) => {
+  const body = req.body || {};
+  const bookId = typeof body.bookId === "string" ? body.bookId.trim() : "";
+  const label = typeof body.label === "string" ? body.label : "";
+  const maxUses = body.maxUses === undefined ? DEFAULT_KEY_MAX_USES : Number(body.maxUses);
+  const catalog = readCatalog();
+  const book = (catalog.books || []).find((b: any) => b.id === bookId);
+  if (!book) {
+    res.status(404).json({ error: "Book not found." });
+    return;
+  }
+  if (!book.isPaid) {
+    res.status(400).json({ error: "Keys are only for paid books. This book is free and needs no key." });
+    return;
+  }
+  const { record, plainKey } = createBookKeyRecord(bookId, maxUses, label);
+  const store = getBookKeyStore();
+  store.keys.push(record);
+  const save = await saveBookKeyStoreDurably();
+  if (!save.saved) {
+    store.keys = store.keys.filter((k) => k.id !== record.id);
+    res.status(500).json({ error: "Failed to save the key." });
+    return;
+  }
+  res.json({
+    success: true,
+    key: { ...publicKeyView(record), bookTitle: book.title },
+    plainKey,
+    durable: save.durable,
+    durableWarning: save.durableWarning,
+  });
+});
+
+// Admin: revoke a key (it stops working at once, even with uses left).
+app.post(["/api/admin/book-keys/:id/revoke", "/admin/book-keys/:id/revoke"], requireAdmin, async (req, res) => {
+  const store = getBookKeyStore();
+  const record = store.keys.find((k) => k.id === req.params.id);
+  if (!record) {
+    res.status(404).json({ error: "Key not found." });
+    return;
+  }
+  record.revoked = true;
+  const save = await saveBookKeyStoreDurably();
+  res.json({ success: true, key: publicKeyView(record), durable: save.durable, durableWarning: save.durableWarning });
+});
+
+// Admin: delete a key entirely.
+app.delete(["/api/admin/book-keys/:id", "/admin/book-keys/:id"], requireAdmin, async (req, res) => {
+  const store = getBookKeyStore();
+  const before = store.keys.length;
+  store.keys = store.keys.filter((k) => k.id !== req.params.id);
+  if (store.keys.length === before) {
+    res.status(404).json({ error: "Key not found." });
+    return;
+  }
+  const save = await saveBookKeyStoreDurably();
+  res.json({ success: true, durable: save.durable, durableWarning: save.durableWarning });
+});
+
 // 1.1 Diagnostics endpoint
 app.get(["/api/diagnostics", "/diagnostics"], async (req, res) => {
   const isAdmin = verifyAdminRequest(req);
@@ -1044,11 +1379,12 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
 
   // Paid gate: a paid catalog book is never streamed to a locked visitor.
   // Admins (and the admin previewing a just-uploaded file, which has no
-  // catalog book yet) are unaffected, and so are followers: a visitor who
-  // unlocked the gate reads paid books free (see hasFollowUnlocked).
-  if (isPaidBookLocked(book, verifyAdminRequest(req), hasFollowUnlocked(req))) {
+  // catalog book yet) are unaffected, and so is a gate-unlocked follower
+  // (paid books are free for followers) and a visitor holding that book's
+  // own unlock key (x-book-keys header).
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id), hasFollowUnlocked(req))) {
     res.status(402).json({
-      error: 'This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it.',
+      error: 'This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin.',
     });
     return;
   }
@@ -1287,10 +1623,12 @@ app.get(pdfDownloadRoutes, async (req, res) => {
   );
 
   // Paid gate: a paid catalog book is never downloadable by a locked
-  // visitor. Admins and gate-unlocked followers download it free.
-  if (isPaidBookLocked(book, verifyAdminRequest(req), hasFollowUnlocked(req))) {
+  // visitor. Admins download it directly, and so does a gate-unlocked
+  // follower (paid books are free for followers) and a visitor holding
+  // that book's own unlock key (x-book-keys header).
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id), hasFollowUnlocked(req))) {
     res.status(402).json({
-      error: 'This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it.',
+      error: 'This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin.',
     });
     return;
   }
@@ -1414,6 +1752,16 @@ app.get(["/api/download", "/download"], async (req, res) => {
     return;
   }
 
+  // Paid gate (same rule as the stream/download routes above): a paid
+  // catalog book is never downloadable by a locked visitor. Without this
+  // check, /api/download?id=<paid book> would serve the file directly.
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id), hasFollowUnlocked(req))) {
+    res.status(402).json({
+      error: 'This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin.',
+    });
+    return;
+  }
+
   // SECURITY: only resolve a caller-supplied Drive ID/URL for the admin or
   // for a catalog book; otherwise any Drive file ID in the query would be
   // streamed through the server's Drive credentials.
@@ -1499,7 +1847,7 @@ app.get(["/api/download", "/download"], async (req, res) => {
   res.sendFile(filePath);
 });
 
-export function sanitizeBook(book: any, isAdmin = true, isFollowUnlocked = false) {
+export function sanitizeBook(book: any, isAdmin = true, hasKeyUnlock = false, isFollowUnlocked = false) {
   if (!book) return book;
   const {
     driveUrl,
@@ -1517,10 +1865,10 @@ export function sanitizeBook(book: any, isAdmin = true, isFollowUnlocked = false
 
   // Paid books: a locked visitor must never be handed a working open or
   // download link. Admins keep the links (they read paid books directly),
-  // and so do followers — paid books are FREE for gate-unlocked visitors,
-  // no payment at all. The lock screen is the only thing a locked visitor
-  // sees for a paid book.
-  if (isPaidBookLocked(rest, isAdmin, isFollowUnlocked)) {
+  // and so does a gate-unlocked follower (paid books are free for
+  // followers) and a visitor holding that book's own unlock key. The lock
+  // screen is the only thing a locked visitor sees for a paid book.
+  if (isPaidBookLocked(rest, isAdmin, hasKeyUnlock, isFollowUnlocked)) {
     const { driveFileId, externalUrl, fileUrl, pdfUrl, ...paidRest } = rest;
     return { ...paidRest, fileUrl: '', pdfUrl: '' };
   }
@@ -1573,10 +1921,21 @@ export function sanitizeFolder(folder: any) {
   return folderRest;
 }
 
-export function sanitizeCatalog(catalog: any, isAdmin = true, isFollowUnlocked = false) {
+export function sanitizeCatalog(
+  catalog: any,
+  isAdmin = true,
+  keyUnlocked: Set<string> | boolean = false,
+  isFollowUnlocked = false
+) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
-  const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin, isFollowUnlocked));
+  // A key unlocks ONE book only, so the check is per book: a Set of
+  // unlocked book ids (from the request's x-book-keys header), or a plain
+  // boolean for callers/tests that unlock one book at a time. A
+  // gate-unlocked follower (isFollowUnlocked) opens all paid books free.
+  const safeBooks = (catalog.books || []).map((b: any) =>
+    sanitizeBook(b, isAdmin, keyUnlocked instanceof Set ? keyUnlocked.has(b?.id) : keyUnlocked, isFollowUnlocked)
+  );
   // Admin-chosen topic/category order survives the sanitiser — without
   // these, the public site would lose the arrange order on every load.
   const categoryOrder = Array.isArray(catalog.categoryOrder)
@@ -1613,9 +1972,10 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
   // Non-admin catalogs have locked paid-book links stripped (see
   // sanitizeBook) and oversized inline covers dropped, so the public
   // payload stays small and a paid book can never be opened from it —
-  // unless the visitor unlocked the gate, in which case paid books are
-  // free for them and the links stay.
-  const safeCatalog = sanitizeCatalog(catalog, isAdmin, hasFollowUnlocked(req));
+  // unless the visitor is a gate-unlocked follower (paid books are free
+  // for followers) or entered that book's own unlock key (x-book-keys
+  // header), in which case only that book's links stay.
+  const safeCatalog = sanitizeCatalog(catalog, isAdmin, getKeyUnlockedBookIds(req), hasFollowUnlocked(req));
 
   if (isAdmin) {
     // Admin edits must never be served stale.
@@ -1626,9 +1986,9 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
     // edge cache (60s) makes repeat loads fast and, as a side effect,
     // serves one consistent catalog while the function instances behind
     // it may hold different /tmp copies. Vary on the admin token and the
-    // follow-unlock flag so an admin or unlocked response is never served
+    // book-keys flag so an admin or key-unlocked response is never served
     // to a locked visitor (and vice versa).
-    res.set('Vary', 'x-admin-token, x-follow-unlocked');
+    res.set('Vary', 'x-admin-token, x-follow-unlocked, x-book-keys');
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
     const visibleFolders = (safeCatalog.folders || []).filter((f: any) => f.visible !== false);
     const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);

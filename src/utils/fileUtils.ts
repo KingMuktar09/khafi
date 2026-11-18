@@ -10,7 +10,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { Book, ItemType } from '../types';
-import { getFollowUnlockHeaders } from '../services/api';
+import { getPaidBookHeaders } from '../services/api';
 
 export function getFileExtension(filename?: string): string {
   if (!filename) return '';
@@ -414,9 +414,10 @@ export async function downloadBookFile(
     const response = await fetch(fetchUrl, {
       method: 'GET',
       credentials: 'same-origin',
-      // Paid books are free for followers: send the unlock flag so the
-      // server serves a paid file instead of 402 (see services/api).
-      headers: getFollowUnlockHeaders(),
+      // Paid books: send the gate flag and any book keys held on this
+      // device, so the server serves a paid file instead of 402 (see
+      // services/api). A key unlocks only its own book.
+      headers: getPaidBookHeaders(),
     });
 
     if (!response.ok) {

@@ -1790,7 +1790,7 @@
       "originalFilename": "The Sun of Knowledge Al-Buni-Shams-Al-Ma-Arif.pdf",
       "author": "",
       "description": "From the Books by ismail Ibn Kathi'r collection in All Islamic History Books. Opens in Google Drive.",
-      "category": "Hidden Knowledge & Esoteric",
+      "category": "Ahmad al-Buni Collection",
       "folderId": "f-1pIG-5Ca_Tcfo7Ekc7exyoTipznP_LKNO",
       "subfolderId": null,
       "tags": [
@@ -1808,7 +1808,7 @@
       "updatedDate": "2025-10-22T13:00:51.000Z",
       "featured": false,
       "visible": true,
-      "sortOrder": 1,
+      "sortOrder": 2,
       "topic": "Shams al-Ma'arif"
     },
     {
@@ -2924,7 +2924,7 @@
       "originalFilename": "Al-buni Shams-al-maarif-manuscript-1500.pdf",
       "author": "",
       "description": "From the Hidden Wisdoms collection in All Islamic History Books. Opens in Google Drive.",
-      "category": "Hidden Knowledge & Esoteric",
+      "category": "Ahmad al-Buni Collection",
       "folderId": "f-1ieZPG8JLkgd2faWsTAnsRApB8pzzSy24",
       "subfolderId": null,
       "tags": [
@@ -2942,7 +2942,7 @@
       "updatedDate": "2025-10-23T06:37:03.000Z",
       "featured": false,
       "visible": true,
-      "sortOrder": 2,
+      "sortOrder": 3,
       "topic": "Shams al-Ma'arif"
     },
     {
@@ -4051,6 +4051,36 @@
       "visible": true,
       "sortOrder": 4,
       "topic": "Sahih Muslim"
+    },
+    {
+      "id": "b-manba-usul-al-hikma",
+      "title": "Manba Usul al-Hikma: The Source of the Foundations of Wisdom: Four Treatises on the Sciences of Letters, Numbers, Invocations, and Oaths (Al-Buni Manuscripts Collection Book 3)",
+      "originalFilename": "Manba-Usul-al-Hikma-al-Buni-compressed.pdf",
+      "author": "Ahmad al-Buni",
+      "description": "First English translation of Manba Usul al-Hikma, by Ahmad al-Buni. Four treatises on the sciences of letters, numbers, invocations, and oaths. Paid book — free for followers.",
+      "category": "Ahmad al-Buni Collection",
+      "topic": "Shams al-Ma'arif",
+      "folderId": "f-all-islamic-history-books",
+      "subfolderId": null,
+      "tags": [
+        "Ahmad al-Buni",
+        "Shams al-Ma'arif",
+        "al-Buni Collection",
+        "Manba Usul al-Hikma"
+      ],
+      "fileType": "pdf",
+      "mimeType": "application/pdf",
+      "fileExtension": "pdf",
+      "pageCount": 1368,
+      "fileSize": "19 MB",
+      "isPaid": true,
+      "addedDate": "2026-11-18T14:36:12.000Z",
+      "updatedDate": "2026-11-18T14:36:12.000Z",
+      "featured": false,
+      "visible": true,
+      "sortOrder": 1,
+      "fileUrl": "",
+      "pdfUrl": ""
     }
   ],
   "categoryOrder": [
@@ -4064,6 +4094,7 @@
     "Dreams & the Unseen",
     "Creation & the Universe",
     "Hidden Knowledge & Esoteric",
+    "Ahmad al-Buni Collection",
     "Stories & Literature"
   ],
   "topicOrder": [

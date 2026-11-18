@@ -44,6 +44,8 @@ import { router } from '../router/router';
 import { MoveModal, isDescendantFolder } from '../components/admin/MoveModal';
 import { ArrangeByTopic } from '../components/admin/ArrangeByTopic';
 import { PaidBookControl } from '../components/admin/PaidBookControl';
+import { BookKeysPanel } from '../components/admin/BookKeysPanel';
+import { MaintenancePanel } from '../components/admin/MaintenancePanel';
 import { QuickRenameModal } from '../components/admin/QuickRenameModal';
 import { QuickDescriptionModal } from '../components/admin/QuickDescriptionModal';
 import { AdminContextMenu } from '../components/admin/AdminContextMenu';
@@ -1123,6 +1125,15 @@ export const AdminView: React.FC = () => {
         </button>
       </div>
 
+      {/* Simple section menu — jump to what you need, no headache. */}
+      <nav className="flex gap-2 flex-wrap items-center text-xs font-semibold" aria-label="Admin sections">
+        <span className="text-[var(--text-muted)]">Jump to:</span>
+        <a href="#admin-book-keys" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Book Keys</a>
+        <a href="#admin-maintenance" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Maintenance</a>
+        <a href="#admin-arrange" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Arrange Books</a>
+        <a href="#admin-files" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">All Books &amp; Files</a>
+      </nav>
+
       {/* Library Analytics & Statistics Dashboard */}
       <LibraryStatsDashboard
         catalog={appState.catalog}
@@ -1571,8 +1582,7 @@ export const AdminView: React.FC = () => {
             <p className="text-[var(--text-muted)]">
               {[...selectedKeys].filter((k) => k.startsWith('book:')).length} book
               {[...selectedKeys].filter((k) => k.startsWith('book:')).length === 1 ? '' : 's'} selected.
-              One price below applies to all of them. Paid books are free
-              for followers — locked visitors see a followers-only lock.
+              One price below applies to all of them. Paid books are free for followers — locked visitors see the followers-only lock, or unlock with a key.
             </p>
             <PaidBookControl
               book={bulkPaidState}
@@ -1598,12 +1608,23 @@ export const AdminView: React.FC = () => {
         </div>
       )}
 
+      {/* Book Keys — paid books only. Generate a key, share it with the
+          follower who needs the book; they enter it to unlock that one book. */}
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl p-5">
+        <BookKeysPanel />
+      </div>
+
+      {/* Maintenance mode — turn the site off for visitors while you work. */}
+      <MaintenancePanel />
+
       {/* Arrange by Topic & Category — the library's organising system.
           No folder digging: search, set topic/category, reorder, mark Authentic. */}
-      <ArrangeByTopic />
+      <div id="admin-arrange">
+        <ArrangeByTopic />
+      </div>
 
       {/* Admin File List Table */}
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg overflow-hidden text-sm">
+      <div id="admin-files" className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg overflow-hidden text-sm">
         
         {/* Table Header */}
         <div className="grid grid-cols-12 px-4 py-2.5 bg-[var(--bg-main)] text-[var(--text-muted)] text-xs font-medium border-b border-[var(--border-main)] items-center">

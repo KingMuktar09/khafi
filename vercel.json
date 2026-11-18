@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.ts": {
-      "includeFiles": "data/catalog.json",
+      "includeFiles": "data/catalog.json, data/book-keys.json, data/site-settings.json",
       "regions": ["bom1"]
     }
   },

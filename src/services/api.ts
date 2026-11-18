@@ -141,11 +141,39 @@ export function isGateKeySet(status: GateStatus | null | undefined): boolean {
 // serves paid files. TRUST-BASED, exactly like the gate itself — the header
 // carries only the boolean unlock flag, never the gate key or any secret.
 // One helper, used by every catalog/file call (catalog fetch here, file
-// downloads in utils/fileUtils, and the in-app viewers).
+// downloads in utils/fileUtils, and the in-app viewers). A visitor holding
+// a book's own unlock key sends that too (see BOOK_KEYS_HEADER below) —
+// either way in opens the book, and there is no payment step anywhere.
 export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
 
 export function getFollowUnlockHeaders(): Record<string, string> {
   return storage.hasFollowUnlocked() ? { [FOLLOW_UNLOCK_HEADER]: '1' } : {};
+}
+
+// Paid-book keys header: the browser sends the keys it holds (one per
+// paid book, { bookId: key }) as base64url JSON, so the server can check
+// them and expose that book's links / files. A key unlocks ONE book only.
+// The keys are stored on this device only (see storage.ts).
+export const BOOK_KEYS_HEADER = 'x-book-keys';
+
+export function getBookKeyHeaders(): Record<string, string> {
+  const keys = storage.getBookKeys();
+  const ids = Object.keys(keys);
+  if (ids.length === 0) return {};
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(keys))))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    return { [BOOK_KEYS_HEADER]: encoded };
+  } catch {
+    return {};
+  }
+}
+
+/** Catalog + file headers: admin token, gate flag, and any paid-book keys. */
+export function getPaidBookHeaders(): Record<string, string> {
+  return { ...getFollowUnlockHeaders(), ...getBookKeyHeaders() };
 }
 
 let inFlightCatalogPromise: Promise<CatalogData> | null = null;
@@ -182,7 +210,7 @@ export const api = {
       // edits, paid marks and Drive sync made after this build.
       try {
         const res = await fetchWithRetry('/api/catalog', {
-          headers: getAuthHeaders(getFollowUnlockHeaders()),
+          headers: getAuthHeaders(getPaidBookHeaders()),
         });
         const parsed = await safeParseJson<CatalogData>(res);
         if (parsed.ok && parsed.data && (parsed.data.books?.length || parsed.data.folders?.length)) {
@@ -251,6 +279,119 @@ export const api = {
       console.error('Failed to load payment settings:', err);
     }
     return { ...EMPTY_PAYMENT_SETTINGS };
+  },
+
+  /** Public site settings: maintenance flag + message only. */
+  async getSiteSettings(): Promise<{ maintenance: { enabled: boolean; message: string } }> {
+    try {
+      const res = await fetch('/api/site-settings');
+      const parsed = await safeParseJson<{ maintenance?: { enabled?: boolean; message?: string } }>(res);
+      if (parsed.ok && parsed.data?.maintenance) {
+        return {
+          maintenance: {
+            enabled: Boolean(parsed.data.maintenance.enabled),
+            message: parsed.data.maintenance.message || '',
+          },
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load site settings:', err);
+    }
+    return { maintenance: { enabled: false, message: '' } };
+  },
+
+  async saveSiteSettings(settings: { maintenance: { enabled: boolean; message: string } }): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/site-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(settings),
+      });
+      const parsed = await safeParseJson<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }>(res);
+      if (!parsed.ok) return { success: false, error: parsed.error || 'Failed to save site settings.' };
+      return { success: true, durable: parsed.data?.durable, durableWarning: parsed.data?.durableWarning };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save site settings.' };
+    }
+  },
+
+  /** Key unlock: check a key for one paid book. On success the caller
+   *  stores the key on the device (storage.saveBookKey) and reloads the
+   *  catalog so that book's links appear. */
+  async verifyBookKey(bookId: string, key: string): Promise<{ ok: boolean; usesLeft?: number; maxUses?: number; error?: string }> {
+    try {
+      const res = await fetch('/api/book-keys/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId, key }),
+      });
+      const parsed = await safeParseJson<{ ok?: boolean; usesLeft?: number; maxUses?: number; error?: string }>(res);
+      if (parsed.ok && parsed.data?.ok) {
+        return { ok: true, usesLeft: parsed.data.usesLeft, maxUses: parsed.data.maxUses };
+      }
+      return { ok: false, error: parsed.error || parsed.data?.error || 'Wrong key. Check the key and try again.' };
+    } catch (err: any) {
+      return { ok: false, error: err.message || 'Failed to check the key.' };
+    }
+  },
+
+  /** Admin: list all book keys + monitor totals (no plain keys, no hashes). */
+  async getBookKeys(): Promise<{ keys: any[]; totals: any | null }> {
+    try {
+      const res = await fetch('/api/admin/book-keys', { headers: getAuthHeaders() });
+      const parsed = await safeParseJson<{ keys?: any[]; totals?: any }>(res);
+      if (parsed.ok && parsed.data) return { keys: parsed.data.keys || [], totals: parsed.data.totals || null };
+    } catch (err) {
+      console.error('Failed to load book keys:', err);
+    }
+    return { keys: [], totals: null };
+  },
+
+  /** Admin: generate a key for one paid book. Returns the plain key ONCE —
+   *  copy it and share it with the follower now; it cannot be shown again. */
+  async generateBookKey(bookId: string, maxUses: number, label?: string): Promise<{ success: boolean; plainKey?: string; key?: any; durable?: boolean; durableWarning?: string; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/book-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ bookId, maxUses, label: label || '' }),
+      });
+      const parsed = await safeParseJson<{ success?: boolean; plainKey?: string; key?: any; durable?: boolean; durableWarning?: string; error?: string }>(res);
+      if (!parsed.ok || !parsed.data?.success) {
+        return { success: false, error: parsed.error || parsed.data?.error || 'Failed to generate key.' };
+      }
+      return { success: true, plainKey: parsed.data.plainKey, key: parsed.data.key, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to generate key.' };
+    }
+  },
+
+  async revokeBookKey(keyId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`/api/admin/book-keys/${encodeURIComponent(keyId)}/revoke`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      const parsed = await safeParseJson<{ success?: boolean; error?: string }>(res);
+      if (!parsed.ok || !parsed.data?.success) return { success: false, error: parsed.error || parsed.data?.error || 'Failed to revoke key.' };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to revoke key.' };
+    }
+  },
+
+  async deleteBookKey(keyId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`/api/admin/book-keys/${encodeURIComponent(keyId)}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const parsed = await safeParseJson<{ success?: boolean; error?: string }>(res);
+      if (!parsed.ok || !parsed.data?.success) return { success: false, error: parsed.error || parsed.data?.error || 'Failed to delete key.' };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to delete key.' };
+    }
   },
 
   /** Public library status: whether live Drive sync is configured. */

@@ -8,6 +8,7 @@ const THEME_KEY = 'khafi_theme';
 const PROGRESS_KEY = 'khafi_reading_progress';
 const SETTINGS_KEY = 'khafi_user_settings';
 const FOLLOW_UNLOCK_KEY = 'ilmeghayb_follow_unlocked';
+const BOOK_KEYS_KEY = 'ilmeghayb_book_keys';
 const BOOKMARKS_KEY = 'khafi_bookmarks';
 const JOURNEYS_KEY = 'khafi_journey_progress';
 const SHELF_KEY = 'khafi_my_shelf';
@@ -327,6 +328,48 @@ export const storage = {
   setFollowUnlocked(): void {
     try {
       localStorage.setItem(FOLLOW_UNLOCK_KEY, '1');
+    } catch {
+      // ignore
+    }
+  },
+
+  // Paid-book unlock keys (one key per paid book, entered by a follower
+  // who was shared the key). The key itself is stored on this device only, so the
+  // browser can send it with catalog / file requests and the server can
+  // check it. It is never sent to anyone else. Free books need no key.
+  getBookKeys(): Record<string, string> {
+    try {
+      const raw = localStorage.getItem(BOOK_KEYS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  },
+
+  getBookKey(bookId: string): string | null {
+    return this.getBookKeys()[bookId] || null;
+  },
+
+  hasBookKey(bookId: string): boolean {
+    return Boolean(this.getBookKey(bookId));
+  },
+
+  saveBookKey(bookId: string, key: string): void {
+    try {
+      const all = this.getBookKeys();
+      all[bookId] = key;
+      localStorage.setItem(BOOK_KEYS_KEY, JSON.stringify(all));
+    } catch {
+      // ignore
+    }
+  },
+
+  clearBookKey(bookId: string): void {
+    try {
+      const all = this.getBookKeys();
+      delete all[bookId];
+      localStorage.setItem(BOOK_KEYS_KEY, JSON.stringify(all));
     } catch {
       // ignore
     }
