@@ -848,3 +848,32 @@ export const TOPIC_ROUTES: Record<string, ViewName> = {
 export function topicRouteFor(id: string): ViewName {
   return TOPIC_ROUTES[id] ?? 'topics';
 }
+
+/**
+ * Every view that belongs to Topics: the hub, every topic page, the
+ * Questions part, and the Guides page. Topics is open to everyone, so
+ * the gate and the navbar both use this list to tell a Topics page
+ * from a gated page.
+ */
+export const TOPIC_VIEWS: ViewName[] = [
+  'topics',
+  'topic-retreat',
+  'topic-malakut',
+  'topic-ruh',
+  'topic-alif',
+  'topic-seal',
+  'topic-dreams',
+  'topic-saba',
+  'topic-khidr',
+  'topic-rijal',
+  'topic-uwaisi',
+  'topic-renewal',
+  'topic-drinks',
+  'topics-questions',
+  'topics-guides',
+];
+
+/** True when the view is a Topics page (hub, topic, questions, guides). */
+export function isTopicsView(view: string): boolean {
+  return (TOPIC_VIEWS as string[]).includes(view);
+}

@@ -10,6 +10,11 @@ import {
   validateMagicSquare,
 } from '../../utils/magicSquare';
 import type { GenerateResult, ValidationResult } from '../../utils/magicSquare';
+import {
+  copyTextToClipboard,
+  gridToText,
+  saveSvgAsPng,
+} from '../../utils/figureExport';
 import { ToolsLayout } from './ToolsLayout';
 
 /**
@@ -96,6 +101,7 @@ export const ForgeView: React.FC = () => {
   const [targetInput, setTargetInput] = useState(String(magicConstant(3)));
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [a2Plate, setA2Plate] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const validation: ValidationResult | null = useMemo(() => {
     if (!result || !isGenerateSuccess(result)) return null;
@@ -116,6 +122,23 @@ export const ForgeView: React.FC = () => {
     setResult(generateMagicSquare(order, Number(targetInput)));
   };
 
+  const onCopy = async (): Promise<void> => {
+    if (!result || !isGenerateSuccess(result)) return;
+    const ok = await copyTextToClipboard(gridToText(result.grid));
+    if (ok) {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const onSavePng = async (): Promise<void> => {
+    if (!result || !isGenerateSuccess(result)) return;
+    await saveSvgAsPng(
+      buildSvg(result.order, result.target, result.grid, result.method),
+      `wafq-${result.order}x${result.order}-${result.target}.png`,
+    );
+  };
+
   const cellFontSize = order <= 5 ? 20 : order <= 9 ? 16 : order <= 14 ? 13 : 11;
 
   return (
@@ -128,6 +151,8 @@ export const ForgeView: React.FC = () => {
           prints at A2 proportions; everything else stays off the page. */}
       <style>{`
         .forge-print-plate { display: none; }
+        .forge-seal-figure { max-width: 480px; margin: 0 auto; }
+        .forge-seal-figure svg { width: 100%; height: auto; display: block; }
         @media print {
           @page { size: ${a2Plate ? 'A2' : 'A4'}; margin: 10mm; }
           body * { visibility: hidden; }
@@ -231,6 +256,14 @@ export const ForgeView: React.FC = () => {
                 </div>
               ))}
             </div>
+            <p className="ms-note">
+              The square is fully shown above, on this page. No download is needed to see it or use it.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="ms-btn-solid" disabled={!passed} onClick={onCopy}>
+                {copied ? 'Copied' : 'Copy square'}
+              </button>
+            </div>
           </section>
 
           <section className="ms-card space-y-3" aria-live="polite">
@@ -299,9 +332,18 @@ export const ForgeView: React.FC = () => {
           <section className="ms-card space-y-3">
             <h2 className="ms-h2">Seal frame and plate</h2>
             <p className="ms-body">
-              Export and print open only after the square passes validation. The export is a framed
-              SVG of this square; the print layout is a plate at A2 proportions.
+              The framed seal is shown below, on this page. Copy it as text, save it as an image, or
+              download the framed SVG. Print stays as an option too. All of these open only after the
+              square passes validation.
             </p>
+            <div
+              className="forge-seal-figure"
+              role="img"
+              aria-label={`Framed ${result.order} by ${result.order} magic square, every line sums to ${result.target}`}
+              dangerouslySetInnerHTML={{
+                __html: buildSvg(result.order, result.target, result.grid, result.method),
+              }}
+            />
             <label className="flex items-center gap-2 ms-body">
               <input
                 type="checkbox"
@@ -311,6 +353,9 @@ export const ForgeView: React.FC = () => {
               Print as an A2 plate (420 x 594 mm proportions)
             </label>
             <div className="flex flex-wrap gap-2">
+              <button type="button" className="ms-btn-solid" disabled={!passed} onClick={onSavePng}>
+                Save as image
+              </button>
               <button
                 type="button"
                 className="ms-btn-solid"

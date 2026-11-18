@@ -5,10 +5,12 @@ import {
   TOPICS,
   TOPICS_START_DATE,
   TOPIC_ROUTES,
+  TOPIC_VIEWS,
   getTopicOfTheDay,
   topicRouteFor,
   formatTopicDate,
   formatAddedDate,
+  isTopicsView,
 } from '../src/data/topicsContent';
 import { TOPIC_QUESTIONS } from '../src/data/topicsQuestions';
 import { STUDY_GUIDES } from '../src/data/studyGuides';
@@ -299,6 +301,44 @@ describe('Sawaqit names are sourced, not "source needed"', () => {
     expect(view).toContain('Ch. 13');
     expect(view).toContain('Fa-Ja-Sha-Tha-Za-Kha-Za');
     expect(view).toContain('Suns of Lights');
+  });
+});
+
+describe('Topics is open: isTopicsView covers every Topics page', () => {
+  it('the hub, every topic page, questions, and guides are Topics views', () => {
+    expect(isTopicsView('topics')).toBe(true);
+    expect(isTopicsView('topics-questions')).toBe(true);
+    expect(isTopicsView('topics-guides')).toBe(true);
+    for (const route of Object.values(TOPIC_ROUTES)) {
+      expect(isTopicsView(route)).toBe(true);
+    }
+    // The list and the routes agree: no topic route is left out.
+    expect(TOPIC_VIEWS).toHaveLength(Object.keys(TOPIC_ROUTES).length + 3);
+  });
+
+  it('gated pages are not Topics views', () => {
+    for (const view of ['home', 'library', 'book', 'tools', 'tools-huruf', 'tools-forge', 'admin', 'amals', 'favorites']) {
+      expect(isTopicsView(view)).toBe(false);
+    }
+  });
+
+  it('App.tsx skips the gate for Topics views only', () => {
+    const app = readSource('src/App.tsx');
+    expect(app).toContain('!isTopicsView(appState.route.view)');
+    expect(app).toContain('Topics stays open without the gate');
+  });
+
+  it('the navbar puts Topics in the top row on desktop and near the top on mobile', () => {
+    const nav = readSource('src/components/layout/Navbar.tsx');
+    expect(nav).toContain("desktopLink(\n              'topics'");
+    expect(nav).not.toContain("moreLink('topics'");
+    expect(nav).toContain('isTopicsView(currentView)');
+  });
+
+  it('the Home Topic of the Day card links to the Topics hub too', () => {
+    const home = readSource('src/views/HomeView.tsx');
+    expect(home).toContain('All topics');
+    expect(home).toContain("router.navigate('topics')");
   });
 });
 

@@ -201,11 +201,13 @@ describe('Stage 3A topic routes are wired', () => {
     }
   });
 
-  it('the Navbar links to Topics in the desktop More menu and the mobile drawer', () => {
+  it('the Navbar puts Topics in the top row on desktop, not in the More menu', () => {
     const navbar = readSource('src/components/layout/Navbar.tsx');
-    expect(navbar).toContain(`moreLink('topics'`);
+    expect(navbar).not.toContain(`moreLink('topics'`);
+    expect(navbar).toContain(`desktopLink(`);
+    expect(navbar).toContain(`'topics',`);
     expect(navbar).toContain(`handleNav('topics')`);
-    expect(navbar).toContain(`'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides'`);
+    expect(navbar).toContain('isTopicsView(currentView)');
   });
 });
 

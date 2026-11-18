@@ -20,7 +20,10 @@ import { BookFinderView } from './views/BookFinderView';
 import { WafqView } from './views/WafqView';
 import { AmalsView } from './views/AmalsView';
 
-// Topics (Stage 3A): long-form discussions, behind the gate.
+// Topics: open to everyone, no gate. The hub, every topic page, the
+// Questions part, and the Guides page all load without a follow or a
+// key. The library, the books, and the study tools stay behind the
+// gate exactly as before. Only Topics is public.
 import { TopicsHubView } from './views/topics/TopicsHubView';
 import { TopicRetreatView } from './views/topics/TopicRetreatView';
 import { TopicMalakutView } from './views/topics/TopicMalakutView';
@@ -96,6 +99,7 @@ const ViewLoading: React.FC = () => (
 );
 
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { isTopicsView } from './data/topicsContent';
 
 export default function App() {
   const [, setTick] = useState(0);
@@ -114,13 +118,14 @@ export default function App() {
   // Instagram follow gate: first screen for new visitors. Admins and the
   // admin sign-in page bypass it; everyone else unlocks by following
   // @ghayb.chronicles and tapping unlock (remembered on this device).
+  // Topics stays open without the gate, so anyone can read the topics.
   const isAdmin = appState.adminAuthenticated;
   const showGate =
-    !followUnlocked && !isAdmin && appState.route.view !== 'admin';
+    !followUnlocked && !isAdmin && appState.route.view !== 'admin' && !isTopicsView(appState.route.view);
 
   if (showGate) {
-    // Gate counts: total folders (36, incl. sub-collections) and total
-    // visible books (173). While the catalog is still loading, show the
+    // Gate counts: total folders (27, incl. sub-collections) and total
+    // visible books (137). While the catalog is still loading, show the
     // known totals from siteConfig instead of 0 — the catalog starts
     // empty and only fills after the async /api/catalog fetch, so
     // rendering the raw state here showed "0 Collections, 0 Books"

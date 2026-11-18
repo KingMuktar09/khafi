@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { Search, Sun, Moon, Lock, ShieldCheck, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram, Compass, Map as MapIcon, Bookmark, Grid3X3, MoonStar, Calculator, ChevronDown } from 'lucide-react';
+import { Search, Sun, Moon, Lock, ShieldCheck, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram, Compass, Map as MapIcon, Bookmark, Grid3X3, MoonStar, Calculator, ChevronDown, NotebookText } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
 import { siteConfig } from '../../config/siteConfig';
 import { ViewName } from '../../types';
 import { SettingsModal } from '../ui/SettingsModal';
+import { isTopicsView } from '../../data/topicsContent';
 
 /**
  * Navbar, manuscript style. The old desktop row listed every page in
  * one wide line, so the page overflowed sideways at 1280px
  * (scrollWidth about 1750px). Now the desktop bar shows only the
- * three main pages (Home, Library, Study Tools) plus a "More" menu
- * that holds the rest, so the bar fits at 1280px and at 390px.
+ * four main pages (Home, Library, Topics, Study Tools) plus a "More"
+ * menu that holds the rest, so the bar fits at 1280px and at 390px.
+ * Topics is a main page, not a hidden one: it sits in the top row on
+ * desktop and near the top of the mobile drawer, and it is open to
+ * everyone, so it never waits behind the gate.
  * Nothing about the pages themselves changed — only the bar.
  */
 export const Navbar: React.FC = () => {
@@ -92,7 +96,7 @@ export const Navbar: React.FC = () => {
   );
 
   const moreActive =
-    ['journeys', 'timeline', 'shelf', 'finder', 'wafq', 'amals', 'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides', 'favorites', 'info', 'admin'].includes(currentView);
+    ['journeys', 'timeline', 'shelf', 'finder', 'wafq', 'amals', 'favorites', 'info', 'admin'].includes(currentView);
 
   return (
     <header className="nav-enter sticky top-0 z-50 w-full bg-[var(--bg-header)] border-b border-[var(--border-main)] transition-colors duration-150 shadow-xs">
@@ -167,6 +171,12 @@ export const Navbar: React.FC = () => {
               <Calculator className="w-4 h-4 text-[var(--gold)]" />,
               currentView === 'tools' || currentView.startsWith('tools-')
             )}
+            {desktopLink(
+              'topics',
+              'Topics',
+              <NotebookText className="w-4 h-4 text-[var(--gold)]" />,
+              isTopicsView(currentView)
+            )}
 
             {/* "More" — every other page, in one menu. */}
             <div className="relative">
@@ -198,7 +208,6 @@ export const Navbar: React.FC = () => {
                     {moreLink('finder', 'Find a Book', <Compass className="w-4 h-4 text-[var(--gold)]" />, currentView === 'finder')}
                     {moreLink('wafq', 'Magic Square', <Grid3X3 className="w-4 h-4 text-[var(--gold)]" />, currentView === 'wafq')}
                     {moreLink('amals', 'Amals', <MoonStar className="w-4 h-4 text-[var(--gold)]" />, currentView === 'amals')}
-                    {moreLink('topics', 'Topics', <BookOpen className="w-4 h-4 text-[var(--gold)]" />, ['topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides'].includes(currentView))}
                     {moreLink('favorites', 'Favorites', <Star className="w-4 h-4 fill-amber-400 text-amber-400" />, currentView === 'favorites', favoritesCount)}
                     {moreLink('info', 'Info', <Info className="w-4 h-4 text-blue-400" />, currentView === 'info')}
                     <a
@@ -309,6 +318,15 @@ export const Navbar: React.FC = () => {
           </button>
 
           <button
+            onClick={() => handleNav('topics')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              isTopicsView(currentView) ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            Topics
+          </button>
+
+          <button
             onClick={() => handleNav('journeys')}
             className={`w-full text-left px-3 py-2 rounded ${
               currentView === 'journeys' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
@@ -365,15 +383,6 @@ export const Navbar: React.FC = () => {
             }`}
           >
             Amals
-          </button>
-
-          <button
-            onClick={() => handleNav('topics')}
-            className={`w-full text-left px-3 py-2 rounded ${
-              ['topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides'].includes(currentView) ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
-            }`}
-          >
-            Topics
           </button>
 
           <button

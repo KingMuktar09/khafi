@@ -23,6 +23,9 @@ import { ReadingStats } from '../components/special/ReadingStats';
 import { RandomBookCard } from '../components/books/RandomBookCard';
 import { JOURNEYS, resolveJourneys, journeyProgress } from '../data/specialFeatures';
 import { getTopicOfTheDay, formatTopicDate, topicRouteFor } from '../data/topicsContent';
+import { greetingForHour } from '../utils/greeting';
+import { HomeSkyCards } from '../components/special/HomeSkyCards';
+import { HomeReckonBox } from '../components/special/HomeReckonBox';
 
 export const HomeView: React.FC = () => {
   // Browse by topic and category, NOT by folders: the folders only say
@@ -47,6 +50,8 @@ export const HomeView: React.FC = () => {
     router.navigate('library', { searchQuery: q });
   };
 
+  const greeting = greetingForHour(new Date().getHours());
+
   return (
     <div className="space-y-6 animate-fade-in py-2 font-sans">
       
@@ -69,6 +74,11 @@ export const HomeView: React.FC = () => {
             </span>
             <HijriDate />
           </div>
+          {/* Big greeting, in large display serif. The `ms-greeting` class is
+              the hook for the soft gold glow added by the animation pass. */}
+          <p className="ms-greeting font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05] animate-fade-up" style={{ animationDelay: '20ms' }}>
+            {greeting}.
+          </p>
           <p className="ms-eyebrow animate-fade-up" style={{ animationDelay: '40ms' }}>A free library of hidden knowledge</p>
           <h1 className="font-display font-semibold text-4xl sm:text-5xl text-[var(--text-main)] leading-[1.05] animate-fade-up" style={{ animationDelay: '70ms' }}>
             Ilm-e-Ghayb <span className="gold-shimmer">Library</span>
@@ -141,6 +151,10 @@ export const HomeView: React.FC = () => {
           </form>
         </div>
       </div>
+
+      {/* The sky right now: live stat cards, then the reckon box. */}
+      <HomeSkyCards />
+      <HomeReckonBox />
 
       {/* Continue Reading Section (If books are in progress) */}
       {booksInProgress.length > 0 && (
@@ -263,7 +277,19 @@ export const HomeView: React.FC = () => {
             <ArrowRight className="w-4 h-4 text-[var(--gold)] shrink-0" aria-hidden="true" />
           </h2>
           <p className="text-xs text-[var(--text-muted)] leading-relaxed">{topicOfTheDay.topic.subtitle}</p>
-          <p className="text-xs text-[var(--gold)] font-medium">Read today&rsquo;s topic</p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-[var(--gold)] font-medium">Read today&rsquo;s topic</p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                router.navigate('topics');
+              }}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] font-medium flex items-center gap-1 cursor-pointer"
+            >
+              <span>All topics</span>
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </section>
 

@@ -192,14 +192,20 @@ body {
   50% { box-shadow: 0 25px 60px -12px rgba(232, 184, 79, 0.3), 0 0 0 1px rgba(232, 184, 79, 0.14); }
 }
 @keyframes motion-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  /* Standalone `scale` property, not transform, so the pulse composes
+     with the hover lift (translateY) instead of overriding it. Gentle:
+     a 1.5% swell and a whisper of opacity, never a jump. */
+  0%, 100% { scale: 1; opacity: 1; }
+  50% { scale: 1.015; opacity: 0.97; }
 }
 
-/* Page / view entry. This defines the long-used `animate-fade-in` class,
-   which previously had no keyframes at all, so it did nothing. */
+/* Page / view entry. The view roots all carry `animate-fade-in`, so
+   that class is the one entrance for every page: a gentle fade plus a
+   small rise, using the same motion-fade-up keyframe as the staggered
+   children. One place to change, every page covered, no element
+   animated twice. */
 .animate-fade-in {
-  animation: motion-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation: motion-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .animate-fade-up {
   animation: motion-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
@@ -212,15 +218,19 @@ body {
   animation-delay: calc(var(--motion-i, 0) * 45ms);
 }
 
-/* Hover lift + soft gold glow for cards. */
+/* Hover lift + soft gold glow for cards. The lift only applies where
+   a real hover exists (desktop mouse/trackpad). Touch screens never
+   get a stuck lift from a tap. */
 .motion-card {
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.35s ease, box-shadow 0.35s ease, background-color 0.2s ease;
 }
-.motion-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(232, 184, 79, 0.55);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 184, 79, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  .motion-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(232, 184, 79, 0.55);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 184, 79, 0.18);
+  }
 }
 
 /* Slow gold light sweep across the hero card (transform-only, GPU-friendly). */
@@ -254,6 +264,19 @@ body {
 /* Gentle breathing scale for the gate brand mark. */
 .motion-breathe {
   animation: motion-breathe 3.5s ease-in-out infinite;
+}
+
+/* ---- Site motion: live sky cards and home greeting ----
+   Slow, restrained, transform/opacity only. The live sky cards breathe
+   once every 6 seconds, and the home greeting carries a soft static
+   gold glow. Both are switched off entirely under reduced motion. */
+.ms-live-card {
+  animation: motion-breathe 6s ease-in-out infinite;
+}
+.ms-greeting {
+  text-shadow:
+    0 0 18px color-mix(in srgb, var(--gold) 38%, transparent),
+    0 0 46px color-mix(in srgb, var(--gold) 16%, transparent);
 }
 
 /* White sheen sweep for the Instagram follow button. */
@@ -290,9 +313,11 @@ html {
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
-.card-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(232, 184, 79, 0.15);
+@media (hover: hover) and (pointer: fine) {
+  .card-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(232, 184, 79, 0.15);
+  }
 }
 
 /* Comfortable tap targets on phones */
@@ -346,16 +371,14 @@ select option {
    and by the app's own reduced-motion toggle (html.reduced-motion, set in
    appState). This block was previously a broken selector list and did nothing. */
 html.reduced-motion *, html.reduced-motion ::before, html.reduced-motion ::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+  animation: none !important;
+  transition: none !important;
   scroll-behavior: auto !important;
 }
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }
@@ -518,10 +541,12 @@ html.light-theme .ms-panel {
   .ms-card { padding: 24px; }
 }
 .ms-card-hover { transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; }
-.ms-card-hover:hover {
-  transform: translateY(-2px);
-  border-color: rgba(232, 184, 79, 0.45);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 32px rgba(0, 0, 0, 0.45);
+@media (hover: hover) and (pointer: fine) {
+  .ms-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: rgba(232, 184, 79, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 32px rgba(0, 0, 0, 0.45);
+  }
 }
 
 /* Fields. */

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { TalismanFiguresSection } from '../../components/special/TalismanFigures';
 import { FilledToolPage } from './FilledToolPage';
 
 /**
@@ -36,6 +37,7 @@ export const TalismStudioView: React.FC = () => {
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
+      <TalismanFiguresSection />
     </FilledToolPage>
   );
 };
