@@ -383,7 +383,7 @@ export const Navbar: React.FC = () => {
               currentView === 'amals' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
-            Daily Amals
+            Amals
           </button>
 
           <button

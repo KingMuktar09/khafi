@@ -1,5 +1,5 @@
 import { ReadingProgress, ThemeMode, UserSettings } from '../types';
-import type { AmalLog, ShelfMap, ShelfStatus } from '../data/tools';
+import type { ShelfMap, ShelfStatus } from '../data/tools';
 import { toISODateLocal } from '../data/tools';
 
 const FAVORITES_KEY = 'khafi_favorites';
@@ -12,7 +12,6 @@ const BOOKMARKS_KEY = 'khafi_bookmarks';
 const JOURNEYS_KEY = 'khafi_journey_progress';
 const SHELF_KEY = 'khafi_my_shelf';
 const VISITS_KEY = 'khafi_visit_days';
-const AMALS_KEY = 'khafi_amals_log';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   appearance: 'dark',
@@ -311,34 +310,6 @@ export const storage = {
       return next;
     }
     return list;
-  },
-
-  // Amals — done amal ids per day (YYYY-MM-DD -> ids), local only.
-  getAmalLog(): AmalLog {
-    try {
-      const raw = localStorage.getItem(AMALS_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  },
-
-  toggleAmal(amalId: string, date: Date = new Date()): string[] {
-    const log = this.getAmalLog();
-    const day = toISODateLocal(date);
-    const done = log[day] || [];
-    const next = done.includes(amalId)
-      ? done.filter((id) => id !== amalId)
-      : [...done, amalId];
-    if (next.length > 0) {
-      log[day] = next;
-    } else {
-      delete log[day];
-    }
-    try {
-      localStorage.setItem(AMALS_KEY, JSON.stringify(log));
-    } catch {}
-    return next;
   },
 
   // Instagram follow gate (honour unlock, remembered per browser).

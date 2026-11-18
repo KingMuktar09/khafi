@@ -2,11 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  AMALS,
   FINDER_MOODS,
   LO_SHU,
-  amalStreak,
-  amalsDoneToday,
   computeReadingStats,
   computeStreak,
   formatHijri,
@@ -175,28 +172,5 @@ describe('Reading stats and streaks', () => {
     expect(computeStreak([], new Date(2026, 10, 18))).toBe(0);
     // Not visited yet today, but visited yesterday: streak still counts.
     expect(computeStreak(['2026-11-17'], new Date(2026, 10, 18))).toBe(1);
-  });
-});
-
-describe('Amals', () => {
-  it('lists general amals whose linked books are real catalog books', () => {
-    expect(AMALS.length).toBeGreaterThanOrEqual(5);
-    for (const amal of AMALS) {
-      expect(amal.title.length).toBeGreaterThan(0);
-      expect(amal.detail.length).toBeGreaterThan(0);
-      expect(amal.why.length).toBeGreaterThan(0);
-      if (amal.sourceTitle) {
-        expect(titles.has(amal.sourceTitle), `amal "${amal.id}" source "${amal.sourceTitle}" must be a real book`).toBe(true);
-      }
-      // No prescribed counts as religious rulings, no Hadith quoted.
-      expect(amal.detail).not.toMatch(/Hadith/i);
-    }
-  });
-
-  it('tracks done amals per day and the amal streak', () => {
-    const log = { '2026-11-17': ['fajr'], '2026-11-18': ['fajr', 'quran-reading'] };
-    expect(amalsDoneToday(log, new Date(2026, 10, 18))).toEqual(['fajr', 'quran-reading']);
-    expect(amalStreak(log, new Date(2026, 10, 18))).toBe(2);
-    expect(amalsDoneToday({}, new Date(2026, 10, 18))).toEqual([]);
   });
 });

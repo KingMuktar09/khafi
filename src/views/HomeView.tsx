@@ -221,7 +221,7 @@ export const HomeView: React.FC = () => {
             <span>Tools</span>
           </h2>
           <p className="text-xs text-[var(--text-muted)]">
-            Made for this library — your shelf, a book finder, the magic square maker, and daily amals.
+            Made for this library — your shelf, a book finder, the magic square maker, and amals from al-Buni&apos;s books.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -229,7 +229,7 @@ export const HomeView: React.FC = () => {
             { title: 'My Shelf', blurb: 'Save books with a status — To Read, Reading, Finished.', view: 'shelf' as const },
             { title: 'Find My Next Book', blurb: 'Three quick questions, three real books for your mood.', view: 'finder' as const },
             { title: 'Magic Square Maker', blurb: 'Build a magic number square — 3×3, 4×4, 5×5 or 7×7 — and check every row adds up.', view: 'wafq' as const },
-            { title: 'Daily Amals', blurb: 'Small daily practices — tick them off, keep your streak going.', view: 'amals' as const },
+            { title: 'Amals from al-Buni', blurb: '25 simple practices from Shams al-Ma\u2019arif — tap one to see the full detail.', view: 'amals' as const },
           ].map((tool) => (
             <div
               key={tool.view}

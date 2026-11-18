@@ -4,7 +4,7 @@ import { storage } from '../services/storage';
 import { router } from '../router/router';
 import { ACCENT_PALETTES } from '../config/accentPalettes';
 import { JOURNEYS } from '../data/specialFeatures';
-import type { AmalLog, ReadingStats, ShelfMap, ShelfStatus } from '../data/tools';
+import type { ReadingStats, ShelfMap, ShelfStatus } from '../data/tools';
 import { computeReadingStats, shelfBooks } from '../data/tools';
 import {
   getBookVersion,
@@ -32,7 +32,6 @@ class AppState {
   public journeyProgress: Record<string, string[]> = storage.getJourneyProgress();
   public shelf: ShelfMap = storage.getShelf();
   public visitDates: string[] = storage.recordVisit();
-  public amalLog: AmalLog = storage.getAmalLog();
   public settings: UserSettings = storage.getSettings();
   public theme: ThemeMode = this.settings.appearance === 'light' ? 'light' : 'dark';
   public toasts: Toast[] = [];
@@ -245,26 +244,6 @@ class AppState {
 
   public getShelfBooksByStatus(status: ShelfStatus): Book[] {
     return this.getShelfBooks().filter((b) => this.shelf[b.id] === status);
-  }
-
-  // Amals — tick done each day, local only.
-  public getAmalsDoneToday(): string[] {
-    const today = new Date();
-    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    return this.amalLog[key] || [];
-  }
-
-  public toggleAmal(amalId: string) {
-    const done = storage.toggleAmal(amalId);
-    const today = new Date();
-    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    this.amalLog = { ...this.amalLog, [key]: done };
-    if (done.length === 0) {
-      const next = { ...this.amalLog };
-      delete next[key];
-      this.amalLog = next;
-    }
-    this.notify();
   }
 
   // Reading Stats — local only, from shelf + progress + journeys.
