@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { BookOpen, Check, Instagram, Lock, ShieldCheck, Sparkles } from 'lucide-react';
+import { Check, Instagram, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import { router } from '../../router/router';
+import { siteConfig } from '../../config/siteConfig';
 
 interface FollowGateProps {
   onUnlock: () => void;
   bookCount: number;
   categoryCount: number;
+  /** True while the catalog is still loading: counts shown are the known totals, not live data. */
+  loading?: boolean;
 }
 
 export const INSTAGRAM_URL = 'https://instagram.com/ghayb.chronicles';
@@ -20,17 +23,22 @@ export const INSTAGRAM_HANDLE = '@ghayb.chronicles';
  * taps "I followed", and the library unlocks in this browser (remembered in
  * localStorage). It is not a verified follow check, and the copy says so.
  */
-export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, categoryCount }) => {
+export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, categoryCount, loading = false }) => {
   const [followed, setFollowed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] font-sans flex items-center justify-center px-4 py-10 animate-fade-in">
-      <div className="w-full max-w-lg">
+    <div className="relative overflow-hidden min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] font-sans flex items-center justify-center px-4 py-10 animate-fade-in">
+      <div aria-hidden="true" className="halftone halftone-top" />
+      <div className="w-full max-w-lg relative">
         {/* Brand */}
         <div className="text-center space-y-3 mb-6">
-          <div className="motion-breathe mx-auto w-16 h-16 rounded-2xl bg-[var(--gold-faint)] border border-[var(--gold)]/40 flex items-center justify-center shadow-lg shadow-black/40">
-            <BookOpen className="w-8 h-8 text-[var(--gold)]" />
-          </div>
+          {/* Official logo, whole and centred in its square frame */}
+          <img
+            src={siteConfig.logo}
+            alt="Ilm-e-Ghayb Library logo — halftone gold arch doorway with a geometric star"
+            className="motion-breathe mx-auto w-16 h-16 rounded-2xl object-cover border border-[var(--gold)]/40 shadow-lg shadow-black/40"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
           <p className="gold-shimmer text-[11px] font-bold tracking-[0.3em] uppercase">
             Ghayb Chronicles
           </p>
@@ -38,8 +46,8 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
             Ilm-e-Ghayb Library
           </h1>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-md mx-auto">
-            Hidden knowledge, Sufi wisdom, and the books behind it. Quran, Tafseer,
-            Hadith, Seerah and history, with sources in every entry.
+            Books on the Quran, the Prophet's life, Sufi wisdom and Islamic history — with the source named in
+            every entry. Everyone is welcome, no account needed.
           </p>
         </div>
 
@@ -71,6 +79,12 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
               <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">After follow</p>
             </div>
           </div>
+
+          {loading && (
+            <p className="text-[11px] text-[var(--text-muted)] text-center -mt-2" role="status">
+              Loading the library…
+            </p>
+          )}
 
           <a
             href={INSTAGRAM_URL}
@@ -106,7 +120,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
         <div className="mt-5 text-center space-y-2">
           <p className="text-[11px] text-[var(--text-faint)] flex items-center justify-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[var(--gold)]" />
-            <span>Islamic esoteric knowledge • Mysticism &amp; Sufi wisdom through art</span>
+            <span>Islamic history and wisdom • Sufism and hidden knowledge, through art</span>
           </p>
           <button
             type="button"

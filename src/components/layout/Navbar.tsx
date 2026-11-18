@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Sun, Moon, Lock, ShieldCheck, Folder, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram } from 'lucide-react';
+import { Search, Sun, Moon, Lock, ShieldCheck, X, Menu, Settings as SettingsIcon, Home, BookOpen, Star, Info, Instagram, Compass, Map as MapIcon, Bookmark, Grid3X3, MoonStar } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
+import { siteConfig } from '../../config/siteConfig';
 import { ViewName } from '../../types';
 import { SettingsModal } from '../ui/SettingsModal';
 
@@ -11,6 +12,7 @@ export const Navbar: React.FC = () => {
   const [searchVal, setSearchVal] = useState(appState.searchQuery || '');
   const currentView = appState.route.view;
   const favoritesCount = appState.getFavoriteBooks().length;
+  const shelfCount = Object.keys(appState.shelf).length;
   const theme = appState.theme;
   const isAdmin = appState.adminAuthenticated;
   const userSettings = appState.settings;
@@ -50,9 +52,12 @@ export const Navbar: React.FC = () => {
               onClick={() => handleNav('home')}
               className="text-left focus:outline-none flex items-center gap-2.5 group cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-lg bg-[var(--gold-faint)] border border-[var(--border-main)] flex items-center justify-center text-[var(--gold)] shadow-2xs group-hover:border-[var(--gold)] group-hover:scale-105 transition-all duration-200">
-                <Folder className="w-4 h-4 fill-[var(--gold)]/20 text-[var(--gold)]" />
-              </div>
+              <img
+                src={siteConfig.logo}
+                alt="Ilm-e-Ghayb Library logo"
+                className="w-9 h-9 rounded-lg object-cover border border-[var(--border-main)] shadow-2xs group-hover:border-[var(--gold)] group-hover:scale-105 transition-all duration-200"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
               <div>
                 <span className="font-display font-semibold text-base sm:text-lg text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors block leading-tight">
                   Ilm-e-Ghayb Library
@@ -118,6 +123,83 @@ export const Navbar: React.FC = () => {
             >
               <BookOpen className="w-4 h-4 text-[var(--gold)]" />
               <span>Library</span>
+            </button>
+
+            <button
+              onClick={() => handleNav('journeys')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'journeys'
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Compass className="w-4 h-4 text-[var(--gold)]" />
+              <span>Reading Paths</span>
+            </button>
+
+            <button
+              onClick={() => handleNav('timeline')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'timeline'
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <MapIcon className="w-4 h-4 text-[var(--gold)]" />
+              <span>History Timeline</span>
+            </button>
+
+            <button
+              onClick={() => handleNav('shelf')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'shelf'
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Bookmark className="w-4 h-4 text-[var(--gold)]" />
+              <span>My Shelf</span>
+              {shelfCount > 0 && (
+                <span className="px-1.5 py-0.2 bg-[var(--gold)] text-black text-xs font-bold rounded-full">
+                  {shelfCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleNav('finder')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'finder'
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Compass className="w-4 h-4 text-[var(--gold)]" />
+              <span>Find a Book</span>
+            </button>
+
+            <button
+              onClick={() => handleNav('wafq')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'wafq'
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Grid3X3 className="w-4 h-4 text-[var(--gold)]" />
+              <span>Magic Square</span>
+            </button>
+
+            <button
+              onClick={() => handleNav('amals')}
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                currentView === 'amals'
+                  ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <MoonStar className="w-4 h-4 text-[var(--gold)]" />
+              <span>Amals</span>
             </button>
 
             <button
@@ -243,6 +325,65 @@ export const Navbar: React.FC = () => {
             }`}
           >
             Library
+          </button>
+
+          <button
+            onClick={() => handleNav('journeys')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              currentView === 'journeys' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            Reading Paths
+          </button>
+
+          <button
+            onClick={() => handleNav('timeline')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              currentView === 'timeline' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            History Timeline
+          </button>
+
+          <button
+            onClick={() => handleNav('shelf')}
+            className={`w-full text-left px-3 py-2 rounded flex items-center justify-between ${
+              currentView === 'shelf' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            <span>My Shelf</span>
+            {shelfCount > 0 && (
+              <span className="px-2 py-0.5 bg-[var(--gold)] text-black text-xs font-semibold rounded-full">
+                {shelfCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => handleNav('finder')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              currentView === 'finder' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            Find a Book
+          </button>
+
+          <button
+            onClick={() => handleNav('wafq')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              currentView === 'wafq' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            Magic Square Maker
+          </button>
+
+          <button
+            onClick={() => handleNav('amals')}
+            className={`w-full text-left px-3 py-2 rounded ${
+              currentView === 'amals' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+            }`}
+          >
+            Daily Amals
           </button>
 
           <button

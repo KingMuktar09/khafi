@@ -29,6 +29,7 @@ import {
 import { Book, Folder, SortFieldSetting, SortDirectionSetting, FilterTypeSetting } from '../../types';
 import { appState } from '../../state/appState';
 import { router } from '../../router/router';
+import { TOPIC_GROUPS, cleanFolderName, groupForFolder } from '../../data/topicGroups';
 import { ActionMenuPortal } from '../ui/ActionMenuPortal';
 import { api } from '../../services/api';
 import { Breadcrumbs } from '../ui/Breadcrumbs';
@@ -46,7 +47,7 @@ import {
   getTypeBadgeColor,
   formatFileSize,
   formatCleanTitle,
-  formatReadableDate,
+  formatCatalogDate,
   getItemUrl,
   parseSizeBytes,
   downloadBookFile,
@@ -85,6 +86,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   const [sortDirection, setSortDirectionState] = useState<SortDirectionSetting>(appState.settings.sortDirection || 'asc');
   const [filterType, setFilterTypeState] = useState<FilterTypeSetting>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  // 6 big topics — the simple way to pick a folder instead of 36 long names.
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   // Creation Modals
   const [newFolderModalOpen, setNewFolderModalOpen] = useState(false);
@@ -145,6 +148,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   useEffect(() => {
     setFilterTypeState('all');
     setSearchQuery('');
+    setSelectedGroup(null);
   }, [folderId, subfolderId]);
 
   // Close row menus on outside click
@@ -184,7 +188,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
     ? appState.getFolderById(folderId)
     : null;
 
-  const currentFolderName = activeFolder ? activeFolder.name : title || 'Library';
+  const currentFolderName = activeFolder ? cleanFolderName(activeFolder.name) : title || 'Library';
   const currentFolderDescription = activeFolder ? activeFolder.description : subtitle;
 
   // One-click Navigation handlers
@@ -227,8 +231,24 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           (f.description || '').toLowerCase().includes(q)
       );
     }
+    // Group filter: show only folders in the picked topic. Searching wins
+    // over the group filter, so a search always looks at every folder.
+    if (selectedGroup && !searchQuery.trim()) {
+      const books = appState.catalog.books || [];
+      result = result.filter((f) => groupForFolder(f, books)?.id === selectedGroup);
+    }
     return result;
-  }, [folders, filterType, searchQuery]);
+  }, [folders, filterType, searchQuery, selectedGroup]);
+
+  // Counts per topic group, for the folders shown in this location.
+  const folderGroupCounts = useMemo(() => {
+    const books = appState.catalog.books || [];
+    const safeFolders = Array.isArray(folders) ? folders : [];
+    return TOPIC_GROUPS.map((group) => ({
+      group,
+      count: safeFolders.filter((f) => f && groupForFolder(f, books)?.id === group.id).length,
+    })).filter((g) => g.count > 0);
+  }, [folders]);
 
   const filteredBooks = useMemo(() => {
     if (filterType === 'folders') {
@@ -538,12 +558,47 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search this folder..."
+              placeholder="Search folders and books — type a name..."
               className="w-full pl-9 pr-4 py-2 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded-md focus:outline-none focus:border-[var(--gold)] text-xs sm:text-sm font-sans transition-colors"
-              aria-label="Search this folder"
+              aria-label="Search folders and books"
             />
           </div>
         </div>
+
+        {/* Row 3b: Topic groups — 6 big topics instead of 36 folder names */}
+        {folderGroupCounts.length > 0 && (
+          <div className="pt-2 border-t border-[var(--border-subtle)]">
+            <p className="text-[11px] text-[var(--text-muted)] mb-2">Pick a topic to narrow the folders:</p>
+            <div className="flex gap-2 flex-wrap" role="group" aria-label="Topics">
+              <button
+                type="button"
+                onClick={() => setSelectedGroup(null)}
+                className={`tap-target px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer ${
+                  selectedGroup === null
+                    ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                    : 'bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)] hover:border-[var(--gold)]/50'
+                }`}
+              >
+                All folders ({(folders || []).length})
+              </button>
+              {folderGroupCounts.map(({ group, count }) => (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => setSelectedGroup(selectedGroup === group.id ? null : group.id)}
+                  aria-pressed={selectedGroup === group.id}
+                  className={`tap-target px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer ${
+                    selectedGroup === group.id
+                      ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                      : 'bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)] hover:border-[var(--gold)]/50'
+                  }`}
+                >
+                  {group.title} ({count})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Row 4: Controls Toolbar (Sort, Filter, View Toggles) */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[var(--border-subtle)] text-xs">
@@ -730,7 +785,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
             {/* 1. Folders Group */}
             {sortedFolders.map((folder, i) => {
               const itemCount = appState.getItemCountForFolder(folder.id);
-              const formattedDate = formatReadableDate(folder.updatedAt || folder.createdAt);
+              const formattedDate = formatCatalogDate(folder.createdAt, folder.updatedAt);
               const menuKey = `folder-${folder.id}`;
               const isMenuOpen = activeMenuKey === menuKey;
 
@@ -746,7 +801,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                     <FolderIcon className="w-5 h-5 text-[var(--gold)] fill-[var(--gold)]/20 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <span className="font-semibold text-[var(--text-main)] group-hover:text-[var(--gold)] transition-colors truncate block">
-                        {folder.name}
+                        {cleanFolderName(folder.name)}
                       </span>
                       {folder.description && (
                         <span className="text-xs text-[var(--text-muted)] truncate block font-normal leading-tight">
@@ -875,7 +930,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
               const typeLabel = getTypeLabel(book);
               const badgeColor = getTypeBadgeColor(itemType);
               const cleanTitle = formatCleanTitle(book.title);
-              const formattedDate = formatReadableDate(book.updatedDate || book.addedDate);
+              const formattedDate = formatCatalogDate(book.addedDate, book.updatedDate);
               const formattedSize = book.fileSize ? formatFileSize(book.fileSize) : book.pageCount ? `${book.pageCount}p` : 'File';
               const targetUrl = getItemUrl(book);
               const menuKey = `book-${book.id}`;
@@ -1168,7 +1223,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                       <FolderIcon className="w-6 h-6 text-[var(--gold)] fill-[var(--gold)]/20 shrink-0" />
                       <div className="min-w-0">
                         <h4 className="font-semibold text-xs sm:text-sm text-[var(--text-main)] group-hover:text-[var(--gold)] truncate">
-                          {folder.name}
+                          {cleanFolderName(folder.name)}
                         </h4>
                         <p className="text-[11px] text-[var(--text-muted)]">
                           {itemCount} {itemCount === 1 ? 'item' : 'items'}

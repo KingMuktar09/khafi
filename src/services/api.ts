@@ -116,28 +116,52 @@ export const api = {
     }
 
     inFlightCatalogPromise = (async () => {
+      // 1) Live API first: this is the only source that reflects admin
+      // edits, paid marks and Drive sync made after this build.
       try {
         const res = await fetchWithRetry('/api/catalog', {
           headers: getAuthHeaders(),
         });
         const parsed = await safeParseJson<CatalogData>(res);
-        if (!parsed.ok || !parsed.data) {
-          throw new Error(parsed.error || 'Failed to load catalog.');
+        if (parsed.ok && parsed.data && (parsed.data.books?.length || parsed.data.folders?.length)) {
+          cachedCatalog = parsed.data;
+          try {
+            sessionStorage.setItem('khafi_last_catalog', JSON.stringify(parsed.data));
+          } catch {}
+          return parsed.data;
         }
-        cachedCatalog = parsed.data;
-        try {
-          sessionStorage.setItem('khafi_last_catalog', JSON.stringify(parsed.data));
-        } catch {}
-        return parsed.data;
+        console.warn('API catalog empty or failed, falling back to static catalog:', parsed.error || res.status);
       } catch (err) {
-        console.error('API getCatalog notice (using cached catalog if available):', err);
-        if (cachedCatalog && (cachedCatalog.folders?.length > 0 || cachedCatalog.books?.length > 0)) {
-          return cachedCatalog;
-        }
-        return { folders: [], books: [] };
-      } finally {
-        inFlightCatalogPromise = null;
+        console.warn('API catalog unreachable, falling back to static catalog:', err);
       }
+
+      // 2) Static fallback: public/catalog.json, copied from
+      // data/catalog.json at build time (scripts/copy-catalog.mjs) and
+      // served as a plain file, so the library still shows all 173 books
+      // on a static-only deploy where /api/catalog 404s (Vercel Drop
+      // deploy without the serverless api/index.ts). It is a snapshot
+      // from build time, and paid-book links are stripped in the copy,
+      // exactly as the API does for visitors.
+      try {
+        const staticRes = await fetch('/catalog.json', { cache: 'no-cache' });
+        const staticParsed = await safeParseJson<CatalogData>(staticRes);
+        if (staticParsed.ok && staticParsed.data && (staticParsed.data.books?.length || staticParsed.data.folders?.length)) {
+          cachedCatalog = staticParsed.data;
+          try {
+            sessionStorage.setItem('khafi_last_catalog', JSON.stringify(staticParsed.data));
+          } catch {}
+          return staticParsed.data;
+        }
+        console.error('Static catalog fallback failed:', staticParsed.error || staticRes.status);
+      } catch (err) {
+        console.error('Static catalog fallback unreachable:', err);
+      }
+
+      // 3) Last resort: the catalog cached in this browser session.
+      if (cachedCatalog && (cachedCatalog.folders?.length > 0 || cachedCatalog.books?.length > 0)) {
+        return cachedCatalog;
+      }
+      return { folders: [], books: [] };
     })();
 
     return inFlightCatalogPromise;
@@ -179,16 +203,16 @@ export const api = {
     return { driveConfigured: false, mode: '', books: 0, paidBooks: 0 };
   },
 
-  async savePaymentSettings(settings: PaymentSettings): Promise<{ success: boolean; error?: string }> {
+  async savePaymentSettings(settings: PaymentSettings): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch('/api/admin/payment-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(settings),
       });
-      const parsed = await safeParseJson<{ success: boolean; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok) return { success: false, error: parsed.error || 'Failed to save payment settings.' };
-      return { success: true };
+      return { success: true, durable: parsed.data?.durable, durableWarning: parsed.data?.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to save payment settings.' };
     }
@@ -252,101 +276,122 @@ export const api = {
     }
   },
 
-  async addBook(book: Partial<Book>): Promise<{ success: boolean; book?: Book; error?: string }> {
+  async addBook(book: Partial<Book>): Promise<{ success: boolean; book?: Book; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch('/api/admin/books', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(book),
       });
-      const parsed = await safeParseJson<{ success: boolean; book?: Book; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; book?: Book; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || !parsed.data.success) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Failed to add book.' };
       }
-      return { success: true, book: parsed.data.book };
+      return { success: true, book: parsed.data.book, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to add book.' };
     }
   },
 
-  async updateBook(id: string, book: Partial<Book>): Promise<{ success: boolean; book?: Book; error?: string }> {
+  async updateBook(id: string, book: Partial<Book>): Promise<{ success: boolean; book?: Book; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch(`/api/admin/books/${id}`, {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(book),
       });
-      const parsed = await safeParseJson<{ success: boolean; book?: Book; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; book?: Book; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || !parsed.data.success) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Failed to update book.' };
       }
-      return { success: true, book: parsed.data.book };
+      return { success: true, book: parsed.data.book, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to update book.' };
     }
   },
 
-  async deleteBook(id: string): Promise<{ success: boolean; error?: string }> {
+  async reorderBooks(payload: {
+    bookOrders: Array<{ id: string; sortOrder?: number; topic?: string; category?: string; isAuthentic?: boolean }>;
+    categoryOrder?: string[];
+    topicOrder?: string[];
+  }): Promise<{ success: boolean; updated?: number; durable?: boolean; durableWarning?: string; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/reorder', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(payload),
+      });
+      const parsed = await safeParseJson<{ success: boolean; updated?: number; durable?: boolean; durableWarning?: string; error?: string }>(res);
+      if (!parsed.ok || !parsed.data || !parsed.data.success) {
+        return { success: false, error: parsed.error || parsed.data?.error || 'Failed to save the new order.' };
+      }
+      return { success: true, updated: parsed.data.updated, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to save the new order.' };
+    }
+  },
+
+  async deleteBook(id: string): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch(`/api/admin/books/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      const parsed = await safeParseJson<{ success: boolean; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || !parsed.data.success) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Failed to delete book.' };
       }
-      return { success: true };
+      return { success: true, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to delete book.' };
     }
   },
 
-  async addFolder(folder: Partial<Folder>): Promise<{ success: boolean; folder?: Folder; error?: string }> {
+  async addFolder(folder: Partial<Folder>): Promise<{ success: boolean; folder?: Folder; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch('/api/admin/folders', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(folder),
       });
-      const parsed = await safeParseJson<{ success: boolean; folder?: Folder; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; folder?: Folder; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || !parsed.data.success) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Failed to add folder.' };
       }
-      return { success: true, folder: parsed.data.folder };
+      return { success: true, folder: parsed.data.folder, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to add folder.' };
     }
   },
 
-  async updateFolder(id: string, folder: Partial<Folder>): Promise<{ success: boolean; folder?: Folder; error?: string }> {
+  async updateFolder(id: string, folder: Partial<Folder>): Promise<{ success: boolean; folder?: Folder; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch(`/api/admin/folders/${id}`, {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(folder),
       });
-      const parsed = await safeParseJson<{ success: boolean; folder?: Folder; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; folder?: Folder; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || !parsed.data.success) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Failed to update folder.' };
       }
-      return { success: true, folder: parsed.data.folder };
+      return { success: true, folder: parsed.data.folder, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to update folder.' };
     }
   },
 
-  async deleteFolder(id: string): Promise<{ success: boolean; error?: string }> {
+  async deleteFolder(id: string): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
       const res = await fetch(`/api/admin/folders/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      const parsed = await safeParseJson<{ success: boolean; error?: string }>(res);
+      const parsed = await safeParseJson<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || !parsed.data.success) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Failed to delete folder.' };
       }
-      return { success: true };
+      return { success: true, durable: parsed.data.durable, durableWarning: parsed.data.durableWarning };
     } catch (err: any) {
       return { success: false, error: err.message || 'Failed to delete folder.' };
     }
@@ -421,6 +466,8 @@ export const api = {
     success: boolean;
     book?: Book;
     folderName?: string;
+    durable?: boolean;
+    durableWarning?: string;
     error?: string;
   }> {
     try {
@@ -547,6 +594,8 @@ export const api = {
     addedFolders?: number;
     removedFolders?: number;
     savedLocally?: boolean;
+    durable?: boolean;
+    durableWarning?: string;
     syncedAt?: string;
     error?: string;
   }> {

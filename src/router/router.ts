@@ -38,7 +38,7 @@ class Router {
 
   public navigate(
     view: ViewName,
-    params?: { folderId?: string | null; subfolderId?: string | null; bookId?: string | null; searchQuery?: string },
+    params?: { folderId?: string | null; subfolderId?: string | null; bookId?: string | null; searchQuery?: string; category?: string | null },
     options?: { replace?: boolean }
   ): void {
     const newRoute: RouteState = {
@@ -47,6 +47,7 @@ class Router {
       subfolderId: params?.subfolderId ?? null,
       bookId: params?.bookId ?? null,
       searchQuery: params?.searchQuery ?? undefined,
+      category: params?.category ?? null,
     };
 
     const url = this.buildUrl(newRoute);
@@ -84,6 +85,7 @@ class Router {
         const searchParams = new URLSearchParams();
         if (route.folderId) searchParams.set('folderId', route.folderId);
         if (route.subfolderId) searchParams.set('subfolderId', route.subfolderId);
+        if (route.category) searchParams.set('category', route.category);
         if (route.searchQuery) searchParams.set('q', route.searchQuery);
         const query = searchParams.toString();
         return query ? `/library?${query}` : '/library';
@@ -98,6 +100,18 @@ class Router {
         return route.bookId ? `/read/${route.bookId}` : '/library';
       case 'admin':
         return '/admin';
+      case 'journeys':
+        return '/journeys';
+      case 'timeline':
+        return '/timeline';
+      case 'shelf':
+        return '/shelf';
+      case 'finder':
+        return '/finder';
+      case 'wafq':
+        return '/wafq';
+      case 'amals':
+        return '/amals';
       default:
         return '/';
     }
@@ -122,6 +136,7 @@ class Router {
         folderId: params.get('folderId') || null,
         subfolderId: params.get('subfolderId') || null,
         searchQuery: params.get('q') || undefined,
+        category: params.get('category') || null,
       };
     }
 
@@ -135,6 +150,30 @@ class Router {
 
     if (pathname === '/admin') {
       return { view: 'admin' };
+    }
+
+    if (pathname === '/journeys') {
+      return { view: 'journeys' };
+    }
+
+    if (pathname === '/timeline') {
+      return { view: 'timeline' };
+    }
+
+    if (pathname === '/shelf') {
+      return { view: 'shelf' };
+    }
+
+    if (pathname === '/finder') {
+      return { view: 'finder' };
+    }
+
+    if (pathname === '/wafq') {
+      return { view: 'wafq' };
+    }
+
+    if (pathname === '/amals') {
+      return { view: 'amals' };
     }
 
     return { view: 'home' };

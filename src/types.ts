@@ -29,7 +29,13 @@ export interface Book {
   originalFilename?: string;
   author: string;
   description: string;
+  /** Category the admin sets (e.g. "Seerah", "Tafseer"). This is the
+   *  organising label — it is NOT the Drive folder. A book's folder
+   *  only says where its file lives; its category says what it is about. */
   category: string;
+  /** Topic inside a category (e.g. "Sufism" inside "All Sufis Books").
+   *  Free text set by the admin; empty means "no topic set yet". */
+  topic?: string;
   folderId: string;
   subfolderId?: string | null;
   tags: string[];
@@ -60,6 +66,12 @@ export interface Book {
   paymentLink?: string;
   paymentNote?: string;
   sortOrder?: number;
+  /** Marked Authentic by the library admin. "Authentic" here means the
+   *  admin checked this copy and found it to be the genuine, unaltered
+   *  text of the named work — not a fake, altered or mislabelled copy.
+   *  It is the admin's own check, not a scholarly certificate, and an
+   *  unmarked book is simply "not checked yet", not fake. */
+  isAuthentic?: boolean;
   publisher?: string;
   year?: string;
   language?: string;
@@ -70,7 +82,7 @@ export interface Book {
 
 export type LibraryItem = Book;
 
-export type ViewName = 'home' | 'library' | 'favorites' | 'info' | 'book' | 'read' | 'admin';
+export type ViewName = 'home' | 'library' | 'favorites' | 'info' | 'book' | 'read' | 'admin' | 'journeys' | 'timeline' | 'shelf' | 'finder' | 'wafq' | 'amals';
 
 export interface RouteState {
   view: ViewName;
@@ -78,6 +90,8 @@ export interface RouteState {
   subfolderId?: string | null;
   bookId?: string | null;
   searchQuery?: string;
+  /** Library category to open, by category NAME (topic/category browsing, not folders). */
+  category?: string | null;
 }
 
 export type ThemeMode = 'dark' | 'light';
@@ -117,6 +131,11 @@ export interface AdminUser {
 export interface CatalogData {
   folders: Folder[];
   books: Book[];
+  /** Admin-chosen display order of categories (category names). Names
+   *  not listed here sort alphabetically after the listed ones. */
+  categoryOrder?: string[];
+  /** Admin-chosen display order of topics (topic names), same rule. */
+  topicOrder?: string[];
 }
 
 /** UPI payment settings, admin-only. All fields empty by default; the admin

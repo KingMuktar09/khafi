@@ -4,7 +4,7 @@ import { Book } from '../../types';
 import { CoverImage } from './CoverImage';
 import { appState } from '../../state/appState';
 import { router } from '../../router/router';
-import { getItemType, getTypeLabel, getTypeBadgeColor } from '../../utils/fileUtils';
+import { getItemType, getTypeLabel, getTypeBadgeColor, getBookCoverUrl } from '../../utils/fileUtils';
 
 interface BookCardProps {
   book: Book;
@@ -42,11 +42,11 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0 })
       style={{ '--motion-i': Math.min(index, 11) } as React.CSSProperties}
       className="motion-card motion-item group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex flex-col h-full rounded-lg overflow-hidden"
     >
-      {/* Cover Image Container */}
-      <div className="relative aspect-[1/1.35] w-full overflow-hidden bg-[var(--bg-main)]">
+      {/* Cover Image Container — fixed 2:3 book ratio so the grid never jumps while covers load */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-[var(--bg-main)]">
         <CoverImage
           book={book}
-          coverUrl={book.coverUrl}
+          coverUrl={getBookCoverUrl(book)}
           fileUrl={book.fileUrl}
           title={book.title}
           author={book.author}
@@ -67,6 +67,26 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0 })
               Free
             </span>
           )}
+          {book.isAuthentic && (
+            <span
+              title="Marked Authentic by the library admin — this copy was checked and found to be the genuine, unaltered text of the named work."
+              className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-emerald-400/60 bg-black/70 text-emerald-300 backdrop-blur-sm rounded inline-flex items-center gap-1"
+            >
+              <CheckCircle2 className="w-3 h-3" />
+              Authentic
+            </span>
+          )}
+          {(() => {
+            const v = appState.getBookVersion(book);
+            return v.totalVersions > 1 ? (
+              <span
+                title={`Version ${v.versionNumber} of ${v.totalVersions} — dated ${v.versionDate || 'unknown'}. Same title, different copy.`}
+                className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 backdrop-blur-sm rounded"
+              >
+                Version {v.versionNumber} of {v.totalVersions}
+              </span>
+            ) : null;
+          })()}
         </div>
 
         {/* Reading Progress Ribbon/Badge Overlay */}
@@ -129,6 +149,18 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0 })
           <p className="text-xs text-[var(--text-muted)] line-clamp-1">
             {book.author}
           </p>
+          {(book.topic || book.category) && (
+            <p className="text-[11px] text-[var(--text-muted)] line-clamp-1 mt-0.5">
+              {book.topic ? (
+                <>
+                  <span className="text-[var(--gold)] font-medium">{book.topic}</span>
+                  <span> • {book.category}</span>
+                </>
+              ) : (
+                book.category
+              )}
+            </p>
+          )}
         </div>
 
         <div className="pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px] text-[var(--text-muted)] mt-2">

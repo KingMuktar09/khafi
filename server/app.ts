@@ -261,6 +261,17 @@ const upload = multer({
 
 // Helper to read catalog
 export function readCatalog() {
+  // Admin-chosen topic/category order lives in catalog.json next to
+  // folders/books. It must survive every read path, or the arrange
+  // order would vanish on the next load.
+  const pickOrders = (parsed: any) => ({
+    ...(Array.isArray(parsed?.categoryOrder)
+      ? { categoryOrder: parsed.categoryOrder.filter((n: any) => typeof n === 'string') }
+      : {}),
+    ...(Array.isArray(parsed?.topicOrder)
+      ? { topicOrder: parsed.topicOrder.filter((n: any) => typeof n === 'string') }
+      : {}),
+  });
   try {
     if (fs.existsSync(catalogFilePath)) {
       const content = fs.readFileSync(catalogFilePath, "utf8");
@@ -269,7 +280,7 @@ export function readCatalog() {
         const books = Array.isArray(parsed.books) ? parsed.books : [];
         const folders = Array.isArray(parsed.folders) ? parsed.folders : [];
         if (books.length > 0 || folders.length > 0) {
-          return { folders, books };
+          return { folders, books, ...pickOrders(parsed) };
         }
       }
     }
@@ -287,7 +298,7 @@ export function readCatalog() {
         const books = Array.isArray(parsed.books) ? parsed.books : [];
         const folders = Array.isArray(parsed.folders) ? parsed.folders : [];
         if (books.length > 0 || folders.length > 0) {
-          return { folders, books };
+          return { folders, books, ...pickOrders(parsed) };
         }
       }
     }
@@ -300,11 +311,11 @@ export function readCatalog() {
   // not guaranteed to be present in the serverless function filesystem.
   // Books carry their Drive externalUrl, so they open in Google Drive.
   try {
-    const bundled = bundledCatalog as unknown as { folders?: unknown; books?: unknown };
+    const bundled = bundledCatalog as unknown as { folders?: unknown; books?: unknown; categoryOrder?: unknown; topicOrder?: unknown };
     const folders = Array.isArray(bundled?.folders) ? bundled.folders : [];
     const books = Array.isArray(bundled?.books) ? bundled.books : [];
     if (folders.length > 0 || books.length > 0) {
-      return { folders, books };
+      return { folders, books, ...pickOrders(bundled) };
     }
   } catch (err) {
     console.error("Error reading bundled catalog:", err);
@@ -332,6 +343,204 @@ export function writeCatalog(data: any) {
     console.error("Error writing catalog:", err);
     return false;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Durable catalog saves: commit to GitHub.
+//
+// On Vercel, writeCatalog() only writes to /tmp, so admin changes (a book
+// marked paid, a price, an edit, a delete) vanish on redeploy or when the
+// next request lands on a fresh function instance — the user already lost
+// paid marks this way. When GITHUB_SYNC_TOKEN is set (a fine-grained
+// personal access token with Contents: read + write on this repo, added in
+// the Vercel dashboard as an env var), every admin catalog save also commits
+// the new file to GitHub main. Vercel auto-deploys from main, so the change
+// becomes the live catalog within a few minutes. The token is never logged.
+//
+// If the token is unset, or the commit fails for any reason, the local write
+// still succeeds and the caller gets durable:false with a plain-language
+// warning — the request never crashes because of GitHub.
+// ---------------------------------------------------------------------------
+export const GITHUB_SYNC_REPO = (process.env.GITHUB_SYNC_REPO || "KingMuktar09/khafi").trim();
+export const GITHUB_SYNC_BRANCH = (process.env.GITHUB_SYNC_BRANCH || "main").trim();
+
+export const DURABLE_SAVE_WARNING =
+  "Saved for now only — it will vanish on redeploy. Set GITHUB_SYNC_TOKEN in Vercel to save it permanently.";
+
+export function isGitHubSyncConfigured(): boolean {
+  return Boolean((process.env.GITHUB_SYNC_TOKEN || "").trim());
+}
+
+function shortTitle(title: unknown): string {
+  return String(title || "Untitled").replace(/[\r\n]+/g, " ").trim().slice(0, 80) || "Untitled";
+}
+
+async function githubApiFetch(
+  url: string,
+  token: string,
+  init?: { method?: string; body?: string }
+): Promise<{ ok: boolean; status: number; data: any }> {
+  const fetchFn = (globalThis as any).fetch as
+    | ((input: string, init?: any) => Promise<any>)
+    | undefined;
+  if (typeof fetchFn !== "function") {
+    return { ok: false, status: 0, data: null };
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetchFn(url, {
+      method: init?.method || "GET",
+      body: init?.body,
+      signal: controller.signal,
+      headers: {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        Authorization: `Bearer ${token}`,
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      },
+    });
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {
+      // Non-JSON body (e.g. an empty error page) — status still tells us enough.
+    }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err: any) {
+    return { ok: false, status: 0, data: null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Commit one UTF-8 text file into the repo via the GitHub Contents API.
+// Reads the file's current sha first, then PUTs the new content. A 409
+// means the file changed between our read and write: re-read the sha once
+// and retry once. Returns ok:false (never throws) on any failure.
+export async function commitFileToGitHub(
+  repoPath: string,
+  content: string,
+  commitMessage: string
+): Promise<{ ok: boolean; error?: string }> {
+  const token = (process.env.GITHUB_SYNC_TOKEN || "").trim();
+  if (!token) return { ok: false, error: "GITHUB_SYNC_TOKEN is not set." };
+  const [owner, repo] = GITHUB_SYNC_REPO.split("/").map((s) => s.trim());
+  if (!owner || !repo) {
+    return { ok: false, error: "GITHUB_SYNC_REPO is not in owner/repo form." };
+  }
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${repoPath}`;
+  const encoded = Buffer.from(content, "utf8").toString("base64");
+  const putWithSha = async (sha: string) =>
+    githubApiFetch(apiUrl, token, {
+      method: "PUT",
+      body: JSON.stringify({
+        message: commitMessage,
+        content: encoded,
+        sha,
+        branch: GITHUB_SYNC_BRANCH,
+      }),
+    });
+
+  try {
+    const current = await githubApiFetch(
+      `${apiUrl}?ref=${encodeURIComponent(GITHUB_SYNC_BRANCH)}`,
+      token
+    );
+    if (!current.ok || typeof current.data?.sha !== "string") {
+      return {
+        ok: false,
+        error: `Could not read ${repoPath} from GitHub (HTTP ${current.status || "network error"}).`,
+      };
+    }
+    let put = await putWithSha(current.data.sha);
+    if (put.status === 409) {
+      // Someone (or another instance) changed the file in between. One retry.
+      const fresh = await githubApiFetch(
+        `${apiUrl}?ref=${encodeURIComponent(GITHUB_SYNC_BRANCH)}`,
+        token
+      );
+      if (fresh.ok && typeof fresh.data?.sha === "string") {
+        put = await putWithSha(fresh.data.sha);
+      }
+    }
+    if (!put.ok) {
+      return { ok: false, error: `GitHub commit failed (HTTP ${put.status || "network error"}).` };
+    }
+    return { ok: true };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || "GitHub commit failed." };
+  }
+}
+
+export async function commitCatalogToGitHub(
+  data: any,
+  commitMessage: string
+): Promise<{ ok: boolean; error?: string }> {
+  return commitFileToGitHub(
+    "data/catalog.json",
+    JSON.stringify(data, null, 2),
+    commitMessage
+  );
+}
+
+export interface CatalogSaveResult {
+  /** The local (/tmp or disk) write succeeded. */
+  saved: boolean;
+  /** True only when the change was also committed to GitHub main. */
+  durable: boolean;
+  /** Plain-language warning for the admin UI when durable is false. */
+  durableWarning?: string;
+}
+
+// The one save path admin endpoints should use: local write first (fast,
+// keeps the change visible on this instance right away), then a GitHub
+// commit when the token is configured. Never throws.
+export async function saveCatalogDurably(
+  data: any,
+  commitMessage: string
+): Promise<CatalogSaveResult> {
+  const saved = writeCatalog(data);
+  if (!saved) return { saved: false, durable: false };
+  if (!isGitHubSyncConfigured()) {
+    return { saved: true, durable: false, durableWarning: DURABLE_SAVE_WARNING };
+  }
+  const committed = await commitCatalogToGitHub(data, commitMessage);
+  if (!committed.ok) {
+    console.warn("GitHub catalog commit failed:", committed.error);
+    return {
+      saved: true,
+      durable: false,
+      durableWarning: `Saved for now only — the permanent GitHub save failed (${committed.error || "unknown error"}). It will vanish on redeploy.`,
+    };
+  }
+  return { saved: true, durable: true };
+}
+
+// Same durability for the UPI payment settings (data/payment-settings.json):
+// without it the admin's UPI ID/QR vanish on redeploy just like paid marks.
+export async function savePaymentSettingsDurably(
+  data: any
+): Promise<CatalogSaveResult> {
+  const saved = writePaymentSettings(data);
+  if (!saved) return { saved: false, durable: false };
+  if (!isGitHubSyncConfigured()) {
+    return { saved: true, durable: false, durableWarning: DURABLE_SAVE_WARNING };
+  }
+  const committed = await commitFileToGitHub(
+    "data/payment-settings.json",
+    JSON.stringify(saved, null, 2),
+    "Admin: update payment settings (UPI)"
+  );
+  if (!committed.ok) {
+    console.warn("GitHub payment-settings commit failed:", committed.error);
+    return {
+      saved: true,
+      durable: false,
+      durableWarning: `Saved for now only — the permanent GitHub save failed (${committed.error || "unknown error"}). It will vanish on redeploy.`,
+    };
+  }
+  return { saved: true, durable: true };
 }
 
 // UPI payment settings (admin-only writes, public reads of the three fields).
@@ -564,13 +773,20 @@ app.get(["/api/payment-settings", "/payment-settings"], (req, res) => {
 });
 
 // Admin-only: save UPI payment settings.
-app.post(["/api/admin/payment-settings", "/admin/payment-settings"], requireAdmin, (req, res) => {
-  const saved = writePaymentSettings(req.body || {});
-  if (!saved) {
+app.post(["/api/admin/payment-settings", "/admin/payment-settings"], requireAdmin, async (req, res) => {
+  const save = await savePaymentSettingsDurably(req.body || {});
+  if (!save.saved) {
     res.status(500).json({ error: "Failed to save payment settings." });
     return;
   }
-  res.json({ success: true, settings: saved });
+  // savePaymentSettingsDurably returns the cleaned settings in `saved` only
+  // as a boolean, so re-read the stored values for the response.
+  res.json({
+    success: true,
+    settings: readPaymentSettings(),
+    durable: save.durable,
+    durableWarning: save.durableWarning,
+  });
 });
 
 // 1.1 Diagnostics endpoint
@@ -1204,9 +1420,19 @@ export function sanitizeCatalog(catalog: any, isAdmin = true) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
   const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin));
+  // Admin-chosen topic/category order survives the sanitiser — without
+  // these, the public site would lose the arrange order on every load.
+  const categoryOrder = Array.isArray(catalog.categoryOrder)
+    ? catalog.categoryOrder.filter((n: any) => typeof n === 'string')
+    : undefined;
+  const topicOrder = Array.isArray(catalog.topicOrder)
+    ? catalog.topicOrder.filter((n: any) => typeof n === 'string')
+    : undefined;
   return {
     folders: safeFolders,
     books: safeBooks,
+    ...(categoryOrder ? { categoryOrder } : {}),
+    ...(topicOrder ? { topicOrder } : {}),
   };
 }
 
@@ -1249,6 +1475,8 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
     res.json({
       folders: visibleFolders,
       books: visibleBooks,
+      ...(safeCatalog.categoryOrder ? { categoryOrder: safeCatalog.categoryOrder } : {}),
+      ...(safeCatalog.topicOrder ? { topicOrder: safeCatalog.topicOrder } : {}),
     });
   }
 });
@@ -1324,7 +1552,7 @@ export function requireAdmin(req: express.Request, res: express.Response, next: 
 }
 
 // 4. Admin Book Operations
-app.post(["/api/admin/books", "/admin/books"], requireAdmin, (req, res) => {
+app.post(["/api/admin/books", "/admin/books"], requireAdmin, async (req, res) => {
   const catalog = readCatalog();
   const newBook = req.body;
 
@@ -1350,14 +1578,25 @@ app.post(["/api/admin/books", "/admin/books"], requireAdmin, (req, res) => {
   catalog.books = catalog.books || [];
   catalog.books.unshift(bookToSave);
 
-  if (writeCatalog(catalog)) {
-    res.json({ success: true, book: sanitizeBook(bookToSave) });
+  const save = await saveCatalogDurably(
+    catalog,
+    bookToSave.isPaid
+      ? `Admin: add paid book "${shortTitle(bookToSave.title)}" (₹${bookToSave.price ?? "?"})`
+      : `Admin: add book "${shortTitle(bookToSave.title)}"`
+  );
+  if (save.saved) {
+    res.json({
+      success: true,
+      book: sanitizeBook(bookToSave),
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
   } else {
     res.status(500).json({ error: "Failed to save book to storage." });
   }
 });
 
-app.put(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, (req, res) => {
+app.put(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, async (req, res) => {
   const catalog = readCatalog();
   const bookId = req.params.id;
   const index = (catalog.books || []).findIndex((b: any) => b.id === bookId);
@@ -1371,19 +1610,40 @@ app.put(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, (req, res) =
     ...catalog.books[index],
     ...req.body,
     updatedDate: new Date().toISOString(),
-    tags: Array.isArray(req.body.tags) ? req.body.tags : (req.body.tags || "").split(",").map((t: string) => t.trim()).filter(Boolean),
+    // Only touch tags when the request actually sends them. A partial update
+    // (e.g. the one-click paid toggle or bulk "Mark Paid", which send only
+    // isPaid/price) must NOT wipe the book's existing tags.
+    tags:
+      req.body.tags === undefined || req.body.tags === null
+        ? catalog.books[index].tags
+        : Array.isArray(req.body.tags)
+          ? req.body.tags
+          : String(req.body.tags).split(",").map((t: string) => t.trim()).filter(Boolean),
   };
 
   catalog.books[index] = updatedBook;
 
-  if (writeCatalog(catalog)) {
-    res.json({ success: true, book: sanitizeBook(updatedBook) });
+  // Commit message names the paid change, so the repo history shows it.
+  const commitMessage =
+    req.body?.isPaid === true
+      ? `Admin: mark "${shortTitle(updatedBook.title)}" paid (₹${updatedBook.price ?? "?"})`
+      : req.body?.isPaid === false
+        ? `Admin: make "${shortTitle(updatedBook.title)}" free`
+        : `Admin: update book "${shortTitle(updatedBook.title)}"`;
+  const save = await saveCatalogDurably(catalog, commitMessage);
+  if (save.saved) {
+    res.json({
+      success: true,
+      book: sanitizeBook(updatedBook),
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
   } else {
     res.status(500).json({ error: "Failed to update book." });
   }
 });
 
-app.delete(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, (req, res) => {
+app.delete(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, async (req, res) => {
   const catalog = readCatalog();
   const bookId = req.params.id;
   const bookToDelete = (catalog.books || []).find((b: any) => b.id === bookId);
@@ -1399,10 +1659,62 @@ app.delete(["/api/admin/books/:id", "/admin/books/:id"], requireAdmin, (req, res
   // remove the Drive file itself, delete it separately in Google Drive.
   catalog.books = (catalog.books || []).filter((b: any) => b.id !== bookId);
 
-  if (writeCatalog(catalog)) {
-    res.json({ success: true, id: bookId });
+  const save = await saveCatalogDurably(
+    catalog,
+    `Admin: delete book "${shortTitle((bookToDelete as any)?.title)}"`
+  );
+  if (save.saved) {
+    res.json({
+      success: true,
+      id: bookId,
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
   } else {
     res.status(500).json({ error: "Failed to delete book." });
+  }
+});
+
+// 4.4 Admin reorder: arrange books by topic/category in one call.
+// The admin's Arrange panel sends the new order for a whole group at
+// once (book sortOrders, plus the category/topic display orders), so a
+// reorder never needs one request per book. topic/category/isAuthentic
+// can also be set per book here. Folders are untouched — arranging is
+// by topic and category, not by folder.
+app.post(["/api/admin/reorder", "/admin/reorder"], requireAdmin, async (req, res) => {
+  const catalog: any = readCatalog();
+  const body = req.body || {};
+  const bookOrders = Array.isArray(body.bookOrders) ? body.bookOrders : [];
+  const byId = new Map((catalog.books || []).map((b: any) => [b.id, b]));
+  let updated = 0;
+  for (const order of bookOrders) {
+    const book: any = order && byId.get(order.id);
+    if (!book) continue;
+    if (typeof order.sortOrder === 'number') book.sortOrder = order.sortOrder;
+    if (typeof order.topic === 'string') book.topic = order.topic.trim();
+    if (typeof order.category === 'string' && order.category.trim()) {
+      book.category = order.category.trim();
+    }
+    if (typeof order.isAuthentic === 'boolean') book.isAuthentic = order.isAuthentic;
+    book.updatedDate = new Date().toISOString();
+    updated++;
+  }
+  if (Array.isArray(body.categoryOrder)) {
+    catalog.categoryOrder = body.categoryOrder.filter((n: any) => typeof n === 'string');
+  }
+  if (Array.isArray(body.topicOrder)) {
+    catalog.topicOrder = body.topicOrder.filter((n: any) => typeof n === 'string');
+  }
+  const save = await saveCatalogDurably(catalog, "Admin: rearrange books / topics");
+  if (save.saved) {
+    res.json({
+      success: true,
+      updated,
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
+  } else {
+    res.status(500).json({ success: false, error: 'Failed to save the new order.' });
   }
 });
 
@@ -1429,7 +1741,7 @@ app.post(["/api/admin/sync", "/admin/sync"], requireAdmin, async (req, res) => {
       res.status(503).json({ success: false, configured: result.configured, error: result.error || "Drive sync failed." });
       return;
     }
-    const saved = writeCatalog(result.catalog);
+    const save = await saveCatalogDurably(result.catalog, "Admin: sync catalog from Drive");
     invalidateDriveCache();
     res.json({
       success: true,
@@ -1441,7 +1753,9 @@ app.post(["/api/admin/sync", "/admin/sync"], requireAdmin, async (req, res) => {
       removedBooks: result.removedBooks,
       addedFolders: result.addedFolders,
       removedFolders: result.removedFolders,
-      savedLocally: saved,
+      savedLocally: save.saved,
+      durable: save.durable,
+      durableWarning: save.durableWarning,
       syncedAt: result.syncedAt,
     });
   } catch (err: any) {
@@ -1472,7 +1786,7 @@ app.get(["/api/cron/sync", "/cron/sync"], async (req, res) => {
       res.status(503).json({ success: false, configured: result.configured, error: result.error || "Drive sync failed." });
       return;
     }
-    writeCatalog(result.catalog);
+    const save = await saveCatalogDurably(result.catalog, "Cron: daily Drive sync");
     invalidateDriveCache();
     res.json({
       success: true,
@@ -1481,6 +1795,8 @@ app.get(["/api/cron/sync", "/cron/sync"], async (req, res) => {
       categories: result.categories,
       addedBooks: result.addedBooks,
       removedBooks: result.removedBooks,
+      durable: save.durable,
+      durableWarning: save.durableWarning,
       syncedAt: result.syncedAt,
     });
   } catch (err: any) {
@@ -1538,9 +1854,18 @@ app.post(["/api/admin/folders", "/admin/folders"], requireAdmin, async (req, res
     catalog.folders.push(newFolder);
   }
 
-  if (writeCatalog(catalog)) {
+  const save = await saveCatalogDurably(
+    catalog,
+    `Admin: add folder "${shortTitle(newFolder.name)}"`
+  );
+  if (save.saved) {
     invalidateDriveCache();
-    res.json({ success: true, folder: sanitizeFolder(newFolder) });
+    res.json({
+      success: true,
+      folder: sanitizeFolder(newFolder),
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
   } else {
     res.status(500).json({ error: "Failed to save folder." });
   }
@@ -1590,9 +1915,18 @@ app.put(["/api/admin/folders/:id", "/admin/folders/:id"], requireAdmin, async (r
     catalog.folders.push(updatedFolder);
   }
 
-  if (writeCatalog(catalog)) {
+  const save = await saveCatalogDurably(
+    catalog,
+    `Admin: update folder "${shortTitle(updatedFolder.name)}"`
+  );
+  if (save.saved) {
     invalidateDriveCache();
-    res.json({ success: true, folder: sanitizeFolder(updatedFolder) });
+    res.json({
+      success: true,
+      folder: sanitizeFolder(updatedFolder),
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
   } else {
     res.status(500).json({ error: "Failed to update folder." });
   }
@@ -1627,9 +1961,15 @@ app.delete(["/api/admin/folders/:id", "/admin/folders/:id"], requireAdmin, async
   const catalog = readCatalog();
   catalog.folders = (catalog.folders || []).filter((f: any) => f.id !== folderId);
 
-  if (writeCatalog(catalog)) {
+  const save = await saveCatalogDurably(catalog, "Admin: delete folder");
+  if (save.saved) {
     invalidateDriveCache();
-    res.json({ success: true, id: folderId });
+    res.json({
+      success: true,
+      id: folderId,
+      durable: save.durable,
+      durableWarning: save.durableWarning,
+    });
   } else {
     res.status(500).json({ error: "Failed to delete folder." });
   }
@@ -2009,12 +2349,18 @@ app.post(["/api/admin/import-url", "/admin/import-url"], requireAdmin, async (re
     catalog.books = catalog.books || [];
     catalog.books.unshift(bookToSave);
 
-    if (writeCatalog(catalog)) {
+    const save = await saveCatalogDurably(
+      catalog,
+      `Admin: import "${shortTitle(bookToSave.title)}" from URL`
+    );
+    if (save.saved) {
       invalidateDriveCache();
       res.json({
         success: true,
         book: sanitizeBook(bookToSave),
         folderName: targetFolder ? targetFolder.name : "Library",
+        durable: save.durable,
+        durableWarning: save.durableWarning,
       });
     } else {
       res.status(500).json({ success: false, error: "Failed to update catalog after file import." });

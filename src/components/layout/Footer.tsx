@@ -1,7 +1,8 @@
 import React from 'react';
-import { BookOpen, Instagram, ShieldCheck } from 'lucide-react';
+import { Instagram, ShieldCheck } from 'lucide-react';
 import { router } from '../../router/router';
 import { appState } from '../../state/appState';
+import { siteConfig } from '../../config/siteConfig';
 
 export const Footer: React.FC = () => {
   return (
@@ -14,7 +15,12 @@ export const Footer: React.FC = () => {
             onClick={() => router.navigate('home')}
             className="flex items-center gap-2 hover:text-[var(--gold)] transition-colors focus:outline-none"
           >
-            <BookOpen className="w-4 h-4 text-[var(--gold)]" />
+            <img
+              src={siteConfig.logo}
+              alt="Ilm-e-Ghayb Library logo"
+              className="w-6 h-6 rounded-md object-cover border border-[var(--gold)]/30 shrink-0"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
             <span className="font-serif font-bold text-sm tracking-wide text-[var(--text-main)]">
               Ilm-e-Ghayb Library
             </span>
@@ -68,8 +74,9 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Copyright */}
-        <div className="text-[10px] text-[var(--text-faint)]">
-          Preserving classical knowledge &bull; Private Digital Library
+        <div className="text-[10px] text-[var(--text-faint)] text-center sm:text-right space-y-1">
+          <p>Free books on Islamic history and wisdom &bull; Open to everyone</p>
+          <p>Amals and magic squares are at your own risk — Ghayb Chronicles and this library are not responsible for any consequences.</p>
         </div>
 
       </div>

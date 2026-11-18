@@ -41,6 +41,7 @@ import { ImportUrlModal } from '../components/admin/ImportUrlModal';
 import { AiOrganizerModal } from '../components/admin/AiOrganizerModal';
 import { router } from '../router/router';
 import { MoveModal, isDescendantFolder } from '../components/admin/MoveModal';
+import { ArrangeByTopic } from '../components/admin/ArrangeByTopic';
 import { PaidBookControl } from '../components/admin/PaidBookControl';
 import { QuickRenameModal } from '../components/admin/QuickRenameModal';
 import { QuickDescriptionModal } from '../components/admin/QuickDescriptionModal';
@@ -172,7 +173,7 @@ export const AdminView: React.FC = () => {
     const res = await api.savePaymentSettings(paySettings);
     setPaySaving(false);
     if (res.success) {
-      appState.showToast('Payment settings saved.', 'success');
+      appState.showToast(`Payment settings saved. ${durableSuffix(res)}`, durableToastType(res));
     } else {
       appState.showToast(res.error || 'Failed to save payment settings.', 'error');
     }
@@ -190,7 +191,8 @@ export const AdminView: React.FC = () => {
         setSyncOk(true);
         setSyncMessage(
           `Synced with Drive: ${res.folders ?? 0} folders, ${res.books ?? 0} books` +
-          ` (${res.addedBooks ?? 0} new books, ${res.removedBooks ?? 0} removed).`
+          ` (${res.addedBooks ?? 0} new books, ${res.removedBooks ?? 0} removed). ` +
+          (res.durable === true ? 'Saved permanently.' : 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep it.')
         );
         await appState.loadCatalog();
       } else {
@@ -483,6 +485,18 @@ export const AdminView: React.FC = () => {
     }
   };
 
+  // Save-state line shown after every admin save. "Saved permanently" means
+  // the change was also committed to GitHub main (durable). Anything else —
+  // including an old server that sends no flag — is "Saved for now only":
+  // it lives only on this server instance and will vanish on redeploy until
+  // GITHUB_SYNC_TOKEN is set in Vercel.
+  const durableSuffix = (res: { durable?: boolean; durableWarning?: string }) =>
+    res.durable === true
+      ? 'Saved permanently.'
+      : 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep it.';
+  const durableToastType = (res: { durable?: boolean }) =>
+    res.durable === true ? 'success' as const : 'info' as const;
+
   // Save Handlers
   const handleSaveBook = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -501,10 +515,20 @@ export const AdminView: React.FC = () => {
     const folderIdToSet = editingBook.folderId || selectedFolderId || (folders[0]?.id || null);
     const targetFolder = folders.find((f) => f.id === folderIdToSet);
 
+    // Category is the admin's organising label, NOT the folder name: keep
+    // what the admin typed, and only fall back to the folder name when
+    // the category was left blank (e.g. a fresh upload).
     const bookPayload: Record<string, unknown> = {
       ...editingBook,
       folderId: folderIdToSet,
-      category: targetFolder ? targetFolder.name : 'General',
+      category:
+        typeof editingBook.category === 'string' && editingBook.category.trim()
+          ? editingBook.category.trim()
+          : targetFolder
+          ? targetFolder.name
+          : 'General',
+      topic:
+        typeof editingBook.topic === 'string' ? editingBook.topic.trim() : editingBook.topic,
     };
     // Fast path: a pasted Drive link needs no file upload at all. Store the
     // Drive file id from the link so readers open the book straight from
@@ -523,7 +547,7 @@ export const AdminView: React.FC = () => {
     if (editingBook.id) {
       const res = await api.updateBook(editingBook.id, bookPayload as Partial<Book>);
       if (res.success) {
-        appState.showToast('Book updated.', 'success');
+        appState.showToast(`Book updated. ${durableSuffix(res)}`, durableToastType(res));
         setBookModalOpen(false);
         setEditingBook(null);
         setInitialBookState(null);
@@ -534,7 +558,7 @@ export const AdminView: React.FC = () => {
     } else {
       const res = await api.addBook(bookPayload as Partial<Book>);
       if (res.success) {
-        appState.showToast('Book added to library.', 'success');
+        appState.showToast(`Book added to library. ${durableSuffix(res)}`, durableToastType(res));
         setBookModalOpen(false);
         setEditingBook(null);
         setInitialBookState(null);
@@ -564,7 +588,7 @@ export const AdminView: React.FC = () => {
     if (editingFolder.id) {
       const res = await api.updateFolder(editingFolder.id, payload);
       if (res.success) {
-        appState.showToast('Folder updated.', 'success');
+        appState.showToast(`Folder updated. ${durableSuffix(res)}`, durableToastType(res));
         setFolderModalOpen(false);
         setEditingFolder(null);
         setInitialFolderState(null);
@@ -575,7 +599,7 @@ export const AdminView: React.FC = () => {
     } else {
       const res = await api.addFolder(payload);
       if (res.success) {
-        appState.showToast('Folder created.', 'success');
+        appState.showToast(`Folder created. ${durableSuffix(res)}`, durableToastType(res));
         setFolderModalOpen(false);
         setEditingFolder(null);
         setInitialFolderState(null);
@@ -591,7 +615,7 @@ export const AdminView: React.FC = () => {
     const newVisible = !(folder.visible !== false);
     const res = await api.updateFolder(folder.id, { visible: newVisible });
     if (res.success) {
-      appState.showToast(`Folder "${folder.name}" is now ${newVisible ? 'public' : 'hidden'}.`, 'info');
+      appState.showToast(`Folder "${folder.name}" is now ${newVisible ? 'public' : 'hidden'}. ${durableSuffix(res)}`, durableToastType(res));
       await appState.loadCatalog();
     } else {
       appState.showToast(res.error || 'Failed to update visibility.', 'error');
@@ -602,7 +626,7 @@ export const AdminView: React.FC = () => {
     const newVisible = !(book.visible !== false);
     const res = await api.updateBook(book.id, { visible: newVisible });
     if (res.success) {
-      appState.showToast(`Book "${book.title}" is now ${newVisible ? 'public' : 'hidden'}.`, 'info');
+      appState.showToast(`Book "${book.title}" is now ${newVisible ? 'public' : 'hidden'}. ${durableSuffix(res)}`, durableToastType(res));
       await appState.loadCatalog();
     } else {
       appState.showToast(res.error || 'Failed to update visibility.', 'error');
@@ -621,7 +645,7 @@ export const AdminView: React.FC = () => {
         paymentNote: '',
       });
       if (res.success) {
-        appState.showToast(`"${book.title}" is now free.`, 'success');
+        appState.showToast(`"${book.title}" is now free. ${durableSuffix(res)}`, durableToastType(res));
         await appState.loadCatalog();
       } else {
         appState.showToast(res.error || 'Failed to make this book free.', 'error');
@@ -632,7 +656,7 @@ export const AdminView: React.FC = () => {
     if (typeof book.price === 'number' && book.price > 0) {
       const res = await api.updateBook(book.id, { isPaid: true });
       if (res.success) {
-        appState.showToast(`"${book.title}" is now paid — ₹${book.price.toLocaleString('en-IN')}.`, 'success');
+        appState.showToast(`"${book.title}" is now paid — ₹${book.price.toLocaleString('en-IN')}. ${durableSuffix(res)}`, durableToastType(res));
         await appState.loadCatalog();
       } else {
         appState.showToast(res.error || 'Failed to mark this book as paid.', 'error');
@@ -928,24 +952,30 @@ export const AdminView: React.FC = () => {
     }
     let ok = 0;
     let failed = 0;
+    let anyTemporary = false;
     for (const id of bookIds) {
       const res = await api.updateBook(id, {
         isPaid: true,
         price: bulkPaidState.price,
         paymentNote: bulkPaidState.paymentNote || '',
       });
-      if (res.success) ok++;
-      else failed++;
+      if (res.success) {
+        ok++;
+        if (res.durable !== true) anyTemporary = true;
+      } else failed++;
     }
     setBulkPaidModalOpen(false);
     setBulkPaidState({ isPaid: true });
     setSelectedKeys(new Set());
     await appState.loadCatalog();
+    const saveLine = anyTemporary
+      ? 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep them.'
+      : 'Saved permanently.';
     appState.showToast(
       failed > 0
-        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}. ${failed} could not be updated.`
-        : `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}.`,
-      failed > 0 ? 'error' : 'success'
+        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}. ${failed} could not be updated. ${saveLine}`
+        : `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}. ${saveLine}`,
+      failed > 0 ? 'error' : anyTemporary ? 'info' : 'success'
     );
   };
 
@@ -960,6 +990,7 @@ export const AdminView: React.FC = () => {
       return;
     }
     let ok = 0;
+    let anyTemporary = false;
     for (const id of bookIds) {
       const res = await api.updateBook(id, {
         isPaid: false,
@@ -967,11 +998,17 @@ export const AdminView: React.FC = () => {
         paymentLink: '',
         paymentNote: '',
       });
-      if (res.success) ok++;
+      if (res.success) {
+        ok++;
+        if (res.durable !== true) anyTemporary = true;
+      }
     }
     setSelectedKeys(new Set());
     await appState.loadCatalog();
-    appState.showToast(`${ok} book${ok === 1 ? '' : 's'} made free.`, 'success');
+    appState.showToast(
+      `${ok} book${ok === 1 ? '' : 's'} made free. ${anyTemporary ? 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep them.' : 'Saved permanently.'}`,
+      anyTemporary ? 'info' : 'success'
+    );
   };
 
   // Drag and Drop Handler
@@ -1450,6 +1487,10 @@ export const AdminView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Arrange by Topic & Category — the library's organising system.
+          No folder digging: search, set topic/category, reorder, mark Authentic. */}
+      <ArrangeByTopic />
 
       {/* Admin File List Table */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg overflow-hidden text-sm">
@@ -2369,6 +2410,71 @@ export const AdminView: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Topic & Category — how the book is arranged. Category is
+                  the organising label, NOT the folder; topic is the subject
+                  inside it. Type a new one and it is created on save. */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[var(--text-muted)] mb-1 font-medium">
+                    Topic
+                  </label>
+                  <input
+                    type="text"
+                    list="admin-topics"
+                    value={editingBook.topic || ''}
+                    onChange={(e) =>
+                      setEditingBook((prev) => ({ ...prev, topic: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
+                    placeholder="e.g. Sufism, Tafseer, Seerah"
+                  />
+                  <datalist id="admin-topics">
+                    {[...new Set(books.map((b) => (b.topic || '').trim()).filter(Boolean))].map((t) => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div>
+                  <label className="block text-[var(--text-muted)] mb-1 font-medium">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    list="admin-categories"
+                    value={editingBook.category || ''}
+                    onChange={(e) =>
+                      setEditingBook((prev) => ({ ...prev, category: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 bg-[var(--bg-main)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
+                    placeholder="e.g. All Sufis Books"
+                  />
+                  <datalist id="admin-categories">
+                    {[...new Set(books.map((b) => (b.category || '').trim()).filter(Boolean))].map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                </div>
+              </div>
+
+              <label className="flex items-start gap-2 cursor-pointer select-none text-xs">
+                <input
+                  type="checkbox"
+                  checked={editingBook.isAuthentic === true}
+                  onChange={(e) =>
+                    setEditingBook((prev) => ({ ...prev, isAuthentic: e.target.checked }))
+                  }
+                  className="w-4 h-4 mt-0.5 rounded text-[var(--gold)] accent-[var(--gold)] cursor-pointer shrink-0"
+                />
+                <span>
+                  <span className="font-semibold text-[var(--text-main)]">Mark Authentic</span>
+                  <span className="text-[var(--text-muted)] block">
+                    You checked this copy and found it the genuine, unaltered text of the named
+                    work. Unmarked books are simply not checked yet, not fake.
+                  </span>
+                </span>
+              </label>
 
               {/* Paid or free — one toggle + price, right at the top. */}
               <PaidBookControl

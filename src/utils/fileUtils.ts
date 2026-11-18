@@ -128,6 +128,53 @@ export function getDriveDownloadUrl(item: Partial<Book>): string | null {
   return `https://drive.google.com/uc?export=download&id=${driveId}`;
 }
 
+/**
+ * Drive files whose thumbnail is NOT a usable cover, checked 18 Nov 2026
+ * against every book in the catalog (all 173 thumbnail URLs fetched):
+ * their first page renders blank white (or, for the docx, a junk web-page
+ * export), so the generated title cover looks better. Files Drive has no
+ * thumbnail for at all (the 36 Markdown notes, a few PDFs) are NOT listed
+ * here — the <img> onError already falls back for those, because Drive
+ * answers those with an HTML 404 the browser refuses to render as an image.
+ */
+const BLANK_COVER_FILE_IDS = new Set([
+  '1ligTUyI9gQIG_vb5MFLdiIi5f0BZLOev', // The Book Of The Thousand Nights And A Night, Vol 9
+  '1EV8e9zoIt4b0HQ3UUuKnhtrQpZ-sZH6E', // The Book Of The Thousand Nights And One Night, Vol 5
+  '19P9vcgsn3kfgbqzjLbeCy1C6EA-sGBWa', // The Book Of The Thousand Nights And One Night, Vol 6
+  '1TrImmeAtsGrrg_THonBNMwc_15746sFt', // Thousand Nights And A Night, Vol 8
+  '1vmxvAHKMpMX_jroWuU38tIYcLSiJn2qz', // The Thousand Nights And One Night, Vol 7
+  '1gKygGbTJSNtkvcRKSURJ3vGnNVNgmDI5', // Kitab Al Bulhan (docx — Drive renders a web-page export)
+  '1H9ot2gZvWC2jYdDmKPXcx764Jnp9pC8T', // Imam Nawawis 40 Hadith (near-blank first page)
+]);
+
+/**
+ * Google Drive thumbnail: Drive renders the real first page of a PDF as an
+ * image. Free, no bytes through our server, and it loads anonymously because
+ * the library folder is shared "Anyone with the link can view". The visitor
+ * catalog strips big data-URI covers (see server sanitizeBook), so without
+ * this the grid shows only the generated title cover.
+ * Only PDFs and images get one: Drive has no thumbnail for Markdown notes
+ * (404) and renders junk for docx, so those fall back to the title cover
+ * without a doomed request.
+ */
+export function getDriveThumbnailUrl(item: Partial<Book>, width = 400): string | null {
+  const driveId = getDriveFileId(item);
+  if (!driveId || BLANK_COVER_FILE_IDS.has(driveId)) return null;
+  const type = getItemType(item);
+  if (type !== 'pdf' && type !== 'image') return null;
+  return `https://drive.google.com/thumbnail?id=${driveId}&sz=w${width}`;
+}
+
+/**
+ * Best cover image for a book card. Drive books get their real first page
+ * (the thumbnail); anything else falls back to the stored cover, then
+ * undefined (the UI draws its generated title cover). Paid books get no
+ * Drive id for visitors, so they never leak a thumbnail here.
+ */
+export function getBookCoverUrl(book: Partial<Book>): string | undefined {
+  return getDriveThumbnailUrl(book) || book.thumbnailUrl || book.coverUrl || undefined;
+}
+
 export function getItemUrl(item: Partial<Book>): string {
   if (!item) return '';
 
@@ -200,12 +247,37 @@ export function getTypeBadgeColor(type: ItemType): { bg: string; text: string; b
 
 export function formatFileSize(bytes?: number | string): string {
   if (bytes === undefined || bytes === null || bytes === '') return '';
+  // Catalog stores sizes as suffixed strings ("2.3 MB", "932.7 KB").
+  // parseFloat("2.3 MB") is 2.3, which the old code then printed as "2.3 B".
+  // Normalise suffixed strings through parseSizeBytes first.
+  if (typeof bytes === 'string' && /[KMG]B/i.test(bytes)) {
+    const parsed = parseSizeBytes(bytes);
+    if (!parsed) return '';
+    return formatFileSize(parsed);
+  }
   const num = typeof bytes === 'number' ? bytes : parseFloat(bytes);
   if (isNaN(num)) return typeof bytes === 'string' ? bytes : '';
+  if (num <= 0) return '';
   if (num < 1024) return `${num} B`;
   if (num < 1024 * 1024) return `${(num / 1024).toFixed(1)} KB`;
   if (num < 1024 * 1024 * 1024) return `${(num / (1024 * 1024)).toFixed(1)} MB`;
   return `${(num / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+/**
+ * Date for a catalog item. The catalog rebuild stamps every book/folder
+ * with the same addedDate and updatedDate (the build date), which is not
+ * a real per-item date — showing it as "Today" for every row is wrong.
+ * Returns '' when added and updated are the same stamp, so callers show
+ * '—' / hide the date instead of inventing one. A real per-item date
+ * needs the sync/build step to store each Drive file's modifiedTime.
+ */
+const CATALOG_BUILD_STAMP = '2026-11-17T00:00:00.000Z';
+export function formatCatalogDate(added?: string, updated?: string): string {
+  const a = added || '';
+  const u = updated || '';
+  if (a && u && a === u && a === CATALOG_BUILD_STAMP) return '';
+  return formatReadableDate(u || a);
 }
 
 export function extractTitleFromFilename(rawTitle?: string): string {

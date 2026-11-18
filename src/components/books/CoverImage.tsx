@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { generateFallbackCoverSvg } from '../../services/pdf';
 import { Book } from '../../types';
-import { getItemType, getItemUrl, getTypeLabel, getTypeBadgeColor, getFileExtension } from '../../utils/fileUtils';
+import { getItemType, getItemUrl, getTypeLabel, getTypeBadgeColor, getFileExtension, getBookCoverUrl } from '../../utils/fileUtils';
 import {
   FileText,
   FileSpreadsheet,
@@ -41,7 +41,10 @@ export const CoverImage: React.FC<CoverImageProps> = ({
   const itemAuthor = book?.author || author || '';
   const itemCategory = book?.category || category || '';
   const itemType = getItemType(book || { fileType: fileType as any, fileUrl, title: itemTitle });
-  const rawUrl = book?.thumbnailUrl || book?.coverUrl || coverUrl || (itemType === 'image' ? (book?.fileUrl || fileUrl) : undefined);
+  // Real first page from Drive first (getBookCoverUrl), then any stored cover,
+  // then the image file itself. Paid books have no Drive id for visitors, so
+  // they fall through to the generated title cover below — no leak.
+  const rawUrl = book?.thumbnailUrl || book?.coverUrl || coverUrl || getBookCoverUrl(book) || (itemType === 'image' ? (book?.fileUrl || fileUrl) : undefined);
 
   const ext = getFileExtension(book?.fileUrl || fileUrl || itemTitle).toUpperCase();
   const badgeColor = getTypeBadgeColor(itemType);
@@ -56,6 +59,7 @@ export const CoverImage: React.FC<CoverImageProps> = ({
           onError={() => setImageError(true)}
           className={`${className} transition-transform duration-500 group-hover/cover:scale-105`}
           loading="lazy"
+          decoding="async"
         />
         <div className="absolute inset-0 border border-black/10 dark:border-white/10 pointer-events-none" />
       </div>
@@ -136,6 +140,7 @@ export const CoverImage: React.FC<CoverImageProps> = ({
         alt={`Cover for ${itemTitle}`}
         className={`${className} transition-transform duration-500 group-hover/cover:scale-105`}
         loading="lazy"
+        decoding="async"
       />
       <div className="absolute inset-y-0 left-0 w-2.5 bg-gradient-to-r from-black/50 via-black/20 to-transparent pointer-events-none" />
       <div className="absolute inset-0 border border-white/5 pointer-events-none" />

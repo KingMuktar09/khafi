@@ -2,12 +2,93 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, BookOpen, Download, ExternalLink, IndianRupee, Instagram, Star, Tag, Play, Image as ImageIcon, Music as AudioIcon, FileText, HardDrive, Folder as FolderIcon, Calendar, FileType, Hash } from 'lucide-react';
 import { appState } from '../state/appState';
 import { router } from '../router/router';
+import { api } from '../services/api';
+import { Book } from '../types';
 import { CoverImage } from '../components/books/CoverImage';
 import { PaidLockScreen } from '../components/books/PaidLockScreen';
+import { PaidBookControl } from '../components/admin/PaidBookControl';
 import { ReadingProgressTracker } from '../components/books/ReadingProgressTracker';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, downloadBookFile } from '../utils/fileUtils';
+import { AUTHENTIC_MEANING, formatVersionDate } from '../utils/bookOrder';
+
+// Admin-only: mark THIS already-added book paid (with a ₹ price) or free
+// again, right from its details page — no need to go back to the admin list
+// and open the edit form. Only the admin ever sees this panel; visitors see
+// the paid lock screen instead.
+const AdminPaidPanel: React.FC<{ book: Book }> = ({ book }) => {
+  const [draft, setDraft] = useState({
+    isPaid: Boolean(book.isPaid),
+    price: book.price,
+    paymentNote: book.paymentNote || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Keep the panel in step when the book changes (e.g. after a save reloads
+  // the catalog, or the admin opens another book).
+  useEffect(() => {
+    setDraft({
+      isPaid: Boolean(book.isPaid),
+      price: book.price,
+      paymentNote: book.paymentNote || '',
+    });
+    setNotice(null);
+  }, [book.id, book.isPaid, book.price, book.paymentNote]);
+
+  const handleSavePaid = async () => {
+    if (draft.isPaid && !(typeof draft.price === 'number' && draft.price > 0)) {
+      setNotice({ text: 'Set a price in ₹ for this paid book.', ok: false });
+      return;
+    }
+    setSaving(true);
+    const res = await api.updateBook(book.id, {
+      isPaid: draft.isPaid,
+      price: draft.isPaid ? draft.price : (null as unknown as number),
+      paymentLink: draft.isPaid ? undefined : '',
+      paymentNote: draft.isPaid ? (draft.paymentNote || '') : '',
+    });
+    setSaving(false);
+    if (res.success) {
+      setNotice({
+        text:
+          res.durable === true
+            ? 'Saved permanently.'
+            : 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep it.',
+        ok: true,
+      });
+      await appState.loadCatalog();
+    } else {
+      setNotice({ text: res.error || 'Failed to save.', ok: false });
+    }
+  };
+
+  return (
+    <div className="space-y-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-3">
+      <p className="text-xs font-semibold text-[var(--text-main)]">
+        Admin: paid or free
+      </p>
+      <PaidBookControl
+        book={draft}
+        onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
+      />
+      <button
+        type="button"
+        onClick={handleSavePaid}
+        disabled={saving}
+        className="w-full px-3 py-2 bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black font-semibold rounded text-xs cursor-pointer"
+      >
+        {saving ? 'Saving…' : 'Save paid setting'}
+      </button>
+      {notice && (
+        <p className={`text-[11px] leading-relaxed ${notice.ok ? 'text-emerald-400' : 'text-rose-400'}`}>
+          {notice.text}
+        </p>
+      )}
+    </div>
+  );
+};
 
 export const BookDetailsView: React.FC = () => {
   const bookId = appState.route.bookId;
@@ -48,6 +129,7 @@ export const BookDetailsView: React.FC = () => {
   const fileUrl = getItemUrl(book);
   const ext = getFileExtension(fileUrl || book.title).toUpperCase();
   const folder = book.folderId ? appState.getFolderById(book.folderId) : undefined;
+  const version = appState.getBookVersion(book);
 
   const handleOpen = () => {
     if (appState.hasAcknowledgedAdvisory()) {
@@ -153,18 +235,74 @@ export const BookDetailsView: React.FC = () => {
               </>
             )}
           </button>
+
+          {/* My Shelf — save with a reading status, local only. */}
+          <div className="w-full max-w-[200px] space-y-1.5">
+            <p className="text-[11px] text-[var(--text-muted)] font-semibold text-center">My Shelf</p>
+            <div className="flex gap-1.5">
+              {(['to-read', 'reading', 'finished'] as const).map((status) => {
+                const active = appState.getShelfStatus(book.id) === status;
+                const label = status === 'to-read' ? 'To Read' : status === 'reading' ? 'Reading' : 'Finished';
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => appState.setShelfStatus(book.id, active ? null : status)}
+                    aria-pressed={active}
+                    className={`tap-target flex-1 py-1.5 px-1 text-[11px] rounded border font-semibold cursor-pointer transition-colors ${
+                      active
+                        ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                        : 'bg-[var(--bg-main)] text-[var(--text-muted)] border-[var(--border-main)] hover:text-[var(--text-main)] hover:border-[var(--gold)]/50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {appState.getShelfStatus(book.id) && (
+              <button
+                type="button"
+                onClick={() => appState.setShelfStatus(book.id, null)}
+                className="w-full text-[11px] text-[var(--text-muted)] hover:text-[var(--gold)] cursor-pointer"
+              >
+                Remove from My Shelf
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Information & Actions */}
         <div className="md:col-span-8 flex flex-col justify-between space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
                 {typeLabel}
               </span>
               <span className="text-xs text-[var(--gold)] font-medium">
                 {book.category}
               </span>
+              {book.topic && (
+                <span className="text-xs text-[var(--text-muted)] font-medium">
+                  • {book.topic}
+                </span>
+              )}
+              {book.isAuthentic && (
+                <span
+                  title={AUTHENTIC_MEANING}
+                  className="px-2 py-0.5 rounded text-[10px] font-bold border uppercase bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
+                >
+                  ✓ Authentic
+                </span>
+              )}
+              {version.totalVersions > 1 && (
+                <span
+                  title={`Same title, different copy. This is Version ${version.versionNumber} of ${version.totalVersions}, dated ${formatVersionDate(book)} (Drive date).`}
+                  className="px-2 py-0.5 rounded text-[10px] font-bold border uppercase bg-[var(--bg-main)] text-[var(--text-muted)] border-[var(--border-main)]"
+                >
+                  Version {version.versionNumber} of {version.totalVersions} • {formatVersionDate(book)}
+                </span>
+              )}
             </div>
 
             <h1 className="font-display font-semibold text-3xl text-[var(--text-main)] leading-tight">
@@ -212,6 +350,7 @@ export const BookDetailsView: React.FC = () => {
                     {typeof book.price === 'number' ? ` (₹${book.price.toLocaleString('en-IN')})` : ''}. Visitors see the UPI checkout instead of the reader.
                   </p>
                 )}
+                {isAdmin && <AdminPaidPanel book={book} />}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {book.externalUrl ? (
                     <a

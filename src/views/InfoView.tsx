@@ -18,7 +18,8 @@ export const InfoView: React.FC = () => {
           Ilm-e-Ghayb Library
         </h1>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl">
-          A personal digital space designed for collecting, organizing, exploring, and preserving sacred, scholarly, and beneficial knowledge.
+          A free library of old and important books — on the Quran, the Prophet's life, Sufism, history and
+          more. Everyone is welcome to read.
         </p>
       </div>
 
@@ -117,10 +118,36 @@ export const InfoView: React.FC = () => {
         </h2>
         <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
           <p>
-            Ilm-e-Ghayb Library, by Ghayb Chronicles, is a private space for Ilm — hidden knowledge, Sufi wisdom, and the books behind it.
+            Ilm-e-Ghayb Library, by Ghayb Chronicles, is a free library of hidden knowledge and Sufi wisdom —
+            Sufism is the spiritual side of Islam — and the books behind it.
           </p>
           <p>
-            The library has a particular interest in Islamic knowledge, Quran, Sunnah, spirituality, history, philosophy, and beneficial knowledge from different traditions and disciplines, with sources in every entry.
+            It covers Islamic knowledge — the Quran, the Sunnah (the Prophet's way of life), spirituality,
+            history and philosophy — with the source named in every entry, so you can check it yourself.
+          </p>
+        </div>
+      </section>
+
+      {/* What "Authentic" means */}
+      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-6 space-y-3">
+        <h2 className="font-semibold text-lg text-[var(--text-main)]">
+          What does “Authentic” mean here?
+        </h2>
+        <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
+          <p>
+            A book marked Authentic was checked by the library admin and found to be the genuine,
+            unaltered text of the named work — not a fake, altered or mislabelled copy.
+          </p>
+          <p>
+            It is the admin's own check, not a scholarly certificate. A book without the mark has
+            simply not been checked yet, not that it is fake. You can filter the library to
+            Authentic books only from the Library page.
+          </p>
+          <p>
+            Books with the same title are shown as versions — Version 1 is the oldest copy,
+            Version 2 the next — each with its real date, so you can tell which copy you are
+            opening. If two copies share a title, check the date, author and edition before
+            choosing.
           </p>
         </div>
       </section>
@@ -149,7 +176,7 @@ export const InfoView: React.FC = () => {
           Connect
         </h2>
         <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-          For inquiries, recommendations, or scholarly discussions, feel free to connect via social platforms below:
+          Questions, or a book to suggest? Message us here:
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

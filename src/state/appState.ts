@@ -3,6 +3,17 @@ import { api } from '../services/api';
 import { storage } from '../services/storage';
 import { router } from '../router/router';
 import { ACCENT_PALETTES } from '../config/accentPalettes';
+import { JOURNEYS } from '../data/specialFeatures';
+import type { AmalLog, ReadingStats, ShelfMap, ShelfStatus } from '../data/tools';
+import { computeReadingStats, shelfBooks } from '../data/tools';
+import {
+  getBookVersion,
+  getCategories,
+  getTopics,
+  getTopicsForCategory,
+  sortBooksByTopicCategory,
+  type BookVersion,
+} from '../utils/bookOrder';
 
 type StateListener = () => void;
 
@@ -16,6 +27,11 @@ class AppState {
   public favorites: string[] = storage.getFavorites();
   public recentlyViewed: string[] = storage.getRecentlyViewed();
   public readingProgress: Record<string, ReadingProgress> = storage.getReadingProgress();
+  public bookmarks: Record<string, number[]> = storage.getBookmarks();
+  public journeyProgress: Record<string, string[]> = storage.getJourneyProgress();
+  public shelf: ShelfMap = storage.getShelf();
+  public visitDates: string[] = storage.recordVisit();
+  public amalLog: AmalLog = storage.getAmalLog();
   public settings: UserSettings = storage.getSettings();
   public theme: ThemeMode = this.settings.appearance === 'light' ? 'light' : 'dark';
   public toasts: Toast[] = [];
@@ -182,6 +198,97 @@ class AppState {
     this.notify();
   }
 
+  // Bookmarks — saved page numbers, local only.
+  public getBookmarksForBook(bookId: string): number[] {
+    return this.bookmarks[bookId] || [];
+  }
+
+  public toggleBookmark(bookId: string, page: number) {
+    this.bookmarks = { ...this.bookmarks, [bookId]: storage.toggleBookmark(bookId, page) };
+    if (this.bookmarks[bookId].length === 0) {
+      const next = { ...this.bookmarks };
+      delete next[bookId];
+      this.bookmarks = next;
+    }
+    this.notify();
+  }
+
+  // Guided Reading Journeys — done steps, local only.
+  public getJourneyDone(journeyId: string): string[] {
+    return this.journeyProgress[journeyId] || [];
+  }
+
+  // My Shelf — saved books with a reading status, local only.
+  public getShelfStatus(bookId: string): ShelfStatus | undefined {
+    return this.shelf[bookId];
+  }
+
+  public setShelfStatus(bookId: string, status: ShelfStatus | null) {
+    this.shelf = storage.setShelfStatus(bookId, status);
+    this.showToast(
+      status === null
+        ? 'Removed from My Shelf'
+        : status === 'finished'
+          ? 'Marked Finished — well done'
+          : status === 'reading'
+            ? 'Moved to Reading on My Shelf'
+            : 'Saved to My Shelf — To Read',
+      'success'
+    );
+    this.notify();
+  }
+
+  public getShelfBooks(): Book[] {
+    return shelfBooks(this.getVisibleBooks(), this.shelf);
+  }
+
+  public getShelfBooksByStatus(status: ShelfStatus): Book[] {
+    return this.getShelfBooks().filter((b) => this.shelf[b.id] === status);
+  }
+
+  // Amals — tick done each day, local only.
+  public getAmalsDoneToday(): string[] {
+    const today = new Date();
+    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return this.amalLog[key] || [];
+  }
+
+  public toggleAmal(amalId: string) {
+    const done = storage.toggleAmal(amalId);
+    const today = new Date();
+    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    this.amalLog = { ...this.amalLog, [key]: done };
+    if (done.length === 0) {
+      const next = { ...this.amalLog };
+      delete next[key];
+      this.amalLog = next;
+    }
+    this.notify();
+  }
+
+  // Reading Stats — local only, from shelf + progress + journeys.
+  public getReadingStats(): ReadingStats {
+    return computeReadingStats({
+      shelf: this.shelf,
+      progress: this.readingProgress,
+      bookmarks: this.bookmarks,
+      journeyProgress: this.journeyProgress,
+      journeys: JOURNEYS.map((j) => ({ id: j.id, total: j.steps.length })),
+      visitDates: this.visitDates,
+    });
+  }
+
+  public toggleJourneyStep(journeyId: string, stepTitle: string) {
+    const done = storage.toggleJourneyStep(journeyId, stepTitle);
+    this.journeyProgress = { ...this.journeyProgress, [journeyId]: done };
+    if (done.length === 0) {
+      const next = { ...this.journeyProgress };
+      delete next[journeyId];
+      this.journeyProgress = next;
+    }
+    this.notify();
+  }
+
   public getBooksInProgress(): { book: Book; progress: ReadingProgress }[] {
     const visible = this.getVisibleBooks();
     const results: { book: Book; progress: ReadingProgress }[] = [];
@@ -330,6 +437,33 @@ class AppState {
     return (this.catalog.books || []).find((b) => b.id === id);
   }
 
+  // --- Topic / category arranging (the library's organising system) ---
+  /** All books in topic/category display order. */
+  public getOrderedBooks(): Book[] {
+    return sortBooksByTopicCategory(
+      this.getVisibleBooks(),
+      this.catalog.categoryOrder,
+      this.catalog.topicOrder
+    );
+  }
+
+  public getCategories(): string[] {
+    return getCategories(this.catalog.books || [], this.catalog.categoryOrder);
+  }
+
+  public getTopics(): string[] {
+    return getTopics(this.catalog.books || [], this.catalog.topicOrder);
+  }
+
+  public getTopicsForCategory(category: string): string[] {
+    return getTopicsForCategory(this.catalog.books || [], category, this.catalog.topicOrder);
+  }
+
+  /** Version info for one book (same-name copies, oldest = Version 1). */
+  public getBookVersion(book: Book): BookVersion {
+    return getBookVersion(this.catalog.books || [], book);
+  }
+
   public getFolderById(id: string): Folder | undefined {
     return (this.catalog.folders || []).find((f) => f.id === id);
   }
@@ -355,6 +489,34 @@ class AppState {
         b.subfolderId === folderId
       );
     });
+  }
+
+  /**
+   * All books in a folder AND every folder below it, in one flat list.
+   * This is what makes browsing easy: one tap on a collection shows
+   * all of its books, with no folder-after-folder drilling.
+   */
+  public getBooksInFolderTree(folderId: string): Book[] {
+    const ids = new Set<string>([folderId]);
+    const queue = [folderId];
+    while (queue.length > 0) {
+      const parent = queue.pop()!;
+      for (const child of this.getChildFolders(parent)) {
+        if (!ids.has(child.id)) {
+          ids.add(child.id);
+          queue.push(child.id);
+        }
+      }
+    }
+    return this.getVisibleBooks().filter(
+      (b) => (b.folderId && ids.has(b.folderId)) || (b.subfolderId && ids.has(b.subfolderId))
+    );
+  }
+
+  /** Top-level collections: children of the single root folder. */
+  public getTopCollections(): Folder[] {
+    const roots = this.getChildFolders(null);
+    return roots.length === 1 ? this.getChildFolders(roots[0].id) : roots;
   }
 
   public getItemCountForFolder(folderId: string, _seen: Set<string> = new Set()): number {
