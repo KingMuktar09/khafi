@@ -159,7 +159,12 @@ export const LibraryView: React.FC = () => {
       list = [...list].sort((a, b) => (b.updatedDate || '').localeCompare(a.updatedDate || ''));
     }
     return list;
-  }, [q, selectedCategory, selectedGroup, authenticOnly, typeFilter, statusFilter, sortBy]);
+    // NOTE: appState.catalog is a dep on purpose. The catalog arrives
+    // after this view mounts (empty at first render), so without it the
+    // memo keeps the empty first result forever and the Library shows
+    // "No books match these filters." on a direct load / refresh.
+    // selectedTopic is a dep too: filtering by topic must recompute.
+  }, [appState.catalog, q, selectedCategory, selectedGroup, selectedTopic, authenticOnly, typeFilter, statusFilter, sortBy]);
 
   // 6 big topics with book counts — the simple way to pick a category.
   // Cheap to compute every render (173 books), so no memo needed.
