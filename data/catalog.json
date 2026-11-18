@@ -696,13 +696,14 @@
       "fileSize": "316.9 KB",
       "driveFileId": "1gKygGbTJSNtkvcRKSURJ3vGnNVNgmDI5",
       "externalUrl": "https://docs.google.com/document/d/1gKygGbTJSNtkvcRKSURJ3vGnNVNgmDI5/edit?usp=drivesdk&ouid=112929133652747768819&rtpof=true&sd=true",
-      "isPaid": false,
+      "isPaid": true,
       "addedDate": "2026-06-21T10:37:29.000Z",
       "updatedDate": "2026-06-21T10:37:29.000Z",
       "featured": false,
       "visible": true,
       "sortOrder": 1,
-      "topic": "Books of Wonders"
+      "topic": "Books of Wonders",
+      "price": 3
     },
     {
       "id": "b-1fYSJK9-M5EhR_iXu8l-kXqv_0fDghDE1",
