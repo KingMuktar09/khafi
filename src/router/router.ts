@@ -138,6 +138,26 @@ class Router {
         return '/topics/renewal-of-creation';
       case 'topic-drinks':
         return '/topics/quranic-drinks';
+      case 'topic-basmalah':
+        return '/topics/basmalah-secrets';
+      case 'topic-kursi':
+        return '/topics/throne-verse';
+      case 'topic-greatest-name':
+        return '/topics/greatest-name';
+      case 'topic-fawatih':
+        return '/topics/fawatih-openings';
+      case 'topic-tawaqif':
+        return '/topics/four-tawaqif';
+      case 'topic-khayas':
+        return '/topics/kaf-ha-ya-ayn-sad';
+      case 'topic-zayirjah':
+        return '/topics/zayirjah';
+      case 'topic-ihatah':
+        return '/topics/circle-of-encompassing';
+      case 'topic-simiya':
+        return '/topics/simiya-works';
+      case 'topic-khalawat':
+        return '/topics/uses-of-letters-retreats';
       case 'topics-questions':
         return '/topics/questions';
       case 'topics-guides':
@@ -334,6 +354,46 @@ class Router {
 
     if (pathname === '/topics/quranic-drinks') {
       return { view: 'topic-drinks' };
+    }
+
+    if (pathname === '/topics/basmalah-secrets') {
+      return { view: 'topic-basmalah' };
+    }
+
+    if (pathname === '/topics/throne-verse') {
+      return { view: 'topic-kursi' };
+    }
+
+    if (pathname === '/topics/greatest-name') {
+      return { view: 'topic-greatest-name' };
+    }
+
+    if (pathname === '/topics/fawatih-openings') {
+      return { view: 'topic-fawatih' };
+    }
+
+    if (pathname === '/topics/four-tawaqif') {
+      return { view: 'topic-tawaqif' };
+    }
+
+    if (pathname === '/topics/kaf-ha-ya-ayn-sad') {
+      return { view: 'topic-khayas' };
+    }
+
+    if (pathname === '/topics/zayirjah') {
+      return { view: 'topic-zayirjah' };
+    }
+
+    if (pathname === '/topics/circle-of-encompassing') {
+      return { view: 'topic-ihatah' };
+    }
+
+    if (pathname === '/topics/simiya-works') {
+      return { view: 'topic-simiya' };
+    }
+
+    if (pathname === '/topics/uses-of-letters-retreats') {
+      return { view: 'topic-khalawat' };
     }
 
     if (pathname === '/topics/questions') {

@@ -2,6 +2,8 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { router } from '../../router/router';
 import { TOOLS_INDEX } from '../../data/toolsIndex';
+import { TOPICS } from '../../data/topicsContent';
+import { tf } from '../../data/i18n';
 import { appState } from '../../state/appState';
 import { localizeTool, tTools } from '../../data/i18n-tools';
 import { ToolsLayout } from './ToolsLayout';
@@ -47,7 +49,7 @@ export const ToolsHubView: React.FC = () => {
           <ArrowRight className="w-5 h-5 ms-gold shrink-0" aria-hidden="true" />
         </span>
         <span className="ms-body block">
-          Longer discussions from the books, with their sources named. 2 topics so far.
+          {tf('topics.hubSubtitle', lang, { count: TOPICS.length })}
         </span>
       </button>
 

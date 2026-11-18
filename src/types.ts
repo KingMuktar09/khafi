@@ -82,7 +82,7 @@ export interface Book {
 
 export type LibraryItem = Book;
 
-export type ViewName = 'home' | 'library' | 'favorites' | 'info' | 'book' | 'read' | 'admin' | 'journeys' | 'timeline' | 'shelf' | 'finder' | 'wafq' | 'amals' | 'topics' | 'topic-retreat' | 'topic-malakut' | 'topic-ruh' | 'topic-alif' | 'topic-seal' | 'topic-dreams' | 'topic-saba' | 'topic-khidr' | 'topic-rijal' | 'topic-uwaisi' | 'topic-renewal' | 'topic-drinks' | 'topics-questions' | 'topics-guides' | 'tools' | 'tools-huruf' | 'tools-asma' | 'tools-bast' | 'tools-fawatih' | 'tools-sawaqit' | 'tools-shields' | 'tools-journal' | 'tools-wird' | 'tools-grimoire' | 'tools-method' | 'tools-about' | 'tools-today' | 'tools-hours' | 'tools-moon' | 'tools-mansions' | 'tools-falak' | 'tools-majlis' | 'tools-forge' | 'tools-qawaid' | 'tools-kitab' | 'tools-talasim' | 'tools-ashkal' | 'tools-figure-forge' | 'tools-talism-studio' | 'tools-haqaiq' | 'tools-shart' | 'tools-sirr-al-jalil' | 'tools-durus' | 'tools-index' | 'tools-library' | 'tools-atlas' | 'tools-qalam' | 'tools-khatam' | 'tools-plate' | 'tools-works' | 'tools-bakhur-adad' | 'tools-shurut' | 'tools-glossary';
+export type ViewName = 'home' | 'library' | 'favorites' | 'info' | 'book' | 'read' | 'admin' | 'journeys' | 'timeline' | 'shelf' | 'finder' | 'wafq' | 'amals' | 'topics' | 'topic-retreat' | 'topic-malakut' | 'topic-ruh' | 'topic-alif' | 'topic-seal' | 'topic-dreams' | 'topic-saba' | 'topic-khidr' | 'topic-rijal' | 'topic-uwaisi' | 'topic-renewal' | 'topic-drinks' | 'topic-basmalah' | 'topic-kursi' | 'topic-greatest-name' | 'topic-fawatih' | 'topic-tawaqif' | 'topic-khayas' | 'topic-zayirjah' | 'topic-ihatah' | 'topic-simiya' | 'topic-khalawat' | 'topics-questions' | 'topics-guides' | 'tools' | 'tools-huruf' | 'tools-asma' | 'tools-bast' | 'tools-fawatih' | 'tools-sawaqit' | 'tools-shields' | 'tools-journal' | 'tools-wird' | 'tools-grimoire' | 'tools-method' | 'tools-about' | 'tools-today' | 'tools-hours' | 'tools-moon' | 'tools-mansions' | 'tools-falak' | 'tools-majlis' | 'tools-forge' | 'tools-qawaid' | 'tools-kitab' | 'tools-talasim' | 'tools-ashkal' | 'tools-figure-forge' | 'tools-talism-studio' | 'tools-haqaiq' | 'tools-shart' | 'tools-sirr-al-jalil' | 'tools-durus' | 'tools-index' | 'tools-library' | 'tools-atlas' | 'tools-qalam' | 'tools-khatam' | 'tools-plate' | 'tools-works' | 'tools-bakhur-adad' | 'tools-shurut' | 'tools-glossary';
 
 export interface RouteState {
   view: ViewName;
@@ -129,7 +129,7 @@ export interface UserSettings {
  * The three site languages. 'hi' is Hinglish: Hindi/Urdu in Roman
  * script, the way the channel's reels are narrated. 'bn' is Bengali.
  */
-export type SiteLanguage = 'en' | 'hi' | 'bn';
+export type SiteLanguage = 'en' | 'hi' | 'bn' | 'ur';
 
 export interface Toast {
   id: string;

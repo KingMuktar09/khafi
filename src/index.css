@@ -133,6 +133,25 @@ html[lang="bn"] .font-mono {
   font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
 }
 
+/* Urdu language: Noto Nastaliq Urdu for body and UI (tall Nastaliq
+   line, so body copy gets a taller line height), loaded from Google
+   Fonts in index.html. Arabic always keeps Amiri (.font-arabic above),
+   and dir="rtl" on <html> mirrors the layout. */
+html[lang="ur"] {
+  --font-display: 'Noto Nastaliq Urdu', 'Amiri', serif;
+  --font-sans: 'Noto Nastaliq Urdu', 'Amiri', sans-serif;
+  --ms-display: 'Noto Nastaliq Urdu', 'Amiri', serif;
+  --ms-body: 'Noto Nastaliq Urdu', 'Amiri', sans-serif;
+  --ms-mono: 'Noto Nastaliq Urdu', 'Amiri', sans-serif;
+}
+html[lang="ur"] body {
+  font-family: 'Noto Nastaliq Urdu', 'Amiri', sans-serif;
+  line-height: 2.1;
+}
+html[lang="ur"] .font-mono {
+  font-family: 'Noto Nastaliq Urdu', 'Amiri', sans-serif;
+}
+
 /* Premium polish: generous, calm surfaces */
 body {
   overflow-x: clip;

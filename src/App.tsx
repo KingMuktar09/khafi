@@ -39,6 +39,16 @@ import { TopicRijalView } from './views/topics/TopicRijalView';
 import { TopicUwaisiView } from './views/topics/TopicUwaisiView';
 import { TopicRenewalView } from './views/topics/TopicRenewalView';
 import { TopicDrinksView } from './views/topics/TopicDrinksView';
+import { TopicBasmalahView } from './views/topics/TopicBasmalahView';
+import { TopicKursiView } from './views/topics/TopicKursiView';
+import { TopicGreatestNameView } from './views/topics/TopicGreatestNameView';
+import { TopicFawatihView } from './views/topics/TopicFawatihView';
+import { TopicTawaqifView } from './views/topics/TopicTawaqifView';
+import { TopicKhayasView } from './views/topics/TopicKhayasView';
+import { TopicZayirjahView } from './views/topics/TopicZayirjahView';
+import { TopicIhatahView } from './views/topics/TopicIhatahView';
+import { TopicSimiyaView } from './views/topics/TopicSimiyaView';
+import { TopicKhalawatView } from './views/topics/TopicKhalawatView';
 import { QuestionsView } from './views/topics/QuestionsView';
 import { GuidesView } from './views/topics/GuidesView';
 
@@ -101,11 +111,13 @@ const ViewLoading: React.FC = () => (
 );
 
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { LanguagePicker } from './components/ui/LanguagePicker';
 import { isTopicsView } from './data/topicsContent';
 
 export default function App() {
   const [, setTick] = useState(0);
   const [followUnlocked, setFollowUnlocked] = useState(() => storage.hasFollowUnlocked());
+  const [showChooser, setShowChooser] = useState(() => !storage.hasChosenLanguage());
   const [maintenance, setMaintenance] = useState<{ enabled: boolean; message: string }>({ enabled: false, message: '' });
 
   useEffect(() => {
@@ -135,6 +147,16 @@ export default function App() {
   // @ghayb.chronicles and tapping unlock (remembered on this device).
   // Topics stays open without the gate, so anyone can read the topics.
   const isAdmin = appState.adminAuthenticated;
+  // First-visit language chooser: before anything else, even the
+  // follow gate. One pick, saved on the device, never shown again.
+  // The language can be changed later only in Settings.
+  if (showChooser) {
+    return (
+      <ErrorBoundary>
+        <LanguagePicker onPicked={() => setShowChooser(false)} />
+      </ErrorBoundary>
+    );
+  }
   // Maintenance mode: visitors see the maintenance page (with an admin
   // sign-in button) instead of any view. The admin and the admin sign-in
   // page bypass it, so Muktar can turn it off again.
@@ -231,6 +253,26 @@ export default function App() {
         return <TopicRenewalView />;
       case 'topic-drinks':
         return <TopicDrinksView />;
+      case 'topic-basmalah':
+        return <TopicBasmalahView />;
+      case 'topic-kursi':
+        return <TopicKursiView />;
+      case 'topic-greatest-name':
+        return <TopicGreatestNameView />;
+      case 'topic-fawatih':
+        return <TopicFawatihView />;
+      case 'topic-tawaqif':
+        return <TopicTawaqifView />;
+      case 'topic-khayas':
+        return <TopicKhayasView />;
+      case 'topic-zayirjah':
+        return <TopicZayirjahView />;
+      case 'topic-ihatah':
+        return <TopicIhatahView />;
+      case 'topic-simiya':
+        return <TopicSimiyaView />;
+      case 'topic-khalawat':
+        return <TopicKhalawatView />;
       case 'topics-questions':
         return <QuestionsView />;
       case 'topics-guides':

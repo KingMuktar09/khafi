@@ -52,13 +52,25 @@ describe('Topic of the Day rotates in fixed upload order', () => {
   it('cycles back to the start when the list ends', () => {
     const day13 = getTopicOfTheDay(new Date(2026, 10, 30));
     expect(day13.dayNumber).toBe(13);
-    expect(day13.topic.id).toBe('ibn-arabi-40-day-retreat');
+    expect(day13.topic.id).toBe('basmalah-secrets');
+    const day18 = getTopicOfTheDay(new Date(2026, 11, 5));
+    expect(day18.dayNumber).toBe(18);
+    expect(day18.topic.id).toBe('kaf-ha-ya-ayn-sad');
+    const day19 = getTopicOfTheDay(new Date(2026, 11, 6));
+    expect(day19.dayNumber).toBe(19);
+    expect(day19.topic.id).toBe('zayirjah');
+    const day22 = getTopicOfTheDay(new Date(2026, 11, 9));
+    expect(day22.dayNumber).toBe(22);
+    expect(day22.topic.id).toBe('uses-of-letters-retreats');
+    const day23 = getTopicOfTheDay(new Date(2026, 11, 10));
+    expect(day23.dayNumber).toBe(23);
+    expect(day23.topic.id).toBe('ibn-arabi-40-day-retreat');
   });
 
-  it('gives day 45 on 1 Jan 2027, Rijal al-Ghayb', () => {
-    const day45 = getTopicOfTheDay(new Date(2027, 0, 1));
-    expect(day45.dayNumber).toBe(45);
-    expect(day45.topic.id).toBe('rijal-al-ghayb');
+  it('gives day 53 on 9 Jan 2027, Rijal al-Ghayb', () => {
+    const day53 = getTopicOfTheDay(new Date(2027, 0, 9));
+    expect(day53.dayNumber).toBe(53);
+    expect(day53.topic.id).toBe('rijal-al-ghayb');
   });
 
   it('is the same for every visitor on the same day', () => {

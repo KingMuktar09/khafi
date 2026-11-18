@@ -56,7 +56,12 @@ describe('hash + verify', () => {
     expect(verifyBookKey(record, plainKey.toLowerCase().replace(/-/g, ' '))).toBe(false); // case matters
     expect(verifyBookKey(record, plainKey.replace(/-/g, ''))).toBe(true);
     expect(verifyBookKey(record, 'WRONG-WRONG-WRONG-WRONG')).toBe(false);
-    expect(verifyBookKey(record, plainKey.slice(0, -1) + 'X')).toBe(false);
+    // A key that differs in one character must fail. The replacement
+    // character is picked to differ from the real last character, so
+    // the "close" key can never accidentally equal the real key.
+    const lastChar = plainKey.slice(-1);
+    const wrongLast = lastChar === 'X' ? 'Y' : 'X';
+    expect(verifyBookKey(record, plainKey.slice(0, -1) + wrongLast)).toBe(false);
     expect(verifyBookKey(record, '')).toBe(false);
     expect(verifyBookKey(record, null)).toBe(false);
   });

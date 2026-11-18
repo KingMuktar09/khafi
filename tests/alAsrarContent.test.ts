@@ -7,7 +7,7 @@ import { FRIEND_AMALS, FRIEND_AMALS_SOURCE, FRIEND_AMALS_WARNING } from '../src/
 import { ASMA_NAMES } from '../src/data/asmaNames';
 
 /**
- * Stage 3A + 3B content checks: the 19 filled Tier B tools, the twelve
+ * Stage 3A + 3B content checks: the 19 filled Tier B tools, the twenty-two
  * Topics, and the 25 John Friend amals. Content prose is used exactly
  * as written in the data files; these tests only check shape,
  * completeness and honest sourcing, never the wording.
@@ -100,7 +100,7 @@ describe('Al Asrar filled tools', () => {
 });
 
 describe('Topics', () => {
-  it('has the twelve topics, in fixed upload order, each with a non-empty intro and closing', () => {
+  it('has the twenty-two topics, in fixed upload order, each with a non-empty intro and closing', () => {
     expect(TOPICS.map((t) => t.id)).toEqual([
       'ibn-arabi-40-day-retreat',
       'alam-al-malakut',
@@ -114,6 +114,16 @@ describe('Topics', () => {
       'uwaisi-transmission',
       'renewal-of-creation',
       'quranic-drinks',
+      'basmalah-secrets',
+      'throne-verse',
+      'greatest-name',
+      'fawatih-openings',
+      'four-tawaqif',
+      'kaf-ha-ya-ayn-sad',
+      'zayirjah',
+      'circle-of-encompassing',
+      'simiya-works',
+      'uses-of-letters-retreats',
     ]);
     for (const topic of TOPICS) {
       expect(topic.intro.trim().length, `${topic.id} intro`).toBeGreaterThan(0);

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   SITE_LANGUAGES,
   resolveLanguage,
+  isRtlLanguage,
   t,
   tf,
   allKeys,
@@ -12,7 +13,7 @@ import {
 } from '../src/data/i18n';
 import { I18N_HOME } from '../src/data/i18n-home';
 import { I18N_LIBRARY } from '../src/data/i18n-library';
-import { I18N_TOOLS } from '../src/data/i18n-tools';
+import { I18N_TOOLS, ASMA_MEANINGS } from '../src/data/i18n-tools';
 import { I18N_TOPICS } from '../src/data/i18n-topics';
 import {
   localizeTopic,
@@ -27,9 +28,11 @@ import { greetingForHour } from '../src/utils/greeting';
 
 /**
  * Language switch: English is the primary language and the default
- * for every visitor. Hinglish and Bengali are Settings-only options,
- * remembered on the device. Arabic, transliteration, book titles,
- * names and @ghayb.chronicles never change with the language.
+ * for every visitor. Hinglish, Bengali and Urdu are picked once, on
+ * the first visit, on a big chooser screen; after that the language
+ * can only be changed in Settings. The choice is remembered on the
+ * device. Arabic, transliteration, book titles, names and
+ * @ghayb.chronicles never change with the language.
  *
  * Hinglish long-form topic/question content comes from the Al Asrar
  * notebook (Hinglish, with sources and pages), not from translating
@@ -80,6 +83,7 @@ describe('default language is English', () => {
     expect(resolveLanguage('EN')).toBe('en');
     expect(resolveLanguage('hi')).toBe('hi');
     expect(resolveLanguage('bn')).toBe('bn');
+    expect(resolveLanguage('ur')).toBe('ur');
     expect(resolveLanguage('en')).toBe('en');
   });
 
@@ -88,9 +92,16 @@ describe('default language is English', () => {
     expect(storage.getSettings().language).toBe('en');
   });
 
-  it('the picker offers exactly English, Hinglish, Bengali, in that order', () => {
-    expect(SITE_LANGUAGES.map((l) => l.id)).toEqual(['en', 'hi', 'bn']);
-    expect(SITE_LANGUAGES.map((l) => l.nativeLabel)).toEqual(['English', 'Hinglish', 'বাংলা']);
+  it('the picker offers exactly English, Hinglish, Bengali, Urdu, in that order', () => {
+    expect(SITE_LANGUAGES.map((l) => l.id)).toEqual(['en', 'hi', 'bn', 'ur']);
+    expect(SITE_LANGUAGES.map((l) => l.nativeLabel)).toEqual(['English', 'Hinglish', 'বাংলা', 'اردو']);
+  });
+
+  it('Urdu is the only right-to-left language', () => {
+    expect(isRtlLanguage('ur')).toBe(true);
+    expect(isRtlLanguage('en')).toBe(false);
+    expect(isRtlLanguage('hi')).toBe(false);
+    expect(isRtlLanguage('bn')).toBe(false);
   });
 });
 
@@ -119,6 +130,24 @@ describe('the choice persists on the device', () => {
     storage.saveSettings({ ...DEFAULT_SETTINGS, language: 'bn' });
     expect(storage.getSettings().language).toBe('bn');
   });
+
+  it('saving Urdu then reading the settings back gives Urdu', () => {
+    stubLocalStorage();
+    storage.saveSettings({ ...DEFAULT_SETTINGS, language: 'ur' });
+    expect(storage.getSettings().language).toBe('ur');
+  });
+
+  it('a fresh visitor has not chosen a language; picking once marks it chosen', () => {
+    stubLocalStorage();
+    expect(storage.hasChosenLanguage()).toBe(false);
+    storage.setLanguageChosen();
+    expect(storage.hasChosenLanguage()).toBe(true);
+  });
+
+  it('a visitor with a saved settings record already counts as having chosen', () => {
+    stubLocalStorage({ [SETTINGS_KEY]: JSON.stringify({ language: 'hi' }) });
+    expect(storage.hasChosenLanguage()).toBe(true);
+  });
 });
 
 describe('switching changes the visible labels', () => {
@@ -137,12 +166,13 @@ describe('switching changes the visible labels', () => {
     'topics.studyNote',
   ];
 
-  it('every spot key reads differently in Hinglish and Bengali than in English', () => {
+  it('every spot key reads differently in Hinglish, Bengali and Urdu than in English', () => {
     for (const key of spotKeys) {
       const en = t(key, 'en');
       expect(en, `${key} has no English value`).not.toBe(key);
       expect(t(key, 'hi'), `${key} did not change in Hinglish`).not.toBe(en);
       expect(t(key, 'bn'), `${key} did not change in Bengali`).not.toBe(en);
+      expect(t(key, 'ur'), `${key} did not change in Urdu`).not.toBe(en);
     }
   });
 
@@ -159,13 +189,15 @@ describe('switching changes the visible labels', () => {
     expect(greetingForHour(9, 'en')).toBe('Good morning');
     expect(greetingForHour(9, 'hi')).not.toBe('Good morning');
     expect(greetingForHour(9, 'bn')).not.toBe('Good morning');
+    expect(greetingForHour(9, 'ur')).not.toBe('Good morning');
     expect(greetingForHour(20, 'en')).toBe('Good evening');
     expect(greetingForHour(20, 'hi')).not.toBe('Good evening');
+    expect(greetingForHour(20, 'ur')).not.toBe('Good evening');
   });
 
   it('placeholders survive translation', () => {
     const key = 'home.sky.hourOf';
-    for (const lang of ['en', 'hi', 'bn'] as const) {
+    for (const lang of ['en', 'hi', 'bn', 'ur'] as const) {
       const out = tf(key, lang, { n: 3, dayNight: 'day' });
       expect(out, `${lang} lost the number`).toContain('3');
       expect(out, `${lang} left a raw placeholder`).not.toContain('{n}');
@@ -178,19 +210,21 @@ describe('switching changes the visible labels', () => {
   });
 });
 
-describe('every key exists in all three languages', () => {
-  it('the merged dict has full coverage in Hinglish and Bengali', () => {
+describe('every key exists in all four languages', () => {
+  it('the merged dict has full coverage in Hinglish, Bengali and Urdu', () => {
     expect(hasFullCoverage('hi')).toBe(true);
     expect(hasFullCoverage('bn')).toBe(true);
+    expect(hasFullCoverage('ur')).toBe(true);
     const keys = allKeys();
     expect(keys.length).toBeGreaterThan(1500);
     for (const key of keys) {
       expect(STRINGS.hi[key], `missing hi: ${key}`).toBeTruthy();
       expect(STRINGS.bn[key], `missing bn: ${key}`).toBeTruthy();
+      expect(STRINGS.ur[key], `missing ur: ${key}`).toBeTruthy();
     }
   });
 
-  it('each chunk has identical key sets across its three languages', () => {
+  it('each chunk has identical key sets across its four languages', () => {
     for (const [name, chunk] of [
       ['home', I18N_HOME],
       ['library', I18N_LIBRARY],
@@ -200,9 +234,11 @@ describe('every key exists in all three languages', () => {
       const en = Object.keys(chunk.en).sort();
       expect(Object.keys(chunk.hi).sort(), `${name} hi keys`).toEqual(en);
       expect(Object.keys(chunk.bn).sort(), `${name} bn keys`).toEqual(en);
+      expect(Object.keys(chunk.ur).sort(), `${name} ur keys`).toEqual(en);
       for (const key of en) {
         expect(chunk.hi[key].trim().length, `${name} hi ${key} empty`).toBeGreaterThan(0);
         expect(chunk.bn[key].trim().length, `${name} bn ${key} empty`).toBeGreaterThan(0);
+        expect(chunk.ur[key].trim().length, `${name} ur ${key} empty`).toBeGreaterThan(0);
       }
     }
   });
@@ -213,6 +249,7 @@ describe('every key exists in all three languages', () => {
     for (const [lang, dict] of [
       ['hi', STRINGS.hi],
       ['bn', STRINGS.bn],
+      ['ur', STRINGS.ur],
     ] as const) {
       for (const [key, value] of Object.entries(dict)) {
         const count = (value.match(/—/g) ?? []).length;
@@ -222,7 +259,7 @@ describe('every key exists in all three languages', () => {
   });
 });
 
-describe('topics: Bengali translated, Hinglish from the notebook', () => {
+describe('topics: Bengali and Urdu translated, Hinglish from the notebook', () => {
   // The notebook's Hinglish telling has its own section breaks, so
   // the Hinglish section counts differ from the English pages by
   // design. These are the counts the notebook material gives.
@@ -239,10 +276,20 @@ describe('topics: Bengali translated, Hinglish from the notebook', () => {
     'rijal-al-ghayb': 6,
     'uwaisi-transmission': 3,
     'renewal-of-creation': 3,
+    'basmalah-secrets': 6,
+    'throne-verse': 6,
+    'greatest-name': 6,
+    'fawatih-openings': 6,
+    'four-tawaqif': 6,
+    'kaf-ha-ya-ayn-sad': 6,
+    'zayirjah': 6,
+    'circle-of-encompassing': 6,
+    'simiya-works': 6,
+    'uses-of-letters-retreats': 6,
   };
 
-  it('all 12 topics localise to Bengali with the same shape as English', () => {
-    expect(TOPICS).toHaveLength(12);
+  it('all 22 topics localise to Bengali with the same shape as English', () => {
+    expect(TOPICS).toHaveLength(22);
     for (const topic of TOPICS) {
       const bn = localizeTopic(topic, 'bn');
       expect(bn.id).toBe(topic.id);
@@ -269,7 +316,7 @@ describe('topics: Bengali translated, Hinglish from the notebook', () => {
   });
 
   it('Hinglish topics come from the notebook, with its own section breaks', () => {
-    expect(TOPICS).toHaveLength(12);
+    expect(TOPICS).toHaveLength(22);
     for (const topic of TOPICS) {
       const hi = localizeTopic(topic, 'hi');
       expect(hi.id).toBe(topic.id);
@@ -332,32 +379,94 @@ describe('topics: Bengali translated, Hinglish from the notebook', () => {
       expect(bn.sections).toHaveLength(g.sections.length);
     }
   });
+
+  it('all 22 topics localise to Urdu with the same shape as English', () => {
+    expect(TOPICS).toHaveLength(22);
+    for (const topic of TOPICS) {
+      const ur = localizeTopic(topic, 'ur');
+      expect(ur.id).toBe(topic.id);
+      expect(ur.title.trim().length, `${topic.id} ur title`).toBeGreaterThan(0);
+      expect(ur.intro, `${topic.id} ur intro`).not.toBe(topic.intro);
+      expect(ur.sections).toHaveLength(topic.sections.length);
+      for (let i = 0; i < topic.sections.length; i++) {
+        expect(ur.sections[i].paragraphs).toHaveLength(topic.sections[i].paragraphs.length);
+      }
+      expect(ur.terms).toHaveLength(topic.terms.length);
+      // Arabic, transliteration, sources and facts never change.
+      for (let i = 0; i < topic.sections.length; i++) {
+        expect(ur.sections[i].quote?.arabic).toBe(topic.sections[i].quote?.arabic);
+        expect(ur.sections[i].quote?.transliteration).toBe(
+          topic.sections[i].quote?.transliteration,
+        );
+        expect(ur.sections[i].quote?.source).toBe(topic.sections[i].quote?.source);
+      }
+      for (let i = 0; i < topic.terms.length; i++) {
+        expect(ur.terms[i].arabic).toBe(topic.terms[i].arabic);
+        expect(ur.terms[i].transliteration).toBe(topic.terms[i].transliteration);
+      }
+      expect(ur.sources).toEqual(topic.sources);
+    }
+  });
+
+  it('Urdu questions and guides are translated with the same shape', () => {
+    for (const q of TOPIC_QUESTIONS) {
+      const ur = localizeQuestion(q, 'ur');
+      expect(ur.question).not.toBe(q.question);
+      expect(ur.answer).toHaveLength(q.answer.length);
+    }
+    for (const g of STUDY_GUIDES) {
+      const ur = localizeGuide(g, 'ur');
+      expect(ur.title).not.toBe(g.title);
+      expect(ur.sections).toHaveLength(g.sections.length);
+    }
+  });
+
+  it('the 99 Names have Urdu meanings, keyed by the same Arabic names', () => {
+    const enNames = Object.keys(ASMA_MEANINGS.en).sort();
+    expect(enNames.length).toBe(99);
+    expect(Object.keys(ASMA_MEANINGS.ur).sort()).toEqual(enNames);
+    for (const name of enNames) {
+      expect(ASMA_MEANINGS.ur[name].trim().length, `ur meaning for ${name}`).toBeGreaterThan(0);
+    }
+  });
 });
 
-describe('the picker is visible at once, not buried in Settings', () => {
-  it('the top bar carries the language strip on every page', () => {
-    const nav = readSource('src/components/layout/Navbar.tsx');
-    expect(nav).toContain('LanguagePicker');
-    expect(nav).toContain("variant=\"bar\"");
+describe('the language is picked once, on the first visit', () => {
+  it('App shows the first-visit chooser before the gate', () => {
+    const app = readSource('src/App.tsx');
+    expect(app).toContain('LanguagePicker');
+    expect(app).toContain('hasChosenLanguage');
+    expect(app).toContain('showChooser');
   });
 
-  it('the Home page carries the big language card under the hero', () => {
-    const home = readSource('src/views/HomeView.tsx');
-    expect(home).toContain('LanguagePicker');
-    expect(home).toContain("variant=\"large\"");
-  });
-
-  it('the picker shows all three languages in their own script and writes the same setting', () => {
+  it('the chooser offers all four languages in their own script, big tap targets, and saves the choice', () => {
     const picker = readSource('src/components/ui/LanguagePicker.tsx');
     expect(picker).toContain('SITE_LANGUAGES');
     expect(picker).toContain('updateSettings({ language: id })');
+    expect(picker).toContain('setLanguageChosen');
     expect(picker).toContain('nativeLabel');
-    expect(picker).toContain('min-h-[44px]');
-    expect(picker).toContain('min-h-[56px]');
+    expect(picker).toContain('min-h-[68px]');
+    expect(picker).toContain('Noto Nastaliq Urdu');
   });
 
-  it('Settings still offers the same three choices', () => {
+  it('the top bar no longer carries a language strip', () => {
+    const nav = readSource('src/components/layout/Navbar.tsx');
+    expect(nav).not.toContain('LanguagePicker');
+  });
+
+  it('the Home page no longer carries a language card', () => {
+    const home = readSource('src/views/HomeView.tsx');
+    expect(home).not.toContain('LanguagePicker');
+  });
+
+  it('Settings offers all four choices', () => {
     const modal = readSource('src/components/ui/SettingsModal.tsx');
     expect(modal).toContain('SITE_LANGUAGES');
+  });
+
+  it('the Tools hub counts topics from the live list, never a hardcoded number', () => {
+    const hub = readSource('src/views/tools/ToolsHubView.tsx');
+    expect(hub).not.toContain('2 topics so far');
+    expect(hub).toContain('TOPICS.length');
   });
 });

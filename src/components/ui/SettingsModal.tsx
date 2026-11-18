@@ -116,7 +116,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <label className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block">
               {t('settings.language', lang)}
             </label>
-            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Language">
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Language">
               {SITE_LANGUAGES.map((item) => {
                 const isSelected = settings.language === item.id;
                 return (
@@ -136,7 +136,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <span>{item.label}</span>
                       {isSelected && <Check className="w-3 h-3 text-[var(--gold)]" />}
                     </div>
-                    <span className="text-[10px] text-[var(--text-muted)] font-normal">{item.nativeLabel}</span>
+                    <span
+                      className="text-[10px] text-[var(--text-muted)] font-normal"
+                      style={
+                        item.id === 'bn'
+                          ? { fontFamily: "'Hind Siliguri', 'Noto Sans Bengali', sans-serif" }
+                          : item.id === 'ur'
+                            ? { fontFamily: "'Noto Nastaliq Urdu', 'Amiri', serif" }
+                            : undefined
+                      }
+                    >
+                      {item.nativeLabel}
+                    </span>
                   </button>
                 );
               })}

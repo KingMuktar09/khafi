@@ -5,7 +5,6 @@ import { appState } from '../../state/appState';
 import { siteConfig } from '../../config/siteConfig';
 import { ViewName } from '../../types';
 import { SettingsModal } from '../ui/SettingsModal';
-import { LanguagePicker } from '../ui/LanguagePicker';
 import { t } from '../../data/i18n';
 import { isTopicsView } from '../../data/topicsContent';
 
@@ -279,13 +278,6 @@ export const Navbar: React.FC = () => {
             </button>
           </div>
 
-        </div>
-
-        {/* Language strip — always visible in the top bar on every page,
-            so anyone can switch at a glance without opening any menu.
-            Same choice as Settings; both write the same setting. */}
-        <div className="border-t border-[var(--border-subtle)] py-2 flex justify-center">
-          <LanguagePicker variant="bar" />
         </div>
 
         {/* Mobile Search Input */}

@@ -10,11 +10,12 @@ import {
   uid,
 } from '../../utils/toolsStorage';
 import type { GrimoireItem, GrimoireKind } from '../../utils/toolsStorage';
+import type { SiteLanguage } from '../../types';
 import { ToolsLayout } from './ToolsLayout';
 
 
 
-function kindLabel(kind: GrimoireKind, lang: 'en' | 'hi' | 'bn'): string {
+function kindLabel(kind: GrimoireKind, lang: SiteLanguage): string {
   if (kind === 'name') return tTools('tools.grimoire.kindName', lang);
   if (kind === 'bast') return tTools('tools.grimoire.kindBast', lang);
   return tTools('tools.grimoire.kindNote', lang);

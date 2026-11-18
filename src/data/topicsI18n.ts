@@ -1,9 +1,10 @@
 /**
- * Topics, Questions and Study Guides in Hinglish and Bengali.
+ * Topics, Questions and Study Guides in Hinglish, Bengali and Urdu.
  *
  * English is the primary language and the default. Hinglish (Roman-script
- * Hindi/Urdu, in the channel's reel voice) and Bengali (easy familiar
- * words) are Settings-only options. Every Hinglish and Bengali line here
+ * Hindi/Urdu, in the channel's reel voice), Bengali (easy familiar
+ * words) and Urdu (proper Urdu script, simple easy words) are
+ * Settings-only options. Every Hinglish, Bengali and Urdu line here
  * was written by hand and checked line by line. No machine translation.
  *
  * What NEVER changes with the language:
@@ -34,6 +35,7 @@ import type { SiteLanguage } from '../types';
 import type { StudyGuide } from './studyGuides';
 import type { TopicContent, TopicSection, TopicTerm } from './topicsContent';
 import type { TopicQuestion } from './topicsQuestions';
+import { TOPICS_UR, QUESTIONS_UR, GUIDES_UR } from './topicsI18n-ur';
 
 /** Localised fields for one topic or guide. */
 export interface TopicLocalization {
@@ -863,6 +865,783 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     closing:
       "Duniya har lamha dobara banayi jati hai. Ek dum nayi. Kuch bhi nahi se. Pathar, ped, aur tum. Yahi taleem hai. Aur iska matlab hai ke agla lamha hamesha ek nayi shuruat hai.",
   },
+  "basmalah-secrets": {
+    eyebrow: "Topics",
+    title: "Basmalah ke Asrar",
+    subtitle:
+      "Kainaat ki sabse badi chabi, aur ek harf ke neeche ka nuqta.",
+    intro:
+      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakūt, Rūḥ-o-Nafs, Harf Alif, Khātam Sulaymān, khwabon ke bhed, Sūrah Sabāʾ ki deemak, al-Khiḍr, mashrūbāt, Rijāl al-Ghayb, Uwaysī transmission aur Tajaddud al-Khalq ke asrar decode kiye. Aaj hum chalte hain roohani ilm ki sabse badi chabi ki taraf — Asrār al-Basmalah. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Bāʾ ke neeche ka nuqta",
+        paragraphs: [
+          "Basmalah Bāʾ harf se shuru hoti hai. Kitabein kehti hain ke poora Quran Surah al-Fatiha mein hai, poori Fatiha Basmalah mein hai, aur poori Basmalah Bāʾ mein hai. Aur Bāʾ khud uske neeche wale nuqte mein hai. Ek nuqta, aur kitabein kehti hain ke saari takhleeq usi se latki hai.",
+          "Bāʾ 'se' aur 'ke zariye' ka harf hai. Bī kāna mā kāna, kitabein kehti hain. Mere zariye woh tha jo tha, aur Mere zariye hai jo hai. Nuqta pehla point hai. Woh jagah jahan qalam ne pehli baar kagaz ko chhua. Uske baad sab kuch usi chhune se behti hui lakeer hai. Source: Decoding Al-Būnī's Esoteric Book, p. 1; Mystical Dimensions of Islam, p. 417.",
+        ],
+      },
+      {
+        heading: "Unnīs harf, unnīs muhafiz",
+        paragraphs: [
+          "Basmalah mein unnīs harf hain. Kitabein unhe ek ek karke ginti hain. Unnīs harf, aur aag par unnīs muhafiz khade hain. Kitabein unhe Zabāniyah kehti hain, gehrai ke rakhwale. Jo line Quran ko kholti hai, wahi line unke saamne dhaal bhi hai.",
+          "Kitabein din ko ghanton mein bhi ginti hain. Chaubees ghante, aur talash karne wala unme se lagbhag paanch ghante sota hai. Unnīs harf ghante dar ghante balance banaye rakhte hain, taaki din measure mein rahe. Yeh number koi taweez nahi hai. Yeh ek pattern hai jo kitabein khud line mein padhti hain. Source: Shams al-Maʿārif al-Kubrā, Ch. 3, pp. 56-57.",
+        ],
+      },
+      {
+        heading: "Chaar Naam, chaar nehrein",
+        paragraphs: [
+          "Basmalah mein chaar Naam hain. Ism, Naam khud. Allah, sabse bada zaati Naam. Al-Raḥmān, sab par meherban. Al-Raḥīm, khaas meherban. Ek chhoti si line mein chaar Naam, aur kitabein har ek ko ek neher padhti hain.",
+          "Kitabein kehti hain ke Jannat mein chaar nehrein behti hain, aur har neher Basmalah ke ek harf se behti hai. Paani Bism ke Mīm se. Doodh Allah ke Hāʾ se. Sharab al-Raḥmān ke Mīm se. Shahed al-Raḥīm ke Mīm se. Line chhoti hai, lekin kitabein kehti hain ke usme chaar nehrein hain. Source: The Journey to the Lord of Power, pp. 36, 82-83; Mudih al-Tariq, pp. 63-64.",
+        ],
+      },
+      {
+        heading: "786 ka wazan",
+        paragraphs: [
+          "Kitabein Basmalah ko number mein bhi tolti hain. Ḥisāb al-Jummal harfon ko unke number se ginne ka hisaab hai. Basmalah ke harfon ko unke number se gino, to total 786 aata hai. Kitabein number saaf saaf deti hain, aur usi se Basmalah ka wafq, uska square, banati hain.",
+          "Square ke chaaron taraf farishte muhafiz khade hain, Amlāk. Woh harfon ke rakhwale hain, aur square unka naqsha hai. Number ek wazan hai, koi khwahish nahi. Kitabein use likhti hain, aur main use waisa hi likhta hoon jaisa woh deti hain. Source: Manbaʿ Uṣūl al-Ḥikma, pp. 28-30; Shams al-Maʿārif, pp. 58-60.",
+        ],
+      },
+      {
+        heading: "Surah al-Tawbah mein Basmalah kyun nahi hai",
+        paragraphs: [
+          "Quran ki har surah Basmalah se shuru hoti hai, sirf ek ko chhod kar. Surah al-Tawbah, nauvi surah, mein Basmalah nahi hai. Kitabein poochti hain kyun, aur ek lafz mein jawab deti hain. Barāʾah. Rishta todna aur alag hona. Surah todne se shuru hoti hai, meherbani se nahi.",
+          "Kitabein ek seedha rule deti hain. Jang aur Allah ki sakhti, Jalāl, wala chapter meherbani se shuru nahi ho sakta. Basmalah Amān wa-Salām hai, poori aman aur salamti. Jo surah rishte todti hai, woh aman aur salamti se nahi khul sakti. Isi liye line chhod di gayi, aur surah khaali shuru hoti hai. Source: Tafsir Ibn Kathir, Vol. 4, commentary on Surah 9, pp. 111-112; Mystical Dimensions of Islam, p. 119.",
+        ],
+      },
+      {
+        heading: "Jism par likhi hui line",
+        paragraphs: [
+          "Kitabein Basmalah ko insaan ke jism par bhi padhti hain. Chehra kagaz hai, aur harf us par likhe hain. Alif naak ko dikhata hai, chehre ke beech mein ek seedhi lakeer. Chehre ko al-Wajh kehte hain, aur lakeer usi mein khadi hai.",
+          "Basmalah mein teen Mīm hain, ek Bism mein, ek al-Raḥmān mein, ek al-Raḥīm mein. Kitabein unhe jism ke beech ke teen hisson se jodti hain. Dimaagh, al-Dimāgh. Dil, al-Qalb. Jigar, al-Kabd. Teen harf, teen hisse, ek jism. Source: Mudih al-Tariq, pp. 61-62; The Mirror, pp. 98-101.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "نقطة الباء", transliteration: "Nuqṭat al-Bāʾ", meaning: "Bāʾ harf ke neeche ka nuqta" },
+      { arabic: "بي كان ما كان", transliteration: "Bī kāna mā kāna", meaning: "'se' aur 'ke zariye' wala Bāʾ" },
+      { arabic: "تسعة عشر حرفا", transliteration: "Tisʿata ʿAshar Ḥarfan", meaning: "unnīs harf" },
+      { arabic: "زبانية", transliteration: "Zabāniyah", meaning: "aag ke muhafiz" },
+      { arabic: "اسم", transliteration: "Ism", meaning: "Naam, zaat" },
+      { arabic: "الله", transliteration: "Allāh", meaning: "Allah, sabse bada zaati Naam" },
+      { arabic: "الرحمن", transliteration: "Al-Raḥmān", meaning: "sab par meherban" },
+      { arabic: "الرحيم", transliteration: "Al-Raḥīm", meaning: "khaas meherban" },
+      { arabic: "أنهار الجنة", transliteration: "Anhār al-Jannah", meaning: "Jannat ki chaar nehrein" },
+      { arabic: "حساب الجمل", transliteration: "Ḥisāb al-Jummal", meaning: "harfon ko number se ginna" },
+      { arabic: "وفق البسملة", transliteration: "Wafq al-Basmalah", meaning: "Basmalah ka square" },
+      { arabic: "أملاك", transliteration: "Amlāk", meaning: "farishte muhafiz" },
+      { arabic: "أمان وسلام", transliteration: "Amān wa-Salām", meaning: "poori aman aur salamti" },
+      { arabic: "براءة", transliteration: "Barāʾah", meaning: "rishta todna, alag hona" },
+      { arabic: "جلال", transliteration: "Jalāl", meaning: "Allah ki sakhti aur azmat" },
+      { arabic: "الوجه", transliteration: "Al-Wajh", meaning: "chehra" },
+      { arabic: "الدماغ", transliteration: "Al-Dimāgh", meaning: "dimaagh" },
+      { arabic: "القلب", transliteration: "Al-Qalb", meaning: "dil" },
+      { arabic: "الكبد", transliteration: "Al-Kabd", meaning: "jigar" },
+    ],
+    closing:
+      "Main Basmalah roz padhta hoon, aur maine use kabhi is tarah nahi dekha tha. Ek nuqta jo takhleeq ko thaame hai. Unnīs harf jo aag ke saamne khade hain. Chaar Naam jo chaar nehron ki tarah behti hain. Ek number, 786, jo line ko tolta hai. Ek gayab line jo sakhti sikhati hai. Aur ek jism jo harfon ko apne chehre aur seene mein liye hai. Yahi kitabein kehti hain. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
+  "throne-verse": {
+    eyebrow: "Topics",
+    title: "Ayat al-Kursi, Throne Verse",
+    subtitle:
+      "Quran ki sabse azeem aayat, aur woh Kursi jo aasmanon ko thaame hue hai.",
+    intro:
+      "Main Khafi hoon. Aaj hum chalte hain Quran-e-Majeed ki sabse azeem aayat ki taraf — Āyat al-Kursī (The Throne Verse), Quran 2:255. Kitabein use Quran ki sardar kehti hain. Kitabein kehti hain ke jab woh utri, to sattar hazaar farishte uske saath utre. Main use line dar line decode karunga, jaisa sources dete hain. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Sabse azeem aayat, aur sattar hazaar farishte",
+        paragraphs: [
+          "Kitabein Ayat al-Kursi ko Sayyidat al-Quran kehti hain, Quran ki sardar. Kisi aur aayat ka yeh rutba nahi hai. Jab woh utri, to kitabein kehti hain ke sattar hazaar farishte uske saath utre. Hubūṭ al-Malāʾikah, farishton ka utarna.",
+          "Aayat chhoti hai, lekin kitabein uske andar 170 harf ginti hain. Ek sau sattar harf, aur har ek uske andar ke blueprint ka hissa hai. Number aayat ka frame hai, aur aayat arsh ka frame hai. Source: Shams al-Maʿārif al-Kubrā, Ch. 18, pp. 68-69; Tafsir Ibn Kathir, Vol. 1, pp. 86-88.",
+        ],
+      },
+      {
+        heading: "Aayat ke andar Sabse Bada Naam",
+        paragraphs: [
+          "Aayat Sabse Bade Naam se khulti hai. Allāhu lā ilāha illā Huwa al-Ḥayyu al-Qayyūm. Allah, uske siwa koi ma'bud nahi, woh hamesha zinda, sab ko thaame hue. Do Naam aayat ke darwaze par khade hain, aur kitabein kehti hain ke yahi Sabse Bada Naam hai.",
+          "Al-Ḥayy hamesha zinda hai, aur kitabein kehti hain ke yeh Jibril ka zikr hai. Al-Qayyūm khud khada rehne wala hai, jo sab ko thaame hue hai aur use kisi ki zaroorat nahi. Kitabein aayat ko Āṣif ibn Barkhiyā se jodti hain, jisne Bilqīs ka takht hila diya tha. Wahi Naam, wahi taaqat, kitabein kehti hain. Source: Shams, pp. 60-61, 68-69; Mudih al-Tariq, pp. 21-22; al-Ghunya, p. 35.",
+        ],
+        quote: {
+          arabic: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ",
+          transliteration: "Allāhu lā ilāha illā Huwa al-Ḥayyu al-Qayyūm",
+          text: "Allah, uske siwa koi ma'bud nahi, woh hamesha zinda hai, sab ko thaame hue hai.",
+          source: "Qurʾān 2:255",
+        },
+      },
+      {
+        heading: "Kursi aur Arsh",
+        paragraphs: [
+          "Aayat kehti hai ke uski Kursi aasmanon aur zameen par phaili hui hai. Wasiʿa Kursiyyuhu al-Samāwāti wa-l-Arḍ. Kursi paaydaan hai, aur kitabein use Arsh ke neeche rakhti hain. Arsh takht hai. Kursi paaydaan hai. Ek baithne ki jagah hai, doosra uske neeche ka step hai.",
+          "Ibn ʿAbbās kehte hain ke Kursi Arsh ke neeche ka paaydaan hai. Kitabein use Maḥall al-Ṣuwar kehti hain, shaklon ka thaamne wala, woh jagah jahan cheezon ki shaklein rakhi hain. Aur woh uske size ke liye ek tasveer deti hain. Saat aasman aur zameen, Kursi ke saamne, jaise registan mein phenki hui ek angoothi. Source: Tafsir Ibn Kathir, Vol. 1, p. 89; Mudih al-Tariq, pp. 19-20, 27-28, 31.",
+        ],
+        quote: {
+          arabic: "وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ",
+          transliteration: "Wasiʿa Kursiyyuhu al-Samāwāti wa-l-Arḍ",
+          text: "Uski Kursi aasmanon aur zameen par phaili hui hai.",
+          source: "Qurʾān 2:255",
+        },
+      },
+      {
+        heading: "170 harfon wala square",
+        paragraphs: [
+          "Kitabein aayat se ek square banati hain. Ek sau sattar harf, aur 170 ka harmonic unme se guzarta hai. Ayat al-Kursi ka 4x4 square aayat se hi banta hai, aur kitabein kehti hain ke farishton ki likhai diagram ke chaaron taraf khadi hai.",
+          "Aayat ek line par khatm hoti hai jise kitabein baar baar quote karti hain. Wa-lā yaʾūduhu ḥifẓuhumā wa-Huwa al-ʿAliyyu al-ʿAẓīm. Aasmanon aur zameen ki hifazat use thakati nahi, aur woh sabse buland, sabse bada hai. Square harfon ko thaame hai. Line matlab ko thaame hai. Source: Shams, Ch. 18, pp. 68-69, 71-72.",
+        ],
+        quote: {
+          arabic: "وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ",
+          transliteration: "Wa-lā yaʾūduhu ḥifẓuhumā wa-Huwa al-ʿAliyyu al-ʿAẓīm",
+          text: "Aur unki hifazat use thakati nahi, aur woh sabse buland, sabse bada hai.",
+          source: "Qurʾān 2:255",
+        },
+      },
+      {
+        heading: "Ek aisa qila jo toot nahi sakta",
+        paragraphs: [
+          "Kitabein aayat ko Ḥirz Māniʿ kehti hain, na tootne wala qila. Yeh ek deewaar hai jise koi sarkash cheez paar nahi kar sakti, kitabein kehti hain. Aayat use thaame hai jo use thaame, aur muhafiz kabhi sota nahi.",
+          "Kitabein ek chhoti line quote karti hain. Lā taʾkhudhuhu sinatun wa-lā nawm. Na use oongh aati hai, na neend. Muhafiz kabhi aankh band nahi karta, kyunki jo hifazat karta hai woh kabhi sota nahi. Yahi qile ka dil hai. Source: Shams, Ch. 18, pp. 68-69, 71; Kitab al-Ajnas, pp. 10-11.",
+        ],
+        quote: {
+          arabic: "لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ",
+          transliteration: "Lā taʾkhudhuhu sinatun wa-lā nawm",
+          text: "Na use oongh aati hai, na neend.",
+          source: "Qurʾān 2:255",
+        },
+      },
+      {
+        heading: "Dil ke andar ka arsh",
+        paragraphs: [
+          "Kitabein aakhir mein aayat ko andar ki taraf modti hain. Qalbu al-Muʾmini ʿArshu Allāh. Momin ka dil Allah ka Arsh hai. Jo Arsh aasmanon ko thaame hai, uski ek jagah seene ke andar bhi hai, kitabein kehti hain.",
+          "Abū Yazīd al-Bisṭāmī ne kaha ke kainaat dil mein gir gayi, aur dil ne use thaam liya. Aayat aasmanon ke baare mein hai, aur dil ke baare mein bhi hai. Bada Arsh aur chhota dil ek hi taleem hain, do baar padhi hui. Source: al-Asrar al-Rabbaniyyah, pp. 125-126; Mudih al-Tariq, pp. 27-28.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "سيدة القرآن", transliteration: "Sayyidat al-Qurʾān", meaning: "Quran ki sardar" },
+      { arabic: "هبوط الملائكة", transliteration: "Hubūṭ al-Malāʾikah", meaning: "farishton ka utarna" },
+      { arabic: "الحي", transliteration: "Al-Ḥayy", meaning: "hamesha zinda" },
+      { arabic: "القيوم", transliteration: "Al-Qayyūm", meaning: "sab ko thaame hue, khud khada rehne wala" },
+      { arabic: "الكرسي", transliteration: "Al-Kursī", meaning: "paaydaan, kursi" },
+      { arabic: "العرش", transliteration: "Al-ʿArsh", meaning: "arsh, takht" },
+      { arabic: "محل الصور", transliteration: "Mahall al-Ṣuwar", meaning: "shaklon ka thaamne wala" },
+      { arabic: "وفق", transliteration: "Wafq", meaning: "jaadui square" },
+      { arabic: "حرز مانع", transliteration: "Ḥirz Māniʿ", meaning: "na tootne wala qila" },
+      { arabic: "قلب المؤمن عرش الله", transliteration: "Qalbu al-Muʾmini ʿArshu Allāh", meaning: "momin ka dil Allah ka Arsh hai" },
+    ],
+    closing:
+      "Main yeh aayat zindagi bhar padhta aaya hoon, aur maine kabhi uske harf nahi gine the, uske Naam nahi tole the. Ek sau sattar harf. Darwaze par do Naam. Aasmanon se badi ek Kursi. Lafzon se bana ek square. Ek qila jo kabhi sota nahi. Aur ek Arsh jo dil ke andar sama jata hai. Yahi kitabein deti hain. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
+  "greatest-name": {
+    eyebrow: "Topics",
+    title: "Ism al-A'zam, Allah ka Sabse Bada Naam",
+    subtitle:
+      "Woh Naam jise kitabein sabse ooncha kehti hain, aur makhtootaat uske baare mein kya kehte hain.",
+    intro:
+      "Main Khafi hoon. Aaj hum chalte hain Islamic occultism aur tasawwuf ki sabse unchi choti par — Al-Ism al-Aʿẓam, Allah ka Sabse Bada Naam. Makhtootaat use kainaat ka sabse bada creative pivot kehte hain, woh hukm jo farishton aur jinn ko majboor karta hai. Main yeh lafz makhtootaat ke apne andaaz mein deta hoon, history ke taur par, apne daawe ke taur par nahi. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai. Yahan kisi ko nuksan pahunchane, majboor karne ya bandhne ki koi hidayat nahi hai.",
+    fullSections: [
+      {
+        heading: "Kitabein Naam ke baare mein kya kehti hain",
+        paragraphs: [
+          "Kitabein Naam ki seedhi definition deti hain. Idhā duʿiya bihi ajāb, wa-idhā suʾila bihi aʿṭā. Jab use pukara jaye to woh jawab deta hai. Jab use manga jaye to woh deta hai. Yahi definition makhtootaat dete hain, aur use guaranteed jawab kehte hain.",
+          "Kitabein ek kahani deti hain. Āṣif ibn Barkhiyā ne Bilqīs ka takht palak jhapakte mein hila diya, aur kitabein kehti hain ke usne yeh Sabse Bade Naam se kiya. Takht ek mulk paar karke aaya, aankh jhapakne se pehle. Kahani makhtootaat ki apni hai, aur main use waisa hi deta hoon jaisa woh kehte hain. Source: Kitab al-Ajnas, pp. 10-11; Exploring Islamic Occult Manuscripts, pp. 1, 4; al-Ghunya, pp. 35, 37.",
+        ],
+        quote: {
+          arabic: "إِذَا دُعِيَ بِهِ أَجَابَ وَإِذَا سُئِلَ بِهِ أَعْطَى",
+          transliteration: "Idhā duʿiya bihi ajāb, wa-idhā suʾila bihi aʿṭā",
+          text: "Jab use pukara jaye to woh jawab deta hai. Jab use manga jaye to woh deta hai.",
+          source: "As quoted in Kitab al-Ajnas, pp. 10-11",
+        },
+      },
+      {
+        heading: "Allah, aur harfon ka chhilna",
+        paragraphs: [
+          "Kitabein kehti hain ke Ism al-Dhāt, zaat ka Naam, Allah khud hai. Naam zaat par koi label nahi hai. Woh zaat hai, naam ke roop mein. Aur kitabein lafz ko harf dar harf chheelti hain, taaki dikhaye ke andar kya chhupa hai.",
+          "Alif hatao, to Li-llāh bachta hai, Allah ki taraf. Pehla Lām hatao, to Lahu bachta hai, uski taraf. Doosra Lām hatao, to sirf Hāʾ bachta hai, Huwa, woh. Har chhilne par ek Naam bachta hai, aur aakhri harf par sirf woh bachta hai. Lafz ek seedhi hai, aur har step ek Naam hai. Source: Mudih al-Tariq, pp. 19-20, 24, 41; al-Asrar al-Rabbaniyyah, pp. 86-87.",
+        ],
+      },
+      {
+        heading: "Yā Ḥayyu Yā Qayyūm",
+        paragraphs: [
+          "Kitabein ek jodi deti hain, Yā Ḥayyu Yā Qayyūm. Aye hamesha zinda, aye sab ko thaame hue. Do Naam, ek saath bole jate hain, aur kitabein kehti hain ke yahi jodi Naam ka kaam karne wala roop hai.",
+          "Yeh jodi Ayat al-Kursi se aati hai, jahan wahi do Naam aayat ko kholte hain. Kitabein Sabse Bade Naam ko sabse badi aayat se jodti hain, aur aayat ko jodi se. Ek Naam, ek aayat, ek jodi, kitabein kehti hain. Source: al-Ghunya, pp. 35, 37; Shams, Ch. 18, pp. 60-61, 68-69.",
+        ],
+        quote: {
+          arabic: "يَا حَيُّ يَا قَيُّومُ",
+          transliteration: "Yā Ḥayyu yā Qayyūm",
+          text: "Aye hamesha zinda, aye sab ko thaame hue.",
+          source: "As quoted in al-Ghunya, pp. 35, 37",
+        },
+      },
+      {
+        heading: "Chaudah roshni wale harf",
+        paragraphs: [
+          "Kitabein Naam ko chaudah roshni wale harfon se jodti hain, Arbaʿata ʿAshara Ḥarfan, woh harf jo surahon ko kholte hain. Chaudah harf, aur kitabein kehti hain ke unme Naam code mein chhupa hai. Harf code hain, aur Naam woh hai jo code bolta hai.",
+          "Kitabein formula poora deti hain. Naṣṣun ḥakīmun lahu sirrun qāṭiʿ. Ek hikmat bhara text jisme ek faisla-kun raaz hai. Aur woh kehti hain ke yeh taleem al-Khiḍr se aayi, chhupe hue ustaad se, haath se haath. Harf chaudah hain. Raaz ek hai. Source: al-Asrar al-Rabbaniyyah, pp. 85-86; Manbaʿ Uṣūl al-Ḥikma, pp. 27-28.",
+        ],
+        quote: {
+          arabic: "نَصٌّ حَكِيمٌ لَهُ سِرٌّ قَاطِعٌ",
+          transliteration: "Naṣṣun ḥakīmun lahu sirrun qāṭiʿ",
+          text: "Ek hikmat bhara text jisme ek faisla-kun raaz hai.",
+          source: "al-Asrar al-Rabbaniyyah, pp. 85-86",
+        },
+      },
+      {
+        heading: "Purane code",
+        paragraphs: [
+          "Kitabein purane code bhi rakhti hain, Syriac aur Hebrew lafzon mein. Ehyā Sharāhyā Adūnāy Aṣbāʾūt Āl Shaddāy. Lafz purane hain, aur kitabein unhe waisa hi rakhti hain jaisa mile. Yeh purane Naam hain, Arabic harfon se pehle ke lafz.",
+          "Lafzon ke saath ek figure aati hai, al-Khātam al-Aʿẓam, saat nishanon wala taweez. Ek pentagram, teen khade neze, ek andha Mīm, do seedhiyon wali seedhi, chaar khade strokes, ek phata hua Hāʾ, aur ek tedha aakhri Wāw. Saat nishan, ek saath bane, aur kitabein kehti hain ke yeh figure Naam hai, tasveer ke roop mein likha hua. Source: Manbaʿ, pp. 22-24; Kitab al-Ajnas, pp. 11, 65, 83; Exploring Islamic Occult Manuscripts, pp. 3-4.",
+        ],
+        quote: {
+          transliteration: "Ehyā Sharāhyā Adūnāy Aṣbāʾūt Āl Shaddāy",
+          text: "Makhtootaat ka purana code, Syriac aur Hebrew lafzon mein.",
+          source: "Manbaʿ, pp. 22-24; Kitab al-Ajnas, pp. 11, 65, 83",
+        },
+      },
+      {
+        heading: "Syllable se upar maqam",
+        paragraphs: [
+          "Kitabein ek warning par khatm hoti hain, aur woh al-Khiḍr se aati hai. Ibrāhīm ibn Adham ne Naam manga, aur al-Khiḍr ne use daanta. Kitabein kehti hain ke use Naam Dāwūd ne sikhaya tha, woh syllable nahi jiske peeche woh bhaag raha tha. Maqam awaaz se zyada zaroori hai.",
+          "Kitabein ek lafz deti hain, Takhalluq, kirdaar ko apnana. Naam koi lafz nahi hai jise apna liya jaye. Yeh ek kirdaar hai jise apnana hai. Jo Naam ko uthata hai, use pehle uske layak banna hota hai, kitabein kehti hain. Maqam pehle aata hai. Syllable baad mein. Source: Mudih al-Tariq, pp. 20-22, 41-42, 48.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "الاسم الأعظم", transliteration: "Al-Ism al-Aʿẓam", meaning: "Allah ka Sabse Bada Naam" },
+      { arabic: "اسم الذات", transliteration: "Ism al-Dhāt", meaning: "zaat ka Naam" },
+      { arabic: "لله", transliteration: "Li-llāh", meaning: "Allah ki taraf" },
+      { arabic: "له", transliteration: "Lahu", meaning: "uski taraf" },
+      { arabic: "هو", transliteration: "Huwa", meaning: "woh" },
+      { arabic: "يا حي يا قيوم", transliteration: "Yā Ḥayyu yā Qayyūm", meaning: "aye hamesha zinda, aye sab ko thaame hue" },
+      { arabic: "أربعة عشر حرفا", transliteration: "Arbaʿata ʿAshara Ḥarfan", meaning: "chaudah roshni wale harf" },
+      { arabic: "الخاتم الأعظم", transliteration: "Al-Khātam al-Aʿẓam", meaning: "saat nishanon wala taweez" },
+      { arabic: "تخلق", transliteration: "Takhalluq", meaning: "kirdaar ko apnana" },
+    ],
+    closing:
+      "Maine Naam ke baare mein makhtootaat ke lafz padhe, aur main unhe history ke taur par wapas deta hoon. Ek definition, ek chhilna, ek jodi, chaudah harf, purane code, aur ek warning. Kitabein kehti hain ke Naam jawab deta hai aur deta hai. Woh yeh bhi kehti hain ke maqam syllable se zyada zaroori hai. Main dono hisse ek saath rakhta hoon, kyunki kitabein dono ko ek saath rakhti hain. Yahi study hai, aur kuch nahi.",
+  },
+  "fawatih-openings": {
+    eyebrow: "Topics",
+    title: "Quran ki Fawatih",
+    subtitle:
+      "Untīs openings, chaudah roots, aur woh harf jo akele khade hain.",
+    intro:
+      "Main Khafi hoon. Aaj hum chalte hain Quran-e-Majeed ke sabse pur-asrar darwazon ki taraf — Fawātiḥ al-Suwar. Quran ke 114 chapters mein, bilkul 29 surahein aise harfon se khulti hain jo akele khade hain. Koi lafz nahi, koi jumla nahi, sirf harf. Alif Lām Mīm. Kāf Hā Yā ʿAyn Ṣād. Kitabein unhe roshni wale code kehti hain, al-aḥruf al-nūrāniyyah, jinse takhleeq boli gayi. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Aṭhattar harf, chaudah roots",
+        paragraphs: [
+          "Saari openings gino, to harf 78 hote hain. Untīs surahon mein aṭhattar harf. Lekin sirf woh harf gino jo kabhi repeat nahi hote, to sirf 14 bachte hain. Alif, Lām, Mīm, Ṣād, Rāʾ, Kāf, Hāʾ, Yāʾ, ʿAyn, Ṭāʾ, Sīn, Ḥāʾ, Qāf, Nūn. Chaudah roots, aur har opening unhi se banti hai.",
+          "Kitabein code ek line mein deti hain. Bi-naṣṣin ḥakīmin qāṭiʿi al-sirr. Ek hikmat bhare text se, jo raaz ka faisla karta hai. Chaudah harf roots hain, aur code woh chabi hai jo kitabein kehti hain ke unhe kholta hai. Source: Manbaʿ, chapter on the Secrets of Quranic Initials, pp. 27-28; al-Futuhat al-Makkiyyah, Vol. 4, pp. 72-73.",
+        ],
+        quote: {
+          arabic: "بِنَصٍّ حَكِيمٍ قَاطِعِ السِّرِّ",
+          transliteration: "Bi-naṣṣin ḥakīmin qāṭiʿi al-sirr",
+          text: "Ek hikmat bhare text se, jo raaz ka faisla karta hai.",
+          source: "Manbaʿ, chapter on the Secrets of Quranic Initials, pp. 27-28",
+        },
+      },
+      {
+        heading: "Pehle logon ne kya kaha",
+        paragraphs: [
+          "Kitabein likhti hain ke pehle logon ne openings ke baare mein kya kaha. Ibn ʿAbbās ne kaha Alif Anā hai, main. Lām Allah hai. Mīm Aʿlam hai, main sabse behtar janta hoon. Rāʾ Arā hai, main dekhta hoon. Har harf ek chhota lafz hai, aur lafz ek Naam hai.",
+          "Abū al-ʿĀliyah ne ek lambi list di. Alif Allah se. Lām Laṭīf se, naram. Mīm Mālik se, badshah. Ṣād Ṣādiq se, sachcha. Rāʾ Rabb se, Rab. Kāf Karīm se, sakhi. Ṭāʾ Ṭayyib se, achha. Sīn Samīʿ se, sunne wala. Ḥāʾ Ḥamīd se, tareef kiya hua. Qāf Qadīr se, taaqatwar. Nūn Nūr se, roshni. Gyarah harf, gyarah Naam. Source: Manbaʿ, pp. 27-28; Shams, Ch. 1, pp. 28-29.",
+        ],
+      },
+      {
+        heading: "Roshni wale harf aur andhere harf",
+        paragraphs: [
+          "Kitabein alphabet ko do hisson mein baantti hain. Chaudah harf roshni wale hain, nūrāniyyah. Baaki chaudah andhere hain, ẓulmāniyyah. Aadha alphabet roshni hai, aadha andhera, aur kitabein kehti hain ke dono hisse ek doosre ka aaina hain.",
+          "Aaina aasman tak jata hai. Chaudah roshni wale harf, aur chaudah dikhai dene wale chaand ke manzil. Upar ke harf aur upar ke manzil ek hi tarah gine jate hain, kitabein kehti hain. Aadhi duniya dikhti hai, aadhi chhupi hai, aur harf bhi usi tarah bante hain. Source: Usul ʿIlm al-Huruf, Ch. 7, p. 18; Shams, pp. 31, 33.",
+        ],
+      },
+      {
+        heading: "Ek harf se paanch harf tak",
+        paragraphs: [
+          "Openings paanch lambai mein aati hain. Ek harf, jaise Ṣād, Qāf aur Nūn. Do harf, jaise Ṭā-Hā, Ṭā-Sīn, Yā-Sīn, aur saat Ḥā-Mīm openings. Teen harf, jaise Alif-Lām-Mīm, jo chhe surahon ko kholta hai.",
+          "Chaar harf, jaise Alif-Lām-Mīm-Ṣād aur Alif-Lām-Mīm-Rāʾ. Aur paanch harf, poore Quran mein sirf do. Kāf-Hā-Yā-ʿAyn-Ṣād, aur Ḥā-Mīm-ʿAyn-Sīn-Qāf. Do paanch harf wale chains, aur koi nahi. Source: Tafsir Ibn Kathir, Vol. 1, p. 88; al-Futuhat al-Makkiyyah, Vol. 4, pp. 72-74.",
+        ],
+      },
+      {
+        heading: "Woh square jo 693 jodta hai",
+        paragraphs: [
+          "Kitabein roshni wale harfon se ek square banati hain. Wafq al-Aḥruf al-Nūrāniyyah, roshni wale harfon ka square. Teen rows, teen columns, teen diagonals, aur har line bilkul 693 jodti hai. Kitabein number saaf saaf deti hain.",
+          "Square ke chaaron taraf saat likhaiyon ka ek ring hai. Alif-Lām-Mīm. Kāf-Hā-Yā-ʿAyn-Ṣād. Ṭā-Sīn. Ḥā-Mīm. Ṣād. Qāf. Nūn. Saat openings ek ring mein likhi hain, aur square beech mein hai. Harf ring hain. Number square hai. Source: Manbaʿ, chapter on Quranic Initials, pp. 28-29.",
+        ],
+      },
+      {
+        heading: "Nabi ke lafzon ki dhaal",
+        paragraphs: [
+          "Kitabein openings ko ek dhaal bhi kehti hain. Idhā laqītumu al-ʿaduwwa ghadan fa-qūlū: Kāf-Hā-Yā-ʿAyn-Ṣād; Ḥā-Mīm; lā yunṣarūn. Agar kal dushman se milo, to kaho: Kāf Hā Yā ʿAyn Ṣād; Ḥā Mīm; unki madad nahi hogi. Lafz kitabon se quote kiye gaye hain, jaisa kitabein deti hain.",
+          "Do aur lines uske saath khadi hain. Bi-Kāf-Hā-Yā-ʿAyn-Ṣād kifāyatunā. Kāf Hā Yā ʿAyn Ṣād se hamari kafayat hai. Bi-Ḥā-Mīm-ʿAyn-Sīn-Qāf ḥimāyatunā. Ḥā Mīm ʿAyn Sīn Qāf se hamari hifazat hai. Kafayat aur hifazat, kitabein kehti hain, do chhoti lines mein. Source: Shams, Ch. 1, p. 30; Tested Remedies, pp. 31-32.",
+        ],
+        quote: {
+          arabic: "إِذَا لَقِيتُمُ الْعَدُوَّ غَدًا فَقُولُوا: كَافْ هَا يَا عَيْنْ صَادْ، حَا مِيمْ، لَا يُنْصَرُونَ",
+          transliteration: "Idhā laqītumu al-ʿaduwwa ghadan fa-qūlū: Kāf-Hā-Yā-ʿAyn-Ṣād; Ḥā-Mīm; lā yunṣarūn",
+          text: "Agar kal dushman se milo, to kaho: Kāf Hā Yā ʿAyn Ṣād; Ḥā Mīm; unki madad nahi hogi.",
+          source: "Shams, Ch. 1, p. 30",
+        },
+      },
+    ],
+    fullTerms: [
+      { arabic: "الأحرف النورانية", transliteration: "al-Aḥruf al-Nūrāniyyah", meaning: "roshni wale harf" },
+      { arabic: "أنا", transliteration: "Anā", meaning: "main" },
+      { arabic: "أعلم", transliteration: "Aʿlam", meaning: "main sabse behtar janta hoon" },
+      { arabic: "أرى", transliteration: "Arā", meaning: "main dekhta hoon" },
+      { arabic: "نورانية", transliteration: "Nūrāniyyah", meaning: "roshni wala" },
+      { arabic: "ظلمانية", transliteration: "Ẓulmāniyyah", meaning: "andhera" },
+      { arabic: "حا ميم", transliteration: "Ḥā-Mīm", meaning: "Ḥā-Mīm openings, saat surahein" },
+      { arabic: "وفق الأحرف النورانية", transliteration: "Wafq al-Aḥruf al-Nūrāniyyah", meaning: "roshni wale harfon ka square" },
+      { arabic: "كفاية", transliteration: "Kifāyah", meaning: "kafayat, kaafi hona" },
+      { arabic: "حماية", transliteration: "Ḥimāyah", meaning: "hifazat" },
+    ],
+    closing:
+      "Untīs openings. Aṭhattar harf. Chaudah roots. Ek code. Roshni aur andhere ke beech ek baant. Ek harf, do, teen, chaar, paanch wale chains. Ek square jo 693 jodta hai. Aur Nabi ke lafzon mein ek dhaal. Harf surahon ke sir par akele khade hain, aur kitabein kehti hain ke woh pehle lafz hain jo takhleeq ne sune. Main unhe waisa hi deta hoon jaisa mile, study ke liye, aur kuch nahi.",
+  },
+  "four-tawaqif": {
+    eyebrow: "Topics",
+    title: "Chaar Tawaqif",
+    subtitle:
+      "Harfon ke raste par chaar rukawat, Arsh se Lawh tak.",
+    intro:
+      "Main Khafi hoon. Aaj hum chalte hain Būnian letter cosmology aur roohani safar ke sabse gehre framework ki taraf — The Four Tawāqif. Shaykh Aḥmad ibn ʿAlī al-Būnī ki kitabon mein, Al-Asrār al-Rabbāniyyah, Muḍīḥ al-Ṭarīq aur Majmūʿat Thalāth Rasāʾil mein, chaar rukawaton ki taleem hai. Chaar maqam jahan talash karne wala Allah ki dehleez par rukta hai. Yahan chaar halts ki decoding hai, seedha sources se. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Dehleez par rukna",
+        paragraphs: [
+          "Tawaqquf ka matlab hai rukna. Talash karne wala harfon ke raste par chalta hai, aur chaar jagah use rukna hota hai aur khada rehna hota hai. Jo rukta hai woh al-Wāqif hai. Woh aage nahi badhta. Woh dehleez par khada rehta hai aur intezar karta hai.",
+          "Kitabein do qism ke rukne wale batati hain. Al-Mustahlikūn, jazb ho jane wale, jo dekhte hain usme kho jate hain. Aur al-Mardūdūn, woh jo wapas bheje jate hain, jo duniya mein laut te hain. Kitabein yeh bhi kehti hain ke Alif khud rukta hai. Woh koi vowel nahi leta, aur uski khamoshi bolti hai. Harf rukta hai, aur talash karne wala uske saath rukta hai. Source: The Journey to the Lord of Power, pp. 48, 116; Shams, Ch. 1, p. 31.",
+        ],
+      },
+      {
+        heading: "Pehla halt: Aql aur Arsh",
+        paragraphs: [
+          "Pehla halt Aql aur Arsh ka maqam hai, Mawqif al-ʿAql wa-l-ʿArsh. Yeh Alif ki line par khada hai. Alif pehla harf hai, seedhi lakeer, aur Arsh sabse ooncha takht hai. Pehla halt sabse ooncha hai.",
+          "Aql sabse oonchi aqal hai, aur Arsh sabse ooncha takht hai, aur kitabein dono ko ek maqam mein rakhti hain. Talash karne wala pehle yahin rukta hai, sabse upar, phir baaki se guzarta hua neeche chalta hai. Source: al-Asrar al-Rabbaniyyah, pp. 1, 3, 276-278; Exploring Al-Asrar, pp. 1, 3.",
+        ],
+      },
+      {
+        heading: "Doosra halt: Ruh aur Kursi",
+        paragraphs: [
+          "Doosra halt Ruh aur Kursi ka maqam hai, Mawqif al-Rūḥ wa-l-Kursī. Yeh Bāʾ ki line par khada hai. Arsh ke neeche Kursi hai, aur Aql ke neeche Ruh hai. Doosra halt ek step neeche hai.",
+          "Kitabein is maqam ki mitti ka naam deti hain, al-Habāʾ, pehli mitti, woh pehli cheez jisse cheezein bani. Aur woh Adam mein Ruh ke phoonkne ka naam deti hain, woh saans jisne mitti ko insaan banaya. Ruh neeche aati hai, mitti upar uthti hai, aur dono is halt par milte hain. Source: al-Asrar al-Rabbaniyyah, pp. 275-278; Mudih al-Tariq, pp. 19-20.",
+        ],
+      },
+      {
+        heading: "Teesra halt: Qalb aur Barzakh",
+        paragraphs: [
+          "Teesra halt Qalb aur Barzakh ka maqam hai, Mawqif al-Qalb wa-l-Barzakh. Yeh Jīm ki line par khada hai. Dil rooh aur jism ke beech khada hai, aur barzakh is duniya aur aakhri duniya ke beech khada hai. Teesra halt beech ki jagah hai.",
+          "Kitabein yahan Universal Soul ka naam deti hain, woh rooh jo saari roohon ko thaame hai. Aur Yawm al-Taṣwīr ka naam deti hain, shakl dene ka din, jis din shaklon ko unki shakal di gayi. Dil is halt par banaya jata hai, aur jo shakal woh leta hai, wahi insaan ki shakal hai. Source: al-Asrar al-Rabbaniyyah, pp. 276-279; Exploring Al-Asrar, pp. 1, 3.",
+        ],
+      },
+      {
+        heading: "Chautha halt: Lawh aur jism",
+        paragraphs: [
+          "Chautha halt Lawh aur jism ki banawat ka maqam hai, Mawqif al-Lawḥ wa-l-Tarkīb. Yeh Dāl ki line par khada hai. Lawh likhai ko thaame hai, aur jism likhai hai jo gosht ban gayi. Chautha halt sabse neeche hai, aur humse sabse kareeb hai.",
+          "Kitabein kehti hain ke number chaar jismani kainaat par hukm chalata hai, al-Tarkīb al-Murabbaʿ, chaar guna banawat. Chaar anasir, chaar dishaein, zameen ke chaar kone. Jism chaar mein bana hai, aur chautha halt wahi hai jahan banawat hoti hai. Source: al-Asrar al-Rabbaniyyah, pp. 276-280; Shams, Ch. 1, pp. 61-62.",
+        ],
+      },
+      {
+        heading: "Har harf par chaar khidkiyan",
+        paragraphs: [
+          "Kitabein har harf ko padhne ka ek rule deti hain, sirf chaar halts ka nahi. Har harf chaar khidkiyon se padha jata hai. Ḥaqāʾiq, asal haqeeqatein. Laṭāʾif, bareek meherbaniyan. Ishārāt, andar ke ishare. ʿIbārāt, bahar ke lafz. Chaar khidkiyan, aur har ek ek hi harf ka alag chehra dikhati hai.",
+          "Kitabein saaf kehti hain. 'The discussion of it and of all the remaining letters proceeds from four aspects: realities, subtleties, indications, expressions.' Harf ek hai. Padhai chaar hain. Aur chaar halts chaar khidkiyan hain, order mein padhi hui. Source: Majmūʿat Thalāth Rasāʾil, Treatise 3, pp. 173, 176, 178.",
+        ],
+        quote: {
+          text: "Iske aur baaki saare harfon ke baare mein baat chaar pehluon se hoti hai: haqeeqatein, bareekiyan, ishare, aur lafz.",
+          source: "Majmūʿat Thalāth Rasāʾil, Treatise 3, pp. 173, 176, 178",
+        },
+      },
+    ],
+    fullTerms: [
+      { arabic: "الواقف", transliteration: "Al-Wāqif", meaning: "rukne wala" },
+      { arabic: "المستهلكون", transliteration: "Al-Mustahlikūn", meaning: "jazb ho jane wale" },
+      { arabic: "المردودون", transliteration: "Al-Mardūdūn", meaning: "wapas bheje jane wale" },
+      { arabic: "موقف العقل والعرش", transliteration: "Mawqif al-ʿAql wa-l-ʿArsh", meaning: "Aql aur Arsh ka maqam" },
+      { arabic: "موقف الروح والكرسي", transliteration: "Mawqif al-Rūḥ wa-l-Kursī", meaning: "Ruh aur Kursi ka maqam" },
+      { arabic: "الهباء", transliteration: "al-Habāʾ", meaning: "pehli mitti" },
+      { arabic: "موقف القلب والبرزخ", transliteration: "Mawqif al-Qalb wa-l-Barzakh", meaning: "Qalb aur Barzakh ka maqam" },
+      { arabic: "يوم التصوير", transliteration: "Yawm al-Taṣwīr", meaning: "shakl dene ka din" },
+      { arabic: "موقف اللوح والتركيب", transliteration: "Mawqif al-Lawḥ wa-l-Tarkīb", meaning: "Lawh aur jism ki banawat ka maqam" },
+      { arabic: "التركيب المربع", transliteration: "al-Tarkīb al-Murabbaʿ", meaning: "chaar guna banawat" },
+      { arabic: "حقائق", transliteration: "Ḥaqāʾiq", meaning: "asal haqeeqatein" },
+      { arabic: "لطائف", transliteration: "Laṭāʾif", meaning: "bareek meherbaniyan" },
+      { arabic: "إشارات", transliteration: "Ishārāt", meaning: "andar ke ishare" },
+      { arabic: "عبارات", transliteration: "ʿIbārāt", meaning: "bahar ke lafz" },
+    ],
+    closing:
+      "Chaar halts, chaar lines, chaar maqam. Aql aur Arsh. Ruh aur Kursi. Qalb aur Barzakh. Lawh aur jism. Aur har harf ko padhne ke liye chaar khidkiyan. Harfon ka rasta seedhi line nahi hai. Woh chaar baar rukta hai, aur har rukawat ek maqam hai. Yahi kitabein deti hain. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
+  "kaf-ha-ya-ayn-sad": {
+    eyebrow: "Topics",
+    title: "Kaf Ha Ya Ayn Sad",
+    subtitle:
+      "Surah Maryam ke sir par paanch harf, aur woh paanch Naam jo woh liye hain.",
+    intro:
+      "Main Khafi hoon. Aaj hum chalte hain poore Quran ke sabse lambe single-cluster mysterious code ki taraf — Kāf-Hā-Yā-ʿAyn-Ṣād, Surah Maryam ke sir par. Yahan Kāf-Hā-Yā-ʿAyn-Ṣād ki decoding hai, seedha sources se. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Paanch harf, paanch Naam",
+        paragraphs: [
+          "Ibn ʿAbbās ne har harf ko ek Naam padha. Kāf al-Kāfī se, sab ke liye kaafi. Hāʾ al-Hādī se, raasta dikhane wala. Yāʾ al-Ḥakīm se, sabse zyada hikmat wala, ya al-Yaqīn se, poora yaqeen. ʿAyn al-ʿAlīm se, sab kuch janne wala. Ṣād al-Ṣādiq se, sachcha.",
+          "Paanch harf, paanch Naam, aur har Naam Allah ka ek chehra hai. Sab ke liye kaafi, raasta dikhane wala, sabse zyada hikmat wala, sab kuch janne wala, sachcha. Cluster chhota hai, lekin kitabein kehti hain ke usme paanch harfon mein paanch Naam hain. Source: Tafsir Ibn Kathir, Vol. 5, commentary on Sūrat Maryam, pp. 212-213; Manbaʿ, p. 28.",
+        ],
+      },
+      {
+        heading: "195 ka number",
+        paragraphs: [
+          "Kitabein paanch harfon ko number mein tolti hain. Ḥisāb al-Jummal, harfon ko unke number se ginne ka hisaab. Paanch harfon ko gino, to total 195 aata hai. Ek sau pachanbe, aur kitabein use cluster ka master harmonic kehti hain.",
+          "Kitabein harfon ko poora spell karke bhi likhti hain, woh bada roop jise Basṭ kehte hain. Har harf apne naam mein khulta hai, aur total uske saath khulta hai. Number jad hai, aur spelling shaakh hai. Jad 195 hai, aur kitabein use saaf deti hain. Source: Manbaʿ, chapter on Qurʾanic Initials, pp. 28-29; Shams, Ch. 18, pp. 69-70.",
+        ],
+      },
+      {
+        heading: "Jang ke lafzon ki dhaal",
+        paragraphs: [
+          "Kitabein paanch harfon ko ek dhaal kehti hain. Idhā laqītumu al-ʿaduwwa ghadan fa-qūlū: Kāf-Hā-Yā-ʿAyn-Ṣād, lā yunṣarūn. Agar kal dushman se milo, to kaho: Kāf Hā Yā ʿAyn Ṣād; unki madad nahi hogi. Lafz kitabon se quote kiye gaye hain, jaisa kitabein deti hain.",
+          "Ek doosri line uske saath khadi hai. Bi-Kāf-Hā-Yā-ʿAyn-Ṣād kifāyatunā, wa-bi-Ḥā-Mīm-ʿAyn-Sīn-Qāf ḥimāyatunā. Kāf Hā Yā ʿAyn Ṣād se hamari kafayat hai, aur Ḥā Mīm ʿAyn Sīn Qāf se hamari hifazat hai. Ek cluster se kafayat, doosre se hifazat. Source: Shams, Ch. 1, p. 30; Tested Remedies, pp. 31-32.",
+        ],
+        quote: {
+          arabic: "إِذَا لَقِيتُمُ الْعَدُوَّ غَدًا فَقُولُوا: كَافْ هَا يَا عَيْنْ صَادْ، لَا يُنْصَرُونَ",
+          transliteration: "Idhā laqītumu al-ʿaduwwa ghadan fa-qūlū: Kāf-Hā-Yā-ʿAyn-Ṣād, lā yunṣarūn",
+          text: "Agar kal dushman se milo, to kaho: Kāf Hā Yā ʿAyn Ṣād; unki madad nahi hogi.",
+          source: "Shams, Ch. 1, p. 30",
+        },
+      },
+      {
+        heading: "Paanch ungliyan, paanch hisse",
+        paragraphs: [
+          "Kitabein paanch harfon ko haath par rakhti hain. Kāf chhoti ungli hai, al-Khinṣir. Hāʾ angoothi wali ungli hai, al-Binṣir. Yāʾ beech wali ungli hai, al-Wusṭā. ʿAyn shahadat wali ungli hai, al-Sabbābah. Ṣād angootha hai, al-Ibhām.",
+          "Paanch harf, paanch ungliyan, aur kitabein kehti hain ke haath cluster ko usi tarah thaame hai jaisa kagaz thaame hai. Mapping sabse chhoti ungli se angoothe tak chalti hai, aur har ungli ek harf thaame hai. Jism kagaz hai, aur harf us par likhe hain. Source: Usul ʿIlm al-Huruf, pp. 24-26; The Mirror, pp. 98-101.",
+        ],
+      },
+      {
+        heading: "Ḥā Mīm ʿAyn Sīn Qāf tak ka pull",
+        paragraphs: [
+          "Paanch harfon ka ek joda hai. Ḥā-Mīm-ʿAyn-Sīn-Qāf, doosra paanch harf wala chain, unke saath khada hai. Das harf ek saath, paanch aur paanch, aur kitabein unhe ek aasmani pull kehti hain. Do clusters, ek pull, aur pull unhe jodta hai.",
+          "Dono clusters ek harf share karte hain, ʿAyn. Aankh, chashma, zaat ka source. Ek harf dono clusters mein khada hai, aur kitabein kehti hain ke woh pull ka joint hai. Aankh dekhti hai, chashma behta hai, aur zaat usi se nikalti hai. Source: al-Futuhat al-Makkiyyah, Vol. 4, pp. 72-74; Manbaʿ, pp. 28-29.",
+        ],
+      },
+      {
+        heading: "Surah Maryam ka dil",
+        paragraphs: [
+          "Cluster Surah Maryam ke sir par khada hai, aur surah ghayb se do paidaishon ki kahani kehti hai. Zakariyyā ko budhape mein Yaḥyā mile. Maryam ne bina baap ke ʿĪsā ko janma. Do paidaish, aur dono dekhi hui duniya ke peeche se aayi.",
+          "Kitabein kehti hain ke paanch harf surah ka dil hain, kyunki surah ghayb se paidaish ki kahani hai, aur harf ghayb hain jo uske sir par likhe hain. Harf pehle aate hain. Paidaish baad mein aati hai. Raaz upar hai, aur kahani usi se neeche behti hai. Source: Mudih al-Tariq, pp. 28-30; The Holy Quran, Sūrat Maryam, pp. 305-306.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "الكافي", transliteration: "Al-Kāfī", meaning: "sab ke liye kaafi" },
+      { arabic: "الهادي", transliteration: "Al-Hādī", meaning: "raasta dikhane wala" },
+      { arabic: "الحكيم", transliteration: "Al-Ḥakīm", meaning: "sabse zyada hikmat wala" },
+      { arabic: "اليقين", transliteration: "Al-Yaqīn", meaning: "poora yaqeen" },
+      { arabic: "العليم", transliteration: "Al-ʿAlīm", meaning: "sab kuch janne wala" },
+      { arabic: "الصادق", transliteration: "Al-Ṣādiq", meaning: "sachcha" },
+      { arabic: "حساب الجمل", transliteration: "Ḥisāb al-Jummal", meaning: "harfon ko number se ginna" },
+      { arabic: "بسط", transliteration: "Basṭ", meaning: "poora spell karke likha hua roop" },
+      { arabic: "كفاية", transliteration: "Kifāyah", meaning: "kafayat, kaafi hona" },
+      { arabic: "حماية", transliteration: "Ḥimāyah", meaning: "hifazat" },
+      { arabic: "الخنصر", transliteration: "al-Khinṣir", meaning: "chhoti ungli" },
+      { arabic: "البنصر", transliteration: "al-Binṣir", meaning: "angoothi wali ungli" },
+      { arabic: "الوسطى", transliteration: "al-Wusṭā", meaning: "beech wali ungli" },
+      { arabic: "السبابة", transliteration: "al-Sabbābah", meaning: "shahadat wali ungli" },
+      { arabic: "الإبهام", transliteration: "al-Ibhām", meaning: "angootha" },
+      { arabic: "عين", transliteration: "ʿAyn", meaning: "aankh, chashma, zaat ka source" },
+    ],
+    closing:
+      "Paanch harf, paanch Naam, ek number, ek dhaal, paanch ungliyan, ek pull, aur do paidaish. Kāf Hā Yā ʿAyn Ṣād Quran ka sabse lamba cluster hai, aur kitabein kehti hain ke yeh Surah Maryam ka dil hai. Maine use waisa padha jaisa woh deti hain, harf dar harf, aur main use waisa hi wapas deta hoon. Study ke liye, aur kuch nahi.",
+  },
+  "zayirjah": {
+    eyebrow: "Topics",
+    title: "Zayirjah ka Ilm",
+    subtitle:
+      "Harfon, planets aur manazil ka ek gol dial, aur woh lines jo use bolna sikhati hain.",
+    intro:
+      "Main Khafi hoon. Humne pichle topics mein alag-alag roohani bhed decode kiye. Ab tumhari maang par main dobara simple Hinglish mein samjha raha hoon medieval occult science ka sabse advanced calculating instrument — Ilm al-Zayirjah. Shaykh Ahmad ibn Ali al-Buni (Manba' Usul al-Hikma, Shams al-Ma'arif al-Kubra, aur Al-Asrar al-Rabbaniyyah) ke mutabiq yeh ek circular calculating table hai. Yahan hain iske theek 6 technical hisse. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Zayirjah kya hai? Qadeem hukama ka dial",
+        paragraphs: [
+          "Manba' Usul al-Hikma ke andar al-Buni Zayirjah ko qadeem ustadon se chali aa rahi ek makhsoos table batate hain. Yeh ek diagrammatic table hai jo 28 harfon, planets, zodiac aur lunar mansions ko ek gol order mein jodti hai. Yeh Ilm al-Zayirjah ki physical key hai.",
+          "Al-Buni iske baare mein likhte hain ke yeh pehle logon aur qadeem hukama ka amal hai, lekin unme se kisi ne bhi apni kitabon mein iska zikr saaf tareeqe se nahi kiya. Yeh apparatus ek bridge ka kaam karta hai. Bolchaal ke alfaaz ko pehle unke harfon aur numbers mein toda jata hai, phir table ke zariye dobara joda jata hai. Natija guess nahi kiya jata. Use matrix se padha jata hai. Source: Manba' Usul al-Hikma, Chapter on Operations and Tables, pp. 13-14.",
+        ],
+      },
+      {
+        heading: "Concentric daayre: markaz se lekar 28 manazil tak",
+        paragraphs: [
+          "Shams al-Ma'arif al-Kubra (Chapter 3) aur Al-Asrar al-Rabbaniyyah mein Zayirjah ka physical naqsha gol daayron mein bana hai. Wheel ke theek center mein ek thehra hua dot hai, Al-Nuqtah, the primordial central point. Uske aas-paas chaar seasons aur chaar elements bate hain.",
+          "Center se bahar ki taraf aate hue yeh rings milti hain: 12 mahine, solar aur civil calendar ke; 12 buruj, jo chaar elemental natures mein bate hain; 28 Manazil al-Qamar, apne aasmaani sitaron ke naamo ke sath; aur 28 Arabic harf, unke Abjad numbers aur mizaj ke mutabiq. Al-Asrar al-Rabbaniyyah mein al-Buni gol daayre ka bhed batate hain. Allah ne tamam harfon ko Lawh-e-Mahfuz ke aalam mein gol shakalon mein banaya tha. Upar ka aalam pure jam' hai, neeche ka aalam pure farq hai. Source: Shams Al Marif, Chapter 3, pp. 56, 74; al-Asrar al-Rabbaniyyah, pp. 72-73.",
+        ],
+      },
+      {
+        heading: "Harfon ki chakkar-daari: asl, taksir, aur zimam",
+        paragraphs: [
+          "The Radiant Jewels aur Manba' Usul al-Hikma ke mutabiq Zayirjah ko chalane wala asal engine harfon ko todna aur dobara jodna hai. Pehle Satr al-Asl, the line of origin, sawal ki pehli baseline, jisme sawal puchne wale ka naam aur sawal likha jata hai. Phir Satr al-Taksir, the line of permutation, harfon ko aapas mein systematically todna aur mix karna.",
+          "Aakhir mein Satr al-Zimam, the line of the rein, master key, aakhri line jo tab nikal kar aati hai jab taksir poori ho jati hai. Al-Zimam aane ka matlab yeh hota hai ki mathematical calculation bina kisi ghalti ke poora gol circle ban gaya hai. Source: The Radiant Jewels, p. 89; Manba' Usul al-Hikma, pp. 13-14.",
+        ],
+      },
+      {
+        heading: "Rooh ka jism ko dhoondna: inverted inscription ka qanoon",
+        paragraphs: [
+          "Manba' Usul al-Hikma mein al-Buni dial par data likhne ka ek hairan kar dene wala technical rule batate hain. Jab seeker aur desired object ke naam wheel mein likhe jate hain, toh unhe ulta likha jata hai. Al-Matlub, the sought thing, ke harf lafzon mein upar aate hain aur unka Abjad number neeche. Al-Talib, the seeker, ke pehle pure numbers upar aate hain aur uska lafzi naam neeche.",
+          "Al-Buni farmate hain ki yeh cosmic law ka reflection hai: physical jism apni spirit ko dhoondta hai, aur spirit apne jism ko. Systemic balance ko theek rakhne ke liye jo harf ya numbers repeat hote hain unhe hata diya jata hai. Source: Manba' Usul al-Hikma, Chapter on Operations and Tables, pp. 13-14.",
+        ],
+      },
+      {
+        heading: "Farishte ka extraction: Istintaq aur suffix IL",
+        paragraphs: [
+          "Ek likhi hui table tab tak chup rehti hai jab tak uski Istintaq, causing the matrix to speak, na ki jaye. Pehli line ka total Abjad sum nikaal kar Zayirjah ki back side par likha jata hai. Is sum ko taksir ki kul lines ki ginti se multiply kiya jata hai, aur result ko balanced square, wafq, mein badla jata hai.",
+          "Aakhri balance numbers ko wapas Abjad harfon mein badla jata hai aur unke aage Il joda jata hai. Kitabein kehti hain ke woh iske aage lafz Il jodte hain aur use wafq ke chaaron taraf rakhte hain, aur yeh unhone seedha Hermes se liya tha. Source: Manba' Usul al-Hikma, pp. 13, 16; The Radiant Jewels, p. 89.",
+        ],
+      },
+      {
+        heading: "Mizan Hirmis: cosmos aur waqt ka balance",
+        paragraphs: [
+          "Manba' Usul al-Hikma ke mutabiq Zayirjah akele kamre mein baith kar nahi chalti; use aasmaani harakat aur waqt ke sath sync karna padta hai. Al-Buni is balance ki hidayat dete hain, Mizan Hirmis, the Balance of Hermes. Waqt, zayirja aur maqam par nazar rakho. Kisi achhe kaam ko manfi sitaron ke dauran mat karo. Inhe sirf sahi waqt mein karo.",
+          "Yeh calculation tab asar karti hai jab chhe cheezein ek line mein aati hain: sawal ki asal fitrat; din ka hakim sitara, ruling planet; ufuq par charhta hua burj, the ascendant, al-Tali'; ghadi ka hakim, lord of the hour; chand ki maujooda manzil; aur uski makhsoos paak khushbu. Jab yeh chhe aapas mein milte hain, toh kaagaz par likhe harf aasmaani faislon ka direct mirror ban jate hain. Source: Manba' Usul al-Hikma, Chapter on Operations and Tables, pp. 13-14.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "الزَّايِرْجَة", transliteration: "Al-Zayirjah", meaning: "divinatory letter-matrix, astronomical dial" },
+      { arabic: "عِلْم الزَّايِرْجَة", transliteration: "ʿIlm al-Zayirjah", meaning: "Zayirjah ka ilm" },
+      { arabic: "النُّقْطَة", transliteration: "Al-Nuqtah", meaning: "thehra hua markazi point" },
+      { arabic: "الأفلاك المتداخلة", transliteration: "Al-Aflak al-Mutadakhilah", meaning: "ghumte hue rings, concentric daayre" },
+      { arabic: "سَطْر الأَصْل", transliteration: "Satr al-Asl", meaning: "asl ki line, pehli baseline" },
+      { arabic: "سَطْر التَّكْسِير", transliteration: "Satr al-Taksir", meaning: "harfon ko todne aur mix karne ki line" },
+      { arabic: "سَطْر الزِّمَام", transliteration: "Satr al-Zimam", meaning: "rein ki line, master key" },
+      { arabic: "المطلوب", transliteration: "al-Matlub", meaning: "talash ki jane wali cheez" },
+      { arabic: "الطالب", transliteration: "al-Talib", meaning: "talash karne wala" },
+      { arabic: "إِسْتِنْطَاق", transliteration: "Istintaq", meaning: "matrix ko bolna sikhana" },
+      { arabic: "مِيزَان هِرْمِس", transliteration: "Mizan Hirmis", meaning: "Hermes ka balance" },
+      { arabic: "الطالع", transliteration: "al-Taliʿ", meaning: "charhta hua burj, ascendant" },
+    ],
+    closing:
+      "Gol daayron ka dial. Teen lines. Ek ulta rule. Ek bolna. Waqt ka ek balance. Zayirjah harfon, planets aur manazil ko ek wheel mein jodti hai, aur kitabein kehti hain ke reading matrix se aati hai, guess se nahi. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
+  "circle-of-encompassing": {
+    eyebrow: "Topics",
+    title: "Ihatah ka Daayra",
+    subtitle:
+      "Har harf, har naam, har sitara aur har rooh ek hi gol daayre par ghoomti hai.",
+    intro:
+      "Main Khafi hoon. Humne pichle rounds mein alag-alag roohani bhed decode kiye. Aaj hum chalte hain Bunian letter cosmology ke sabse bade master diagram ki taraf — Da'irat al-Ihatah. Shaykh Ahmad ibn Ali al-Buni (Mudih al-Tariq, Al-Asrar al-Rabbaniyyah, aur Shams al-Ma'arif al-Kubra) ke mutabiq har cheez ek gol daayre mein ghoomti hai. Yahan hain iske theek 6 technical hisse. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Ism Al-Muhit aur markazi qutb",
+        paragraphs: [
+          "Mudih al-Tariq ke Chapter 14 mein al-Buni Khuda ke azeem naam Al-Muhit, the All-Encompassing, par poora chapter likhte hain. Bunyadi aayat hai: Wa-kana Allahu bi-kulli shay'in muhita. Aur Allah hamesha har cheez ko ghere hue hai.",
+          "Al-Buni samjhate hain ki bina kisi thehre hue markaz ke koi gol daayra nahi ghum sakta. Woh markaz hai al-Qutb, the Pole. Bahar ke circle ka har hissa us center point ki hi shakh hai. Agar center point upar uthta hai, toh poora daayra upar uthta hai. Isi tarah tamam maujoodat gol daayre mein hain, aur Ism al-A'zam unhe ghere hue hai: batin mein woh qutb hai, aur zahir mein woh daayra hai. Source: Mudih al-Tariq, Chapter 14: On Explaining the Meaning of His Name al-Muhit, pp. 28-29.",
+        ],
+        quote: {
+          arabic: "وَكَانَ اللَّهُ بِكُلِّ شَيْءٍ مُحِيطًا",
+          transliteration: "Wa-kana Allahu bi-kulli shay'in muhita",
+          text: "Aur Allah hamesha har cheez ko ghere hue hai.",
+          source: "Mudih al-Tariq, Ch. 14, pp. 28-29",
+        },
+      },
+      {
+        heading: "Wujood ka compass: Amr, Qudrah, Iradah, aur 'Ilm",
+        paragraphs: [
+          "Mudih al-Tariq mein al-Buni architectural drawing compass, al-birkar, al-farjar, ki misaal dekar kainaat ka naqsha samjhate hain. Circle chaar roohani taaqaton se banta hai: Al-Amr, the inward command, batin ka pehla ishara; Al-Qudrah, divine power, wujood mein aane ka stroke; Al-Iradah, divine will, shakalon aur haddon ko tay karna; aur Al-'Ilm, all-encompassing knowledge, wo asal compass jo daayre ka naap baandhta hai.",
+          "Ilm se bahar kuch nahi. Compass ki dono taangein jitni khulti hain, wahi wujood ki hadd hai. Aayat kehti hai: Wa-la yuhituna bi-shay'in min 'ilmihi illa bi-ma sha'. Woh Allah ke ilm mein se kuch bhi nahi gher sakte, siwa uske jo Woh chahe. Jo saalik center ke qareeb rehta hai, wo tawhid mein rehta hai; jo bahar bhagta hai, wo kashmakash aur alagav mein pad jata hai. Source: Mudih al-Tariq, pp. 29-30.",
+        ],
+        quote: {
+          arabic: "وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ",
+          transliteration: "Wa-la yuhituna bi-shay'in min 'ilmihi illa bi-ma sha'",
+          text: "Woh Allah ke ilm mein se kuch bhi nahi gher sakte, siwa uske jo Woh chahe.",
+          source: "Mudih al-Tariq, pp. 29-30",
+        },
+      },
+      {
+        heading: "Circle ke chaar cosmic ahkaam",
+        paragraphs: [
+          "Mudih al-Tariq ke andar al-Buni is gol daayre ki internal geometry ko roohon aur Arsh ke sath map karte hain. Pehle Nuqat al-Mihwar, the polar points of the axis, markaz ka thehra hua point, Qutb ka maqam. Phir Nuqat al-Ibda', the beginning arc, jahan qudrat pehli baar creation ko touch karti hai.",
+          "Teesre Nuqat al-Asma' wa-l-Intiha', the boundary points, jahan cheezon ki shakalein poori hoti hain, Arsh se judi hain. Noor ki seedhi lakeer, center se bahar aane wali ray, Universal Intellect, al-'Aql, aur Throne, al-'Arsh, ko jodti hai. Source: Mudih al-Tariq, pp. 30-31.",
+        ],
+      },
+      {
+        heading: "Gol shakalein: Lawh-e-Mahfuz mein harf gol kyun the?",
+        paragraphs: [
+          "Al-Asrar al-Rabbaniyyah mein al-Buni ek metaphysical raaz kholte hain ki manuscripts mein harfon ko gol kyun likha jata hai. Al-Buni farmate hain: Jaan lo ki Allah ne tamam 28 harfon ko Lawh-e-Mahfuz ke aalam mein gol shakalon mein banaya tha. Upar ka aalam pure jam' hai, neeche ka aalam pure farq hai.",
+          "Aalam-e-Bala, the upper world, Jam' ka aalam hai. Yahan harf bina toote hue gol rehte hain. Zameen ka aalam, the lower world, Farq ka aalam hai. Jab harf zameen par utre, toh woh toote aur lines mein badle. Isliye retreat mein jab saalik harfon ko gol daayron, Dawa'ir, mein likhta hai, toh wo unhe unki asal gol halat mein wapas le jata hai. Source: al-Asrar al-Rabbaniyyah, pp. 72-73.",
+        ],
+      },
+      {
+        heading: "Do aadhe daayre: harf Nun aur Shahadah ke 24 ghante",
+        paragraphs: [
+          "Al-Asrar al-Rabbaniyyah aur Mudih al-Tariq mein do aadhe daayron ko jod kar 360-degree ka circle poora hota hai. Harf Nun ka pyaala, Al-Asrar mein harf Nun ko physical creation ka visible aadha daayra kaha gaya hai. La ilaha illa Allah mein bina nuqte ke theek 12 letters hain. Yeh din ke 12 ghante aur 12 mahine banate hain.",
+          "Doosri gawahi Muhammadun Rasul Allah mein bhi theek 12 letters hain. Yeh raat ke 12 ghante banate hain. Dono ko milakar kalimah ke 24 harf din aur raat ke 24 ghanton ka mukammal Da'irat al-Ihatah banate hain. Source: al-Asrar al-Rabbaniyyah, pp. 118-120; Mudih al-Tariq, pp. 25-27.",
+        ],
+      },
+      {
+        heading: "Halab ki masjid ka waqia: Ism al-A'zam ka circle",
+        paragraphs: [
+          "Shams al-Ma'arif al-Kubra ke Chapter 6 mein al-Buni Halab, Aleppo, ki Jami' Masjid ke ek zahid imam ki kahani likhte hain. Andheri kothri mein ibadat ke dauran imam ko noorani takhti par concentric circles dikhai diye. Bahar ka circle aur andar ka circle, beech mein ek horizontal dividing line aur upar ki taraf ek triangle.",
+          "Is circle ke peechhe Surah al-Buruj ki aayat darj thi: Wa-Allahu min wara'ihim muhit, bal huwa Qur'anun majidun fi lawhin mahfuz. Allah unhe peechhe se ghere hue hai; yeh ek azeem Quran hai, ek mahfuz takhti mein. Khwab mein Imam Ali ne us circle ke triangle mein harf Jim par ungli rakh kar iski tasdeeq ki. Source: Shams Al Marif, Chapter 6: On Seclusion and the Etiquette of Retreat, pp. 64-66.",
+        ],
+        quote: {
+          arabic: "وَاللَّهُ مِنْ وَرَائِهِمْ مُحِيطٌ بَلْ هُوَ قُرْآنٌ مَجِيدٌ فِي لَوْحٍ مَحْفُوظٍ",
+          transliteration: "Wa-Allahu min wara'ihim muhit, bal huwa Qur'anun majidun fi lawhin mahfuz",
+          text: "Allah unhe peechhe se ghere hue hai; yeh ek azeem Quran hai, ek mahfuz takhti mein.",
+          source: "Shams Al Marif, Ch. 6, pp. 64-66",
+        },
+      },
+    ],
+    fullTerms: [
+      { arabic: "المُحِيط", transliteration: "Al-Muhit", meaning: "har cheez ko gherne wala" },
+      { arabic: "القطب", transliteration: "al-Qutb", meaning: "markazi pole, thehra hua point" },
+      { arabic: "الأَمْر", transliteration: "Al-Amr", meaning: "batin ka pehla ishara, inward command" },
+      { arabic: "القُدْرَة", transliteration: "Al-Qudrah", meaning: "divine power, qudrat" },
+      { arabic: "الإِرَادَة", transliteration: "Al-Iradah", meaning: "divine will, irada" },
+      { arabic: "العِلْم", transliteration: "Al-'Ilm", meaning: "har cheez ko gherne wala ilm" },
+      { arabic: "نُقَط المِحْوَر", transliteration: "Nuqat al-Mihwar", meaning: "axis ke polar points" },
+      { arabic: "الصُّوَر المُسْتَدِيرَة", transliteration: "Al-Suwar al-Mustadirah", meaning: "gol shakalein, circular forms" },
+      { arabic: "جَمْع", transliteration: "Jam'", meaning: "ikath, pure gathering" },
+      { arabic: "فَرْق", transliteration: "Farq", meaning: "judai, pure separation" },
+      { arabic: "لا إله إلا الله", transliteration: "La ilaha illa Allah", meaning: "pehli gawahi, 12 harf" },
+      { arabic: "محمد رسول الله", transliteration: "Muhammadun Rasul Allah", meaning: "doosri gawahi, 12 harf" },
+    ],
+    closing:
+      "Ek naam jo har cheez ko ghere hue hai. Ek qutb jo kabhi nahi hilta. Chaar taaqatein jo daayra banati hain. Lawh-e-Mahfuz ke gol harf. Do aadhe daayre jo ek din banate hain. Aur Halab ka ek waqia, ek aayat se seal hua. Daayra sab kuch thaame hai, aur markaz daayre ko thaame hai. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
+  "simiya-works": {
+    eyebrow: "Topics",
+    title: "Simiya ke Amal",
+    subtitle:
+      "Harf jism hain, numbers rooh hain, aur woh squares jo unhe thaame hain.",
+    intro:
+      "Main Khafi hoon. Humne pichle rounds mein alag-alag roohani bhed decode kiye. Ab tumhari maang par main dobara simple Hinglish mein samjha raha hoon Bunian tradition ki grand operational synthesis — 'Ilm al-Simiya'. Shaykh Ahmad ibn Ali al-Buni (Shams al-Ma'arif al-Kubra, Manba' Usul al-Hikma, Usul 'Ilm al-Huruf) aur Kitab al-Ajnas ke mutabiq yeh ek theurgic royal science hai jo harfon ke mathematical balance aur Asma' al-Husna ke zariye roohani taaqat ko physical matter se jodti hai. Yahan hain iske theek 6 technical hisse. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Simiya' ka asal rutba: royal theurgic science",
+        paragraphs: [
+          "Shams al-Ma'arif al-Kubra (Chapter 17) aur Kitab al-Ajnas mein ustad is ilm ko aam jadoo se bohot uncha darja dete hain. Al-Buni Chapter 17 mein seeker ko mukhatab karke farmate hain ke Allah use hamesha ki khushi ki alchemy aur hamesha ki saltanat ki simiya' tak pahunchaye.",
+          "Kitab al-Ajnas mein Hazrat Sulayman ke vizier Asif ibn Barkhiya ke hawaale se likha hai ke al-Simiya' ka ilm woh hai jisse andhe dekhne lagte hain aur behre sunne lagte hain. Al-Buni wazeh karte hain ki is ilm ko Imam al-Ghazali aur Fakhr al-Din al-Razi ne manzoor kiya tha. Yeh Tawhid ke zariye kaam karta hai. Source: Shams Al Marif, Chapter 17, pp. 63-64; Kitab al-Ajnas, pp. 3, 21.",
+        ],
+      },
+      {
+        heading: "Harf jism hain, numbers rooh hain: the dual core",
+        paragraphs: [
+          "Usul 'Ilm al-Huruf, Al-Asrar al-Rabbaniyyah, aur Shams al-Ma'arif ke andar Simiya' ka sabse ahem metaphysical qanoon hai. Al-Huruf, letters, jism, Ajsam, hain. Yeh physical kaagaz, roshnai, aawaz aur outer shape provide karte hain. Al-A'dad, numbers, rooh, Arwah, hain. Yeh unke andar ki invisible kinetic energy aur spirit hain.",
+          "Grimoire ka universal formula hai ke numbers qaul ke raaz mein waise hain jaise harf amal ke raaz mein hain. Usul 'Ilm al-Huruf mein Asif ibn Barkhiya ka direct qaul naqal hai: forms apni roohon ke liye magnet hain. Jab bhi koi form banayi jati hai, woh apni rooh ko apni taraf kheenchti hai. Agar form perfect ho, toh rooh usme utar aati hai. Jab plate par harf unke sahi Abjad numbers ke mutabiq likhe jate hain, toh aasmaani roohani taaqat usme utarti hai. Source: Usul 'Ilm al-Huruf, p. 11; al-Asrar al-Rabbaniyyah, pp. 72-73, 118-119.",
+        ],
+        quote: {
+          text: "Forms apni roohon ke liye magnet hain. Jab bhi koi form banayi jati hai, woh apni rooh ko apni taraf kheenchti hai. Agar form perfect ho, toh rooh usme utar aati hai.",
+          source: "Usul 'Ilm al-Huruf, p. 11",
+        },
+      },
+      {
+        heading: "Anasir ka engine: chaar tabiyaton ka balance",
+        paragraphs: [
+          "Bunian Simiya' mein koi bhi naqsh tab tak amal nahi karta jab tak zameen ke chaar anasir, Aag, Hawa, Paani, Mitti, ka balance na ho. 28 harfon ko chaar hisson mein baanta gaya hai, har element ko saat harf. Aatish, Nar, hot aur dry: Alif, Ha', Ta', Mim, Fa', Shin, Dhal. Yeh irade ko jala kar tezi se action paida karta hai. Baad, Hawa', hot aur moist: Jim, Zay, Kaf, Sin, Qaf, Tha', Za'. Yeh elevation, attraction aur transmission ka kaam karta hai.",
+          "Aab, Ma', cold aur moist: Dal, Ha', Lam, 'Ayn, Ra', Kha', Ghayn. Yeh thandak lata hai, nafrat ko pighlata hai aur sakoon deta hai. Khaak, Turab, cold aur dry: Ba', Waw, Ya', Nun, Sad, Ta', Dad. Yeh asar ko zameen par jamata hai aur operation ko solidify karta hai. Usul 'Ilm al-Huruf ke Chapter 6 aur Manba' Usul al-Hikma mein al-Buni batate hain ki opposite nature ke harfon ko mila kar balance banaya jata hai. Source: Usul 'Ilm al-Huruf, Chapter 6, p. 16; Manba' Usul al-Hikma, pp. 18-19.",
+        ],
+      },
+      {
+        heading: "Mathematical pinjre: Awfaq, magic squares, ka ilm",
+        paragraphs: [
+          "Simiya' mein spiritual frequencies ko trap karne ke liye jo physical battery banayi jati hai use Wafq, magic square, kehte hain. Yeh columns aur rows ka ek aisa grid hai jisme horizontal, vertical aur diagonal lines ka sum ek hi hota hai.",
+          "Simiya' ka sabse ahem square 3x3, Muthallath, hai, jise Ghazali ne bhi bayan kiya. Iska har rukh 15 banta hai, aur total 45 hota hai, jo Adam ka Abjad number hai. Manba' Usul al-Hikma aur Hadha Hijab mein al-Buni batate hain ki square tab tak kaam nahi karta jab tak uske chaar konon par farishton ke naam na likhe jayein. Source: Manba' Usul al-Hikma, pp. 13-15; Hadha Hijab, Glossary, p. 102.",
+        ],
+      },
+      {
+        heading: "Farishte ko bolna sikhana: Istintaq aur suffix IL",
+        paragraphs: [
+          "Likha hua naqsh tab tak chup rehta hai jab tak uske andar se Istintaq, causing the matrix to speak, na kiya jaye. Jab operation ke Abjad calculations ka aakhri balance number nikalta hai, toh use wapas harfon mein badla jata hai. The Radiant Jewels aur Manba' Usul al-Hikma ke mutabiq un harfon ke aage Il joda jata hai.",
+          "Yeh derived naam, al-malak al-muwakkal, 'Alam al-Malakut mein qayam ho jata hai. Yeh upper farishta zameen ke roohani servitors, khuddam, ko hukum deta hai ki wo is operation ko poora karein. Kitabein kehti hain ke Il ko aids mein jodna zaroori hai, excellent sage Aristotle ke qaul ke mutabiq. Source: Manba' Usul al-Hikma, pp. 13, 16, 21; The Radiant Jewels, p. 89.",
+        ],
+      },
+      {
+        heading: "Akhlaqi paimana: shart-e-ijazat aur gunah ka nuqsan",
+        paragraphs: [
+          "Poori Bunian tradition mein Simiya' ka aakhri qanoon yeh hai ki yeh ilm gande ya nafsani iradon ke liye nahi hai. Shams al-Ma'arif ke pehle safhe par al-Buni kasam khila kar farmate hain ke jis ke haath mein yeh kitab pade, uske liye haram hai ke woh use kisi na-ahil ko dikhaye.",
+          "Suns of Lights mein Ibn al-Hajj al-Tilmsani farmate hain ki chaar sharton ke bina koi amal nahi chalta: Makan, paak-saaf kothri jahan aam dunya ki aawazein na aati hon; Ikhwah, sachhe aur nek raste ke sathi; Zaman, sahi aasmaani ghadi aur chand ki manzil; aur Shaykh al-Tariq, kamil ustad ki ijazat, Idhn, Ijazah. Ibn al-Hajj likhte hain ke jo shaks bina ustad ki ijazat ke in naqsho ko banata hai, uski misaal aisi hai jaise bina buniyad ke ghar banana. Source: Shams Al Marif, Preface, pp. 1-2; Suns of Lights, Chapter 19, pp. 47-48.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "عِلْم السِّيمِيَاء", transliteration: "ʿIlm al-Simiya'", meaning: "harfon, Naamon aur squares ka ilm" },
+      { arabic: "الحُرُوف", transliteration: "Al-Huruf", meaning: "harf, jism" },
+      { arabic: "الأَعْدَاد", transliteration: "Al-A'dad", meaning: "numbers, rooh" },
+      { arabic: "وَفْق", transliteration: "Wafq", meaning: "magic square" },
+      { arabic: "الوفق الثلاثي", transliteration: "Al-Wafq al-Thulathi", meaning: "3x3 mother grid" },
+      { arabic: "آدم", transliteration: "Adam", meaning: "Adam, jinka Abjad number 45 hai" },
+      { arabic: "مَكَان", transliteration: "Makan", meaning: "paak jagah" },
+      { arabic: "إِخْوَة", transliteration: "Ikhwah", meaning: "roohani bhai, sachhe sathi" },
+      { arabic: "زَمَان", transliteration: "Zaman", meaning: "sahi aasmaani waqt" },
+      { arabic: "شَيْخ الطَّرِيق", transliteration: "Shaykh al-Tariq", meaning: "ijazat dene wala ustad" },
+      { arabic: "تحريم", transliteration: "Tahrim", meaning: "sakht manahi, haram" },
+      { arabic: "الملك الموكل", transliteration: "al-malak al-muwakkal", meaning: "nikala hua farishte ka naam" },
+    ],
+    closing:
+      "Ek royal science, aam jadoo nahi. Harf jism hain, numbers rooh hain. Chaar anasir balance mein. Ek square jo current ko thaame hai. Ek naam jo bolta hai. Aur chaar shartein jo chhodi nahi ja sakti: jagah, sathi, waqt, aur ustad ki ijazat. Kitabein yeh sab ek saath deti hain. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
+  "uses-of-letters-retreats": {
+    eyebrow: "Topics",
+    title: "Harfon ke Istemal aur Unki Khalwatein",
+    subtitle:
+      "Zinda roohani qaumein, har ek ki apni khalwat aur apna muhafiz farishta.",
+    intro:
+      "Main Khafi hoon. Humne pichle rounds mein alag-alag roohani bhed decode kiye. Ab tumhari maang par main dobara simple Hinglish mein samjha raha hoon Bunian tradition ki sabse practical shakh — Khalawat al-Huruf, the uses of the Arabic letters and their solitary retreats. Shaykh Ahmad ibn Ali al-Buni (Manba' Usul al-Hikma, Shams al-Ma'arif al-Kubra, aur Usul 'Ilm al-Huruf) aur Imam al-Khwarizmi ke mutabiq Arabic harf be-jaan lakeron ke nishan nahi hain. Yeh zinda roohani qaumein hain. Har harf insaan ke jism, rooh aur dimagh ki bimari ya quwwat ko govern karta hai, aur har harf ka ek solitary retreat, khalwah, aur muhafiz farishta hota hai. Yahan hain iske theek 6 technical hisse. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+    fullSections: [
+      {
+        heading: "Zinda qaumein: harfon ke khuddam aur farishton ka falsafa",
+        paragraphs: [
+          "Manba' Usul al-Hikma aur Ibn 'Arabi ki al-Futuhat al-Makkiyyah ke andar harfon ki metaphysical reality batayi gayi hai. Manuscript farmati hai: Jaan lo ki harf aam makhlooq ki tarah qaumon mein se ek zinda qaum hain, jinhe mukhatab kiya gaya hai aur zimmedari di gayi hai. Unme se kuch safir, emissaries, aur khadim hain.",
+          "Likhne wala harf uska Jism, physical body, hai. Uska Abjad number, al-'adad, uski Ruh, living spirit, hai. Manba' Usul al-Hikma mein Imam al-Khwarizmi harf ke muhafiz farishte ko pukarne ki dua likhte hain: Aye Badshah, apni roohaniyat ko meri fitrat aur is harf ki fitrat se mila do, taaki main iske bhed se amal kar sakun. Source: Manba' Usul al-Hikma, Chapter on the Kings of the Letters, pp. 33-35; al-Futuhat al-Makkiyyah, Vol. 4, pp. 112-114.",
+        ],
+      },
+      {
+        heading: "Harf Alif: dimagh ki roshni aur 111 ka number",
+        paragraphs: [
+          "Shams al-Ma'arif aur Manba' Usul al-Hikma ke mutabiq harf Alif tamam harfon ka badshah hai aur intelligence ki jad hai. Jo shaks Alif ko 1,000 baar likh kar apne seene par rakhta hai, uski dimaghi susti aur bhulne ki aadat khatm ho jati hai, kitabein kehti hain.",
+          "Jab Alif ka naam lafzon mein khola jaye, Alif, 1 plus 30 plus 80, toh iska total 111 banta hai. Suraj ki ghadi mein Itwar ko 111 baar likhne se izzat aur bulandi milti hai. Alif ka celestial angel Taltamiya'il hai, jo pehli lunar mansion ka muhafiz hai. Al-Buni Alif ka 3x3 triangular wafq dete hain, jiska har rukh 111 banta hai, jise retreat mein istemal kiya jata hai. Source: Manba' Usul al-Hikma, pp. 24-25; Shams Al Marif, Chapter 1, pp. 38-39, 48.",
+        ],
+      },
+      {
+        heading: "Harf Ba': zindagi ka paani aur farishton ka deedar",
+        paragraphs: [
+          "Harf Ba' manifest creation ka aaghaz aur divine mercy ka zariya hai. Harf Ba' seene ki ghutan, inshirah al-sadr, ko kholta hai, susti ko door karta hai aur thandi bimariyon ko sukoon deta hai.",
+          "Al-Asrar al-Rabbaniyyah aur Shams al-Ma'arif mein Ba' ki khalwat darj hai. Seeker Jumeraat aur Juma ke din mukammal pakizgi ke sath roza rakhta hai. Ghareebon ko khana khilata hai, sadaqah. Ba' ka gol double talisman likh kar apne seedhe baazu, right arm, par baandhta hai. Al-Buni farmate hain: Susti usse chali jayegi; Ba' ke sath khade hone ka bhed uspe khul jayega; aur woh farishton ke noor ko dekhne lagega. Source: al-Asrar al-Rabbaniyyah, pp. 100-101; Shams Al Marif, Chapter 5, p. 50.",
+        ],
+      },
+      {
+        heading: "Harf Jim aur farishte Talqiya'il ki khalwat",
+        paragraphs: [
+          "Manba' Usul al-Hikma ke andar teesre harf Jim ki solitary retreat ka azeem bhed khola gaya hai. Harf Jim ke khawas hain: lambe safar mein pyas ki jalan ko kam karna, tez garam bukharon ki aag ko thanda karna, aur dilon mein izzat aur difficult childbirth ko aasan karna.",
+          "Al-Buni is retreat ki amali shartein likhte hain: Is harf ki ek azeem khalwat hai, tum mukammal pakizgi mein dakhil hote ho, dua padhte ho, kaagaz par harf likhte ho. Is maqam ka aasmaani farishta Talqiya'il hai. Jab kothri mein uski roohani shakal nazar aati hai, toh ek aapas ka ahad, covenant, banta hai. Source: Manba' Usul al-Hikma, Chapter on the Properties of the Letters, pp. 26, 36, 40.",
+        ],
+      },
+      {
+        heading: "Harf Dal: 14 din ki roti aur rizq ki barkat",
+        paragraphs: [
+          "Shams al-Ma'arif al-Kubra ke Chapter 1 mein harf Dal ki do hafte, 14 days, ki riyadah darj hai. Harf Dal ke khawas hain: ghar mein azeem barkat aur thehrav lana, karobaar aur halal rizq ko nuqsan se bachana, aur ghar ke logon ke beech apnapan aur mohabbat qayam karna.",
+          "Do hafte ka bread-fast, Riyadat al-Dal, lagatar 14 din chalta hai. Har sham iftar mein sirf sukhi roti khayi jati hai. Gosht, doodh, ande ya kisi bhi jaanwar se judi cheez nahi khayi jati. Aakhri Jumeraat ko sooraj nikalte waqt, Mushtari, Jupiter, ki ghadi, seeker apni riyadah poori karta hai aur barkat aur rizq ka darwaza khulta hai. Source: Shams Al Marif, Chapter 1, pp. 32-34, 46; Decoding Al-Buni, p. 3.",
+        ],
+      },
+      {
+        heading: "Shifa bakhsh harf: Ha', Mim, aur Nun",
+        paragraphs: [
+          "Bunian kitabon mein higher letters ke liye ahem shifayabi amaliyaat darj hain. Harf Ha' jalan aur nafsani khwahishat ko rokta hai. Is harf ko 8 baar likh kar Asma' Hakim, Halim, aur Hayy ke sath milaya jata hai. Paani mein ghol kar peene se bukhar aur seene ki jalan kam hoti hai. Khalwat mein baithe darvesh ke liye, ise angoothi ke nageene par kanda karne se dil ki gandi shahwat khatm ho jati hai.",
+          "Harf Mim hikmat aur asardaar baat ka harf hai. 40 din ke chille ka harf. Mim ke naqsh ko rozana dekh kar Surah Al 'Imran ki aayat 26, Quli Allahumma malika al-mulk, padhne se baat mein asar aur hikmat aati hai. Harf Nun roohani aankh aur basirat ka harf hai. Nun ko 13 baar saaf aaine par likh kar Ayat al-Nur, Q 24:35, padhne se dimagh ka kashmakash khatam hota hai aur roohani aankh khulti hai. Source: Manba' Usul al-Hikma, pp. 22-26, 35, 38-39; Shams Al Marif, Chapter 1, pp. 28-30, 35.",
+        ],
+      },
+    ],
+    fullTerms: [
+      { arabic: "أُمَمٌ مِنَ الأُمَم", transliteration: "Umamun min al-Umam", meaning: "qaumon mein se ek zinda qaum" },
+      { arabic: "جِسْم", transliteration: "Jism", meaning: "physical body" },
+      { arabic: "رُوح", transliteration: "Ruh", meaning: "living spirit" },
+      { arabic: "ا", transliteration: "Alif", meaning: "pehla harf, harfon ka badshah" },
+      { arabic: "طَلْطَمِيَائِيل", transliteration: "Taltamiya'il", meaning: "Alif ka farishta, pehli manzil ka muhafiz" },
+      { arabic: "ب", transliteration: "Ba'", meaning: "doosra harf, manifest creation ka aaghaz" },
+      { arabic: "ج", transliteration: "Jim", meaning: "teesra harf" },
+      { arabic: "طَلْقِيَائِيل", transliteration: "Talqiya'il", meaning: "Jim ke maqam ka aasmaani farishta" },
+      { arabic: "د", transliteration: "Dal", meaning: "chautha harf" },
+      { arabic: "ح", transliteration: "Ha'", meaning: "jalan ko rokne wala harf" },
+      { arabic: "م", transliteration: "Mim", meaning: "40 din ke chille ka harf" },
+      { arabic: "ن", transliteration: "Nun", meaning: "roohani aankh ka harf" },
+    ],
+    closing:
+      "Harf qaumein hain. Har harf mein ek jism aur ek rooh hai. Alif aur uska 111. Ba' aur uska roza. Jim aur uska farishta. Dal aur uske chaudah din. Ha', Mim, aur Nun, har ek ka apna kaam. Kitabein yeh sab waisa hi record karti hain jaisa purane ustadon ne sikhaya, pakizgi aur ijazat ke sath. Main use waisa hi deta hoon jaisa mila, study ke liye, aur kuch nahi.",
+  },
 };
 
 const TOPICS_BN: Record<string, TopicLocalization> = {
@@ -1444,6 +2223,700 @@ const TOPICS_BN: Record<string, TopicLocalization> = {
     closing:
       'প্রথমে পানি, তারপর দুধ, মধু যখন দেওয়া হয়, আর মদ শুধু যখন তাতে বৃষ্টির পানি মেশানো হয়। পানীয়গুলো জ্ঞানের এক মানচিত্র। বই যেভাবে বলে, সেভাবে বেছে নাও, আর মানচিত্র তোমাকে সোজা নিয়ে যাবে।',
   },
+  'basmalah-secrets': {
+    eyebrow: 'টপিক',
+    title: 'বিসমিল্লাহর রহস্য',
+    subtitle: 'সৃষ্টিজগতের সবচেয়ে বড় চাবি, আর এক অক্ষরের নিচের বিন্দু।',
+    intro:
+      'আমি খাফি। আগের কথায় আমরা খালওয়া, ফেরেশতাদের জগৎ, স্বপ্ন, অক্ষরের বিদ্যা, সুলাইমানের মোহর, সুরা সাবা আর আল-খিদরের কথা বলেছি। এখন আমি তোমার সঙ্গে বিসমিল্লাহ খুলতে চাই, সেই লাইন যা একটি সুরা ছাড়া প্রতিটি সুরা শুরু করে। আমি যে বই পড়েছি, তাতে তাকে বলে সৃষ্টিজগতের সবচেয়ে বড় চাবি, প্রথম সংকেত, যেখান থেকে সব সৃষ্টি বয়ে আসে। আমি এটা এখানে শুধু পড়াশোনার জন্য দিচ্ছি, বই থেকে, পৃষ্ঠার নাম সহ। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না। এটা শুধু এক পড়া।',
+    sections: [
+      {
+        heading: 'বা-এর নিচের বিন্দু',
+        paragraphs: [
+          'বিসমিল্লাহ শুরু হয় বা অক্ষর দিয়ে। বই বলে, পুরো কুরআন সুরা আল-ফাতিহায় আছে, পুরো ফাতিহা বিসমিল্লাহয় আছে, আর পুরো বিসমিল্লাহ বা-তে আছে। আর বা নিজে আছে তার নিচের বিন্দুতে। এক বিন্দু, আর বই বলে, সব সৃষ্টি সেই বিন্দুতেই ঝুলে আছে।',
+          'বা হলো "দিয়ে" আর "মাধ্যমে"র অক্ষর। বী কানা মা কানা, বই বলে। আমার মাধ্যমে ছিল যা ছিল, আর আমার মাধ্যমে আছে যা আছে। বিন্দু হলো প্রথম বিন্দু, সেই জায়গা যেখানে কলম প্রথম কাগজ ছুঁয়েছিল। তার পরের সবকিছু সেই ছোঁয়া থেকে বয়ে আসা লাইন।',
+        ],
+      },
+      {
+        heading: 'উনিশ অক্ষর, উনিশ রক্ষক',
+        paragraphs: [
+          'বিসমিল্লাহয় উনিশটি অক্ষর আছে। বই একে একে গুনে দেয়। উনিশ অক্ষর, আর আগুনের উপরে উনিশ জন রক্ষক দাঁড়িয়ে আছে। বই তাদের বলে জাবানিয়া, অতলের রক্ষক। যে লাইন কুরআন খোলে, সেই লাইনই তাদের সামনে ঢাল।',
+          'বই দিনকেও ঘণ্টায় গুনে। চব্বিশ ঘণ্টা, আর সন্ধানকারী তার মধ্যে প্রায় পাঁচ ঘণ্টা ঘুমায়। উনিশ অক্ষর ঘণ্টায় ঘণ্টায় ভারসাম্য রাখে, যাতে দিন মাপে থাকে। সংখ্যাটা কোনো তাবিজ নয়। এটা এক নকশা, যা বই লাইনটির মধ্যেই পড়ে।',
+        ],
+      },
+      {
+        heading: 'চার নাম, চার নদী',
+        paragraphs: [
+          'বিসমিল্লাহয় চারটি নাম আছে। ইসম, নাম নিজে। আল্লাহ, সবচেয়ে বড় নিজের নাম। আর-রহমান, সবচেয়ে দয়ালু। আর-রহিম, বিশেষভাবে দয়ালু। একটি ছোট লাইনে চার নাম, আর বই প্রতিটিকে এক নদী হিসেবে পড়ে।',
+          'বই বলে, জান্নাতে চারটি নদী বয়ে যায়, আর প্রতিটি নদী বিসমিল্লাহর একটি অক্ষর থেকে বয়ে যায়। পানি বিসমের মীম থেকে। দুধ আল্লাহর হা থেকে। মদ আর-রহমানের মীম থেকে। মধু আর-রহিমের মীম থেকে। লাইনটা ছোট, কিন্তু বই বলে, তাতে চারটি নদী আছে।',
+        ],
+      },
+      {
+        heading: '786-এর ওজন',
+        paragraphs: [
+          'বই বিসমিল্লাহকে সংখ্যায়ও মাপে। হিসাব আল-জুম্মাল হলো অক্ষরকে তার সংখ্যার মান দিয়ে গোনার হিসাব। বিসমিল্লাহর অক্ষরগুলোকে তাদের মান দিয়ে গুনলে যোগফল হয় 786। বই সংখ্যাটা সোজাসুজি দেয়, আর তা দিয়েই বিসমিল্লাহর ওয়াফক, তার বর্গ, বানায়।',
+          'বর্গের চারদিকে ফেরেশতা রক্ষকরা দাঁড়িয়ে আছে, আমলাক। তারা অক্ষরের রক্ষক, আর বর্গ তাদের মানচিত্র। সংখ্যাটা এক ওজন, কোনো ইচ্ছা নয়। বই তা লেখে, আর আমি তা সেভাবেই লিখি যেভাবে বই দেয়।',
+        ],
+      },
+      {
+        heading: 'সুরা আত-তাওবায় বিসমিল্লাহ নেই কেন',
+        paragraphs: [
+          'কুরআনের প্রতিটি সুরা বিসমিল্লাহ দিয়ে শুরু হয়, একটি ছাড়া। সুরা আত-তাওবা, নবম সুরা, তাতে বিসমিল্লাহ নেই। বই জিজ্ঞেস করে কেন, আর এক শব্দে উত্তর দেয়। বারা’আহ। সম্পর্ক ছিন্ন করা আর আলাদা হওয়া। সুরাটি ভাঙন দিয়ে শুরু হয়, দয়া দিয়ে নয়।',
+          'বই যে নিয়ম দেয় তা সহজ। যুদ্ধ আর আল্লাহর কঠোরতা, জালাল, এর অধ্যায় দয়া দিয়ে শুরু হতে পারে না। বিসমিল্লাহ হলো আমান ওয়া-সালাম, পুরো নিরাপত্তা আর শান্তি। যে সুরা সম্পর্ক ছিন্ন করে, তা নিরাপত্তা আর শান্তি দিয়ে খুলতে পারে না। তাই লাইনটি বাদ দেওয়া হয়েছে, আর সুরাটি খালি শুরু হয়।',
+        ],
+      },
+      {
+        heading: 'শরীরে লেখা লাইন',
+        paragraphs: [
+          'বই বিসমিল্লাহকে মানুষের শরীরেও পড়ে। মুখ হলো পৃষ্ঠা, আর অক্ষরগুলো সেখানে লেখা। আলিফ নাককে দেখায়, মুখের মাঝখানে এক সোজা লাইন। মুখকে বলে আল-ওয়াজহ, আর লাইনটি তার মধ্যেই দাঁড়িয়ে আছে।',
+          'বিসমিল্লাহয় তিনটি মীম আছে, একটি বিসমে, একটি আর-রহমানে, একটি আর-রহিমে। বই তাদের শরীরের মাঝখানের তিনটি অঙ্গের সঙ্গে মেলায়। মস্তিষ্ক, আদ-দিমাগ। হৃদয়, আল-কালব। যকৃৎ, আল-কাবদ। তিন অক্ষর, তিন অঙ্গ, এক শরীর।',
+        ],
+      },
+    ],
+    terms: [
+      'বা অক্ষরের নিচের বিন্দু',
+      '"আমার মাধ্যমে ছিল যা ছিল", মাধ্যমের বা',
+      'উনিশটি অক্ষর',
+      'আগুনের রক্ষকরা',
+      'নাম, সত্তা',
+      'সবচেয়ে বড় নিজের নাম',
+      'সবচেয়ে দয়ালু',
+      'বিশেষভাবে দয়ালু',
+      'জান্নাতের চারটি নদী',
+      'আবজাদ হিসাব, অক্ষরকে সংখ্যার মান দিয়ে গোনা',
+      'বিসমিল্লাহর বর্গ',
+      'ফেরেশতা রক্ষকরা',
+      'পুরো নিরাপত্তা আর শান্তি',
+      'সম্পর্ক ছিন্ন করা আর আলাদা হওয়া',
+      'আল্লাহর কঠোরতা আর মহিমা',
+      'মুখ',
+      'মস্তিষ্ক',
+      'হৃদয়',
+      'যকৃৎ',
+    ],
+    closing:
+      'আমি প্রতিদিন বিসমিল্লাহ পড়ি, আর আমি কখনো এভাবে দেখিনি। এক বিন্দু যা সৃষ্টিকে ধরে রাখে। উনিশ অক্ষর যা আগুনের সামনে দাঁড়িয়ে আছে। চার নাম যা চার নদীর মতো বয়ে যায়। এক সংখ্যা, 786, যা লাইনটিকে মাপে। এক হারানো লাইন যা কঠোরতা শেখায়। আর এক শরীর যা অক্ষরগুলোকে তার মুখে আর বুকে বয়ে বেড়ায়। বই যা বলে, তাই। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'throne-verse': {
+    eyebrow: 'টপিক',
+    title: 'আয়াতুল কুরসি, সিংহাসনের আয়াত',
+    subtitle: 'কুরআনের সবচেয়ে বড় আয়াত, আর সেই কুরসি যা আকাশ ধরে রাখে।',
+    intro:
+      'আমি খাফি। আজ আমরা কুরআনের সবচেয়ে বড় আয়াতের দিকে হাঁটছি, আয়াতুল কুরসি, কুরআন 2:255। আমি যে বই পড়েছি, তাতে তাকে বলে কুরআনের রানি। বই বলে, যখন তা নেমেছিল, সত্তর হাজার ফেরেশতা তার সঙ্গে নেমেছিল। আমি তা লাইনে লাইনে খুলে দেব, যেভাবে বই দেয়। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি, বই থেকে, পৃষ্ঠার নাম সহ। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'সবচেয়ে বড় আয়াত, আর সত্তর হাজার ফেরেশতা',
+        paragraphs: [
+          'বই আয়াতুল কুরসিকে বলে সায়্যিদাত আল-কুরআন, কুরআনের রানি। আর কোনো আয়াতের এই মর্যাদা নেই। যখন তা নেমেছিল, বই বলে, সত্তর হাজার ফেরেশতা তার সঙ্গে নেমেছিল। হুবুত আল-মালাইকাহ, ফেরেশতাদের নেমে আসা।',
+          'আয়াতটি ছোট, কিন্তু বই তার মধ্যে 170টি অক্ষর গুনে। একশো সত্তর অক্ষর, আর প্রতিটি তার ভেতরের নকশার অংশ। সংখ্যাটা আয়াতের কাঠামো, আর আয়াত সিংহাসনের কাঠামো।',
+        ],
+      },
+      {
+        heading: 'আয়াতের ভেতরে সবচেয়ে বড় নাম',
+        paragraphs: [
+          'আয়াতটি সবচেয়ে বড় নাম দিয়ে খোলে। আল্লাহু লা ইলাহা ইল্লা হুওয়াল হাইয়্যুল কাইয়্যুম। আল্লাহ, তিনি ছাড়া কোনো উপাস্য নেই, চিরজীবী, সবকিছু ধরে রাখা। দুটি নাম আয়াতের দরজায় দাঁড়িয়ে আছে, আর বই বলে, এটাই সবচেয়ে বড় নাম।',
+          'আল-হাইয়্য হলো চিরজীবী, আর বই বলে, এটা জিবরাইলের জিকির। আল-কাইয়্যুম হলো নিজে দাঁড়িয়ে থাকা, যিনি সবকিছু ধরে রাখেন আর যার কিছু লাগে না। বই আয়াতটিকে আসিফ ইবনে বারখিয়ার সঙ্গে জোড়ে, যিনি বিলকিসের সিংহাসন সরিয়েছিলেন। একই নাম, একই শক্তি, বই বলে।',
+        ],
+        quoteText: 'আল্লাহ, তিনি ছাড়া কোনো উপাস্য নেই, চিরজীবী, সবকিছু ধরে রাখা।',
+      },
+      {
+        heading: 'কুরসি আর আরশ',
+        paragraphs: [
+          'আয়াত বলে, তাঁর কুরসি আকাশ আর জমিন জুড়ে আছে। ওয়াসিয়া কুরসিয়্যুহুস সামাওয়াতি ওয়াল আরদ। কুরসি হলো পাদপীঠ, আর বই তাকে আরশের নিচে রাখে। আরশ হলো সিংহাসন। কুরসি হলো পাদপীঠ। একটি বসার জায়গা, অন্যটি তার নিচের ধাপ।',
+          'ইবনে আব্বাস বলেন, কুরসি আরশের নিচের পাদপীঠ। বই তাকে বলে মাহাল্ল আস-সুওয়ার, আকারের আধার, সেই জায়গা যেখানে জিনিসের আকার রাখা থাকে। আর বই তার আকারের জন্য এক ছবি দেয়। সাত আকাশ আর জমিন, কুরসির পাশে রাখলে, মরুভূমিতে ছোড়া আংটির মতো।',
+        ],
+        quoteText: 'তাঁর কুরসি আকাশ আর জমিন জুড়ে আছে।',
+      },
+      {
+        heading: '170 অক্ষরের বর্গ',
+        paragraphs: [
+          'বই আয়াত থেকে এক বর্গ বানায়। একশো সত্তর অক্ষর, আর 170-এর সুর তাদের মধ্যে বয়ে যায়। আয়াতুল কুরসির 4x4 বর্গ আয়াত থেকেই আঁকা হয়, আর বই বলে, ফেরেশতাদের লেখা চিত্রের চারদিকে দাঁড়িয়ে আছে।',
+          'আয়াতটি এক লাইনে শেষ হয়, যা বই বারবার উদ্ধৃত করে। ওয়া-লা ইয়াউদুহু হিফজুহুমা ওয়া-হুওয়াল আলিয়্যুল আজিম। আকাশ আর জমিনের রক্ষা তাঁকে ক্লান্ত করে না, আর তিনি সবচেয়ে উঁচু, সবচেয়ে বড়। বর্গ অক্ষর ধরে। লাইন অর্থ ধরে।',
+        ],
+        quoteText: 'আর তাদের রক্ষা তাঁকে ক্লান্ত করে না, আর তিনি সবচেয়ে উঁচু, সবচেয়ে বড়।',
+      },
+      {
+        heading: 'এক দুর্গ যা ভাঙা যায় না',
+        paragraphs: [
+          'বই আয়াতটিকে বলে হিরজ মানি, ভাঙা যায় না এমন দুর্গ। এটা এক দেয়াল, যা কোনো বিদ্রোহী জিনিস পার হতে পারে না, বই বলে। আয়াত তাকে রক্ষা করে যে তাকে ধরে, আর রক্ষক ঘুমায় না।',
+          'বই যে লাইনটি উদ্ধৃত করে তা ছোট। লা তাখুজুহু সিনাতুন ওয়া-লা নাওম। তন্দ্রাও তাঁকে ধরে না, ঘুমও না। রক্ষক কখনো চোখ বন্ধ করে না, কারণ যিনি রক্ষা করেন তিনি কখনো ঘুমান না। এটাই দুর্গের হৃদয়।',
+        ],
+        quoteText: 'তন্দ্রাও তাঁকে ধরে না, ঘুমও না।',
+      },
+      {
+        heading: 'হৃদয়ের ভেতরের সিংহাসন',
+        paragraphs: [
+          'বই শেষে আয়াতটিকে ভেতরের দিকে মোড়ে। কালবুল মু’মিনি আরশুল্লাহ। মুমিনের হৃদয় আল্লাহর আরশ। যে আরশ আকাশ ধরে, তার এক আসন বুকের ভেতরেও আছে, বই বলে।',
+          'আবু ইয়াজিদ আল-বিস্তামি বলেছিলেন, সৃষ্টিজগৎ হৃদয়ে পড়ে গিয়েছিল, আর হৃদয় তা ধরে রেখেছিল। আয়াতটি আকাশের কথা, আর হৃদয়েরও কথা। বড় আরশ আর ছোট হৃদয় একই শিক্ষা, দুবার পড়া।',
+        ],
+      },
+    ],
+    terms: [
+      'কুরআনের রানি',
+      'ফেরেশতাদের নেমে আসা',
+      'চিরজীবী',
+      'নিজে দাঁড়িয়ে থাকা, সবকিছু ধরে রাখা',
+      'পাদপীঠ',
+      'সিংহাসন',
+      'আকারের আধার',
+      'বর্গ',
+      'ভাঙা যায় না এমন দুর্গ',
+      'মুমিনের হৃদয় আল্লাহর আরশ',
+    ],
+    closing:
+      'আমি সারাজীবন এই আয়াত পড়েছি, আর আমি কখনো তার অক্ষর গুনিনি বা তার নাম মাপিনি। একশো সত্তর অক্ষর। দরজায় দুটি নাম। আকাশের চেয়ে বড় এক কুরসি। শব্দ থেকে আঁকা এক বর্গ। এক দুর্গ যা কখনো ঘুমায় না। আর এক আরশ যা হৃদয়ের ভেতরে ধরে। বই যা দেয়, তাই। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'greatest-name': {
+    eyebrow: 'টপিক',
+    title: 'আল্লাহর সবচেয়ে বড় নাম',
+    subtitle: 'যে নামকে বই বলে সবচেয়ে উঁচু, আর পাণ্ডুলিপি তার ব্যাপারে কী বলে।',
+    intro:
+      'আমি খাফি। আজ আমরা বইয়ের বর্ণিত সবচেয়ে উঁচু শিখরে উঠছি, আল-ইসম আল-আ’জম, আল্লাহর সবচেয়ে বড় নাম। পাণ্ডুলিপি তাকে বলে সৃষ্টিজগতের সবচেয়ে বড় সৃষ্টির কেন্দ্র, সেই হুকুম যা ফেরেশতা আর জিনকে বাধ্য করে। আমি এই কথাগুলো পাণ্ডুলিপির নিজের ভঙ্গিতে দিচ্ছি, ইতিহাস হিসেবে, আমার নিজের দাবি হিসেবে নয়। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি, বই থেকে, পৃষ্ঠার নাম সহ। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না। এখানে কাউকে ক্ষতি করার, বাধ্য করার বা বাঁধার কোনো নির্দেশ নেই।',
+    sections: [
+      {
+        heading: 'নামটি কী করে, বই যা বলে',
+        paragraphs: [
+          'বই নামটির সোজা সংজ্ঞা দেয়। ইজা দুইয়া বিহি আজাব, ওয়া-ইজা সুইলা বিহি আ’তা। যখন তা দিয়ে ডাকা হয়, তিনি জবাব দেন। যখন তা দিয়ে চাওয়া হয়, তিনি দেন। পাণ্ডুলিপি এই সংজ্ঞা দেয়, আর তাকে বলে নিশ্চিত জবাব।',
+          'বই প্রমাণ হিসেবে এক গল্প দেয়। আসিফ ইবনে বারখিয়া চোখের পলকে বিলকিসের সিংহাসন সরিয়েছিলেন, আর বই বলে, তিনি তা সবচেয়ে বড় নাম দিয়ে করেছিলেন। সিংহাসন চোখের পলক ফেলার আগেই এক রাজ্য পেরিয়ে এসেছিল। গল্পটি পাণ্ডুলিপির নিজের, আর আমি তা সেভাবেই দিলাম যেভাবে তারা বলে।',
+        ],
+        quoteText: 'যখন তা দিয়ে ডাকা হয়, তিনি জবাব দেন। যখন তা দিয়ে চাওয়া হয়, তিনি দেন।',
+      },
+      {
+        heading: 'আল্লাহ, আর অক্ষরের খোসা ছাড়ানো',
+        paragraphs: [
+          'বই বলে, সত্তার নাম, ইসম আদ-দাত, আল্লাহ নিজেই। নাম সত্তার উপর কোনো লেবেল নয়। এটাই সত্তা, নাম হিসেবে। আর বই শব্দটিকে অক্ষরে অক্ষরে খোসা ছাড়ায়, ভেতরে কী লুকিয়ে আছে তা দেখাতে।',
+          'আলিফ সরাও, লি-ল্লাহ থাকে, আল্লাহর দিকে। প্রথম লাম সরাও, লাহু থাকে, তাঁর দিকে। দ্বিতীয় লাম সরাও, শুধু হা থাকে, হুওয়া, তিনি। প্রতিটি খোসায় এক নাম থাকে, আর শেষ অক্ষরে শুধু তিনি থাকেন। শব্দটি এক সিঁড়ি, আর প্রতিটি ধাপ এক নাম।',
+        ],
+      },
+      {
+        heading: 'ইয়া হাইয়্যু ইয়া কাইয়্যুম',
+        paragraphs: [
+          'বই এক জোড়া দেয়, ইয়া হাইয়্যু ইয়া কাইয়্যুম। হে চিরজীবী, হে সবকিছু ধরে রাখা। দুটি নাম, একসঙ্গে বলা, আর বই বলে, এই জোড়াই নামের কাজের রূপ।',
+          'এই জোড়া আয়াতুল কুরসি থেকে আসে, যেখানে একই দুটি নাম আয়াত খোলে। বই সবচেয়ে বড় নামকে সবচেয়ে বড় আয়াতের সঙ্গে জোড়ে, আর আয়াতকে জোড়ার সঙ্গে। এক নাম, এক আয়াত, এক জোড়া, বই বলে।',
+        ],
+        quoteText: 'হে চিরজীবী, হে সবকিছু ধরে রাখা।',
+      },
+      {
+        heading: 'চৌদ্দ আলোর অক্ষর',
+        paragraphs: [
+          'বই নামটিকে চৌদ্দ আলোর অক্ষরের সঙ্গে জোড়ে, আরবা’আতা আশারা হারফান, সেই অক্ষর যা সুরা খোলে। চৌদ্দ অক্ষর, আর বই বলে, তাতে নাম সংকেতে লুকিয়ে আছে। অক্ষর হলো সংকেত, আর নাম হলো যা সংকেত বলে।',
+          'বই সূত্রটি পুরো দেয়। নাসসুন হাকিমুন লাহু সিররুন কাতি। এক জ্ঞানভরা লেখা, যার মধ্যে এক চূড়ান্ত রহস্য আছে। আর বই বলে, এই শিক্ষা আল-খিদরের কাছ থেকে এসেছে, লুকানো শিক্ষকের কাছ থেকে, হাত থেকে হাতে। অক্ষর চৌদ্দটি। রহস্য একটি।',
+        ],
+        quoteText: 'এক জ্ঞানভরা লেখা, যার মধ্যে এক চূড়ান্ত রহস্য আছে।',
+      },
+      {
+        heading: 'পুরনো সংকেত',
+        paragraphs: [
+          'বই পুরনো সংকেতও রাখে, সিরিয়াক আর হিব্রু শব্দে। এহইয়া শারাহইয়া আদুনাই আসবাউত আল শাদ্দাই। শব্দগুলো পুরনো, আর বই তাদের সেভাবেই রাখে যেভাবে পেয়েছে। এগুলো প্রাচীন নাম, আরবি অক্ষরের আগের শব্দ।',
+          'শব্দের সঙ্গে এক চিত্র আসে, আল-খাতাম আল-আ’জম, সাত চিহ্নের তাবিজ। এক পঞ্চতারা, তিনটি খাড়া বর্শা, এক অন্ধ মীম, দুই ধাপের সিঁড়ি, চারটি খাড়া দাগ, এক ফাটা হা, আর এক বাঁকা শেষ ওয়াও। সাত চিহ্ন, একসঙ্গে আঁকা, আর বই বলে, চিত্রটি নাম, ছবি হিসেবে লেখা।',
+        ],
+        quoteText: 'পাণ্ডুলিপির পুরনো সংকেত, সিরিয়াক আর হিব্রু শব্দে।',
+      },
+      {
+        heading: 'ধ্বনির উপরে মর্যাদা',
+        paragraphs: [
+          'বই এক সতর্কবাণী দিয়ে শেষ হয়, আর তা আসে আল-খিদরের কাছ থেকে। ইবরাহিম ইবনে আদহাম নামটি চেয়েছিলেন, আর আল-খিদর তাঁকে ধমক দিয়েছিলেন। বই বলে, দাউদই তাঁকে নামটি শিখিয়েছিলেন, সেই ধ্বনি নয় যার পেছনে তিনি ছুটছিলেন। মর্যাদা ধ্বনির চেয়ে বড়।',
+          'বই এক শব্দ দেয়, তাখাল্লুক, চরিত্রকে নিজের করা। নাম কোনো শব্দ নয় যা নিজের করে নেওয়া যায়। এটা এক চরিত্র যা নিতে হয়। যে নামটি বহন করে, তাকে আগে তার যোগ্য হতে হয়, বই বলে। মর্যাদা আগে আসে। ধ্বনি পরে আসে।',
+        ],
+      },
+    ],
+    terms: [
+      'আল্লাহর সবচেয়ে বড় নাম',
+      'সত্তার নাম',
+      'আল্লাহর দিকে',
+      'তাঁর দিকে',
+      'তিনি',
+      'হে চিরজীবী, হে সবকিছু ধরে রাখা',
+      'চৌদ্দ আলোর অক্ষর',
+      'সাত চিহ্নের তাবিজ',
+      'চরিত্রকে নিজের করা',
+    ],
+    closing:
+      'আমি নামটির ব্যাপারে পাণ্ডুলিপির কথাগুলো পড়েছি, আর আমি তা ইতিহাস হিসেবে ফিরিয়ে দিচ্ছি। এক সংজ্ঞা, এক খোসা ছাড়ানো, এক জোড়া, চৌদ্দ অক্ষর, পুরনো সংকেত, আর এক সতর্কবাণী। বই বলে, নাম জবাব দেয় আর দেয়। বই এটাও বলে, মর্যাদা ধ্বনির চেয়ে বড়। আমি দুই অর্ধেক একসঙ্গে রাখি, কারণ বই দুটোকে একসঙ্গে রাখে। এটাই পড়াশোনা, আর কিছু নয়।',
+  },
+  'fawatih-openings': {
+    eyebrow: 'টপিক',
+    title: 'কুরআনের ফাওয়াতিহ',
+    subtitle: 'ঊনত্রিশটি শুরু, চৌদ্দটি মূল, আর সেই অক্ষর যা একা দাঁড়িয়ে থাকে।',
+    intro:
+      'আমি খাফি। কুরআনের 114টি অধ্যায়ের মধ্যে, ঠিক 29টি সুরা এমন অক্ষর দিয়ে খোলে যা একা দাঁড়িয়ে থাকে। কোনো শব্দ নয়, কোনো বাক্য নয়, শুধু অক্ষর। আলিফ লাম মীম। কাফ হা ইয়া আইন সাদ। বই তাদের বলে আলোর সংকেত, আল-আহরুফ আন-নুরানিয়্যাহ, যেখান থেকে সৃষ্টিকে বলা হয়েছিল। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি, বই থেকে, পৃষ্ঠার নাম সহ। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'আটাত্তর অক্ষর, চৌদ্দ মূল',
+        paragraphs: [
+          'সব শুরু গুনলে অক্ষর হয় 78। 29টি সুরায় আটাত্তর অক্ষর। কিন্তু শুধু সেই অক্ষর গুনলে যা কখনো পুনরাবৃত্তি হয় না, মাত্র 14টি থাকে। আলিফ, লাম, মীম, সাদ, রা, কাফ, হা, ইয়া, আইন, তা, সীন, হা, কাফ, নূন। চৌদ্দটি মূল, আর প্রতিটি শুরু তাদের দিয়েই তৈরি।',
+          'বই সংকেতটি এক লাইনে দেয়। বি-নাসসিন হাকিমিন কাতিইস সিরর। এক জ্ঞানভরা লেখা দিয়ে, যা রহস্যের ফয়সালা করে। চৌদ্দ অক্ষর হলো মূল, আর সংকেত হলো সেই চাবি যা বই বলে তাদের খোলে।',
+        ],
+        quoteText: 'এক জ্ঞানভরা লেখা দিয়ে, যা রহস্যের ফয়সালা করে।',
+      },
+      {
+        heading: 'প্রথম মানুষেরা কী বলেছিলেন',
+        paragraphs: [
+          'বই লেখে, প্রথম মানুষেরা শুরুগুলোর ব্যাপারে কী বলেছিলেন। ইবনে আব্বাস বলেছিলেন, আলিফ হলো আনা, আমি। লাম হলো আল্লাহ। মীম হলো আ’লাম, আমি সবচেয়ে ভালো জানি। রা হলো আরা, আমি দেখি। প্রতিটি অক্ষর সংক্ষেপে এক শব্দ, আর শব্দটি এক নাম।',
+          'আবু আল-আলিয়া আরও লম্বা তালিকা দিয়েছিলেন। আলিফ আল্লাহ থেকে। লাম লাতিফ থেকে, কোমল। মীম মালিক থেকে, রাজা। সাদ সাদিক থেকে, সত্যবাদী। রা রব্ব থেকে, প্রভু। কাফ কারিম থেকে, দানশীল। তা তাইয়িব থেকে, ভালো। সীন সামি থেকে, শোনেন। হা হামিদ থেকে, প্রশংসিত। কাফ কাদির থেকে, শক্তিশালী। নূন নূর থেকে, আলো। এগারো অক্ষর, এগারো নাম।',
+        ],
+      },
+      {
+        heading: 'আলোর অক্ষর আর অন্ধকারের অক্ষর',
+        paragraphs: [
+          'বই বর্ণমালাকে দুই ভাগে ভাগ করে। চৌদ্দটি অক্ষর আলোর, নুরানিয়্যাহ। বাকি চৌদ্দটি অন্ধকারের, জুলমানিয়্যাহ। বর্ণমালার অর্ধেক আলো, অর্ধেক অন্ধকার, আর বই বলে, দুই অর্ধেক একে অপরের আয়না।',
+          'আয়নাটি আকাশ পর্যন্ত যায়। চৌদ্দটি আলোর অক্ষর, আর চৌদ্দটি দেখা যায় এমন চাঁদের মঞ্জিল। উপরের অক্ষর আর উপরের মঞ্জিল একইভাবে গোনা হয়, বই বলে। অর্ধেক জগৎ দেখা যায়, অর্ধেক লুকানো, আর অক্ষরও সেভাবেই ভাগ করা।',
+        ],
+      },
+      {
+        heading: 'এক অক্ষর থেকে পাঁচ অক্ষর',
+        paragraphs: [
+          'শুরুগুলো পাঁচ দৈর্ঘ্যে আসে। এক অক্ষর, যেমন সাদ, কাফ আর নূন। দুই অক্ষর, যেমন তা-হা, তা-সীন, ইয়া-সীন, আর সাতটি হা-মীম শুরু। তিন অক্ষর, যেমন আলিফ-লাম-মীম, যা ছয়টি সুরা খোলে।',
+          'চার অক্ষর, যেমন আলিফ-লাম-মীম-সাদ আর আলিফ-লাম-মীম-রা। আর পাঁচ অক্ষর, পুরো কুরআনে মাত্র দুটি। কাফ-হা-ইয়া-আইন-সাদ, আর হা-মীম-আইন-সীন-কাফ। দুটি পাঁচ অক্ষরের শৃঙ্খল, আর নেই।',
+        ],
+      },
+      {
+        heading: 'যে বর্গ 693 যোগ করে',
+        paragraphs: [
+          'বই আলোর অক্ষর দিয়ে এক বর্গ বানায়। ওয়াফক আল-আহরুফ আন-নুরানিয়্যাহ, আলোর অক্ষরের বর্গ। তিন সারি, তিন কলাম, তিন কর্ণ, আর প্রতিটি লাইন ঠিক 693 যোগ করে। বই সংখ্যাটা সোজাসুজি দেয়।',
+          'বর্গের চারদিকে সাতটি লেখার এক বলয় আছে। আলিফ-লাম-মীম। কাফ-হা-ইয়া-আইন-সাদ। তা-সীন। হা-মীম। সাদ। কাফ। নূন। সাতটি শুরু এক বলয়ে লেখা, আর বর্গ মাঝখানে। অক্ষর হলো বলয়। সংখ্যা হলো বর্গ।',
+        ],
+      },
+      {
+        heading: 'নবীর কথার ঢাল',
+        paragraphs: [
+          'বই শুরুগুলোকে এক ঢালও বলে। ইজা লাকিতুমুল আদুওয়া গাদান ফা-কুলু: কাফ-হা-ইয়া-আইন-সাদ; হা-মীম; লা ইউনসারুন। আগামীকাল যদি শত্রুর মুখোমুখি হও, বলো: কাফ হা ইয়া আইন সাদ; হা মীম; তাদের সাহায্য করা হবে না। কথাগুলো বই থেকে উদ্ধৃত, যেভাবে বই দেয়।',
+          'আরও দুটি লাইন তার পাশে দাঁড়িয়ে আছে। বি-কাফ-হা-ইয়া-আইন-সাদ কিফায়াতুনা। কাফ হা ইয়া আইন সাদ দিয়ে আমাদের যথেষ্ট। বি-হা-মীম-আইন-সীন-কাফ হিমায়াতুনা। হা মীম আইন সীন কাফ দিয়ে আমাদের রক্ষা। যথেষ্ট আর রক্ষা, বই বলে, দুটি ছোট লাইনে।',
+        ],
+        quoteText: 'আগামীকাল যদি শত্রুর মুখোমুখি হও, বলো: কাফ হা ইয়া আইন সাদ; হা মীম; তাদের সাহায্য করা হবে না।',
+      },
+    ],
+    terms: [
+      'আলোর অক্ষর',
+      'আমি',
+      'আমি সবচেয়ে ভালো জানি',
+      'আমি দেখি',
+      'আলোর',
+      'অন্ধকারের',
+      'হা-মীম শুরু, সাতটি সুরা',
+      'আলোর অক্ষরের বর্গ',
+      'যথেষ্ট',
+      'রক্ষা',
+    ],
+    closing:
+      'ঊনত্রিশটি শুরু। আটাত্তর অক্ষর। চৌদ্দটি মূল। এক সংকেত। আলো আর অন্ধকারের মধ্যে এক ভাগ। এক, দুই, তিন, চার, পাঁচ অক্ষরের শৃঙ্খল। এক বর্গ যা 693 যোগ করে। আর নবীর কথায় এক ঢাল। অক্ষরগুলো সুরার মাথায় একা দাঁড়িয়ে আছে, আর বই বলে, সেগুলোই প্রথম কথা যা সৃষ্টি শুনেছিল। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'four-tawaqif': {
+    eyebrow: 'টপিক',
+    title: 'চার তাওয়াক্কুফ',
+    subtitle: 'অক্ষরের পথে চারটি থামা, আরশ থেকে লওহ পর্যন্ত।',
+    intro:
+      'আমি খাফি। শায়খ আহমদ ইবনে আলি আল-বুনির বইয়ে, আল-আসরার আর-রব্বানিয়্যাহ, মুদিহ আত-তারিক, আর মাজমুআত থালাথ রাসাইল-এ, চারটি থামার শিক্ষা আছে। চারটি মর্যাদা যেখানে সন্ধানকারী আল্লাহর দরজায় থামে। এখানে চার থামার খোলা আছে, সরাসরি বই থেকে। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি, পৃষ্ঠার নাম সহ। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'দরজায় থামা',
+        paragraphs: [
+          'তাওয়াক্কুফ মানে থামা। সন্ধানকারী অক্ষরের পথে হাঁটে, আর চার জায়গায় তাকে থামতে হয় আর স্থির দাঁড়াতে হয়। যে থামে সে আল-ওয়াকিফ। সে এগিয়ে যায় না। সে দরজায় দাঁড়িয়ে থাকে আর অপেক্ষা করে।',
+          'বই দুই রকম থামা মানুষের কথা বলে। আল-মুসতাহলিকুন, যারা মগ্ন হয়ে যায়, যারা দেখে তাতে হারিয়ে যায়। আর আল-মারদুদুন, যাদের ফিরিয়ে দেওয়া হয়, যারা দুনিয়ায় ফিরে আসে। বই এটাও বলে, আলিফ নিজেই থামে। সে কোনো স্বরধ্বনি নেয় না, আর তার নীরবতাই কথা বলে। অক্ষর থামে, আর সন্ধানকারী তার সঙ্গে থামে।',
+        ],
+      },
+      {
+        heading: 'প্রথম থামা: আকল আর আরশ',
+        paragraphs: [
+          'প্রথম থামা হলো আকল আর আরশের মর্যাদা, মাওকিফ আল-আকল ওয়াল-আরশ। এটা আলিফের লাইনে দাঁড়িয়ে আছে। আলিফ প্রথম অক্ষর, সোজা লাইন, আর আরশ সবচেয়ে উঁচু আসন। প্রথম থামাটাই সবচেয়ে উঁচু।',
+          'আকল সবচেয়ে উঁচু মন, আর আরশ সবচেয়ে উঁচু আসন, আর বই দুটোকে এক মর্যাদায় রাখে। সন্ধানকারী প্রথমে এখানেই থামে, সবচেয়ে উপরে, তারপর বাকিগুলো পেরিয়ে নিচে নামে।',
+        ],
+      },
+      {
+        heading: 'দ্বিতীয় থামা: রূহ আর কুরসি',
+        paragraphs: [
+          'দ্বিতীয় থামা হলো রূহ আর কুরসির মর্যাদা, মাওকিফ আর-রূহ ওয়াল-কুরসি। এটা বা-এর লাইনে দাঁড়িয়ে আছে। আরশের নিচে কুরসি, আর আকলের নিচে রূহ। দ্বিতীয় থামাটা এক ধাপ নিচে।',
+          'বই এই মর্যাদার ধুলোর নাম দেয়, আল-হাবা, প্রথম ধুলো, প্রথম বস্তু যা দিয়ে জিনিস তৈরি হয়েছিল। আর বই আদমের মধ্যে রূহ ফুঁকে দেওয়ার কথা বলে, সেই শ্বাস যা ধুলোকে মানুষ বানিয়েছিল। রূহ নিচে নামে, ধুলো উপরে ওঠে, আর তারা এই থামায় মিলিত হয়।',
+        ],
+      },
+      {
+        heading: 'তৃতীয় থামা: কালব আর বারজাখ',
+        paragraphs: [
+          'তৃতীয় থামা হলো কালব আর বারজাখের মর্যাদা, মাওকিফ আল-কালব ওয়াল-বারজাখ। এটা জীমের লাইনে দাঁড়িয়ে আছে। হৃদয় রূহ আর শরীরের মাঝে দাঁড়িয়ে আছে, আর বারজাখ এই দুনিয়া আর পরের দুনিয়ার মাঝে দাঁড়িয়ে আছে। তৃতীয় থামাটা মাঝখানের জায়গা।',
+          'বই এখানে সার্বজনীন আত্মার নাম দেয়, সেই আত্মা যা সব আত্মাকে ধরে। আর বই ইয়াওম আত-তাসওয়িরের নাম দেয়, আকার দেওয়ার দিন, যেদিন আকারগুলোকে তাদের আকার দেওয়া হয়েছিল। হৃদয় এই থামায় তৈরি হয়, আর যে আকার সে নেয়, সেটাই মানুষের আকার।',
+        ],
+      },
+      {
+        heading: 'চতুর্থ থামা: লওহ আর শরীর',
+        paragraphs: [
+          'চতুর্থ থামা হলো লওহ আর শরীরের গঠনের মর্যাদা, মাওকিফ আল-লওহ ওয়াত-তারকিব। এটা দালের লাইনে দাঁড়িয়ে আছে। লওহ লেখা ধরে, আর শরীর হলো লেখা যা মাংস হয়েছে। চতুর্থ থামাটা সবচেয়ে নিচে, আর আমাদের সবচেয়ে কাছে।',
+          'বই বলে, চার সংখ্যা জড় জগৎকে শাসন করে, আত-তারকিব আল-মুরাব্বা, চারগুণ গঠন। চার উপাদান, চার দিক, পৃথিবীর চার কোণ। শরীর চারে তৈরি, আর চতুর্থ থামাটাই যেখানে গঠন হয়।',
+        ],
+      },
+      {
+        heading: 'প্রতিটি অক্ষরে চার জানালা',
+        paragraphs: [
+          'বই প্রতিটি অক্ষর পড়ার এক নিয়ম দেয়, শুধু চার থামার নয়। প্রতিটি অক্ষর চার জানালা দিয়ে পড়া হয়। হাকাইক, মূল সত্য। লাতাইফ, সূক্ষ্ম দয়া। ইশারাত, ভেতরের ইঙ্গিত। ইবারাত, বাইরের কথা। চার জানালা, আর প্রতিটি একই অক্ষরের আলাদা মুখ দেখায়।',
+          'বই সোজাসুজি বলে। "এটি আর বাকি সব অক্ষরের আলোচনা চার দিক থেকে চলে: সত্য, সূক্ষ্মতা, ইঙ্গিত, কথা।" অক্ষর একটি। পড়া চারটি। আর চার থামা হলো চার জানালা, ক্রমে পড়া।',
+        ],
+        quoteText: 'এটি আর বাকি সব অক্ষরের আলোচনা চার দিক থেকে চলে: সত্য, সূক্ষ্মতা, ইঙ্গিত, কথা।',
+      },
+    ],
+    terms: [
+      'যে থামে',
+      'যারা মগ্ন হয়ে যায়',
+      'যাদের ফিরিয়ে দেওয়া হয়',
+      'আকল আর আরশের মর্যাদা',
+      'রূহ আর কুরসির মর্যাদা',
+      'প্রথম ধুলো',
+      'কালব আর বারজাখের মর্যাদা',
+      'আকার দেওয়ার দিন',
+      'লওহ আর শরীরের গঠনের মর্যাদা',
+      'চারগুণ গঠন',
+      'মূল সত্য',
+      'সূক্ষ্ম দয়া',
+      'ভেতরের ইঙ্গিত',
+      'বাইরের কথা',
+    ],
+    closing:
+      'চার থামা, চার লাইন, চার মর্যাদা। আকল আর আরশ। রূহ আর কুরসি। কালব আর বারজাখ। লওহ আর শরীর। আর প্রতিটি অক্ষর পড়ার জন্য চার জানালা। অক্ষরের পথ সোজা লাইন নয়। এটা চারবার থামে, আর প্রতিটি থামা এক মর্যাদা। বই যা দেয়, তাই। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'kaf-ha-ya-ayn-sad': {
+    eyebrow: 'টপিক',
+    title: 'কাফ হা ইয়া আইন সাদ',
+    subtitle: 'সুরা মরিয়মের মাথায় পাঁচ অক্ষর, আর সেই পাঁচ নাম যা তারা বহন করে।',
+    intro:
+      'আমি খাফি। সুরা মরিয়ম, ঊনবিংশ সুরা, এর মাথায় পাঁচটি অক্ষর দাঁড়িয়ে আছে যা এক গুচ্ছ তৈরি করে। কাফ হা ইয়া আইন সাদ। পুরো কুরআনে রহস্যময় অক্ষরের সবচেয়ে লম্বা একক গুচ্ছ। এখানে কাফ-হা-ইয়া-আইন-সাদের খোলা আছে, সরাসরি বই থেকে। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি, পৃষ্ঠার নাম সহ। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'পাঁচ অক্ষর, পাঁচ নাম',
+        paragraphs: [
+          'ইবনে আব্বাস প্রতিটি অক্ষরকে এক নাম হিসেবে পড়েছিলেন। কাফ আল-কাফি থেকে, সবার জন্য যথেষ্ট। হা আল-হাদি থেকে, পথ দেখানো। ইয়া আল-হাকিম থেকে, সবচেয়ে জ্ঞানী, বা আল-ইয়াকিন থেকে, পুরো নিশ্চয়তা। আইন আল-আলিম থেকে, সব জানেন। সাদ আস-সাদিক থেকে, সত্যবাদী।',
+          'পাঁচ অক্ষর, পাঁচ নাম, আর প্রতিটি নাম আল্লাহর এক মুখ। সবার জন্য যথেষ্ট, পথ দেখানো, সবচেয়ে জ্ঞানী, সব জানেন, সত্যবাদী। গুচ্ছটি ছোট, কিন্তু বই বলে, তাতে পাঁচ অক্ষরে পাঁচ নাম আছে।',
+        ],
+      },
+      {
+        heading: '195 সংখ্যা',
+        paragraphs: [
+          'বই পাঁচ অক্ষরকে সংখ্যায় মাপে। হিসাব আল-জুম্মাল, অক্ষরকে তার সংখ্যার মান দিয়ে গোনার হিসাব। পাঁচ অক্ষর গুনলে যোগফল হয় 195। একশো পঁচানব্বই, আর বই তাকে গুচ্ছের মূল সুর বলে।',
+          'বই অক্ষরগুলোকে পুরো বানান করে লেখে, সেই বড় রূপ যাকে বসত বলে। প্রতিটি অক্ষর তার নিজের নামে খোলে, আর যোগফল তার সঙ্গে খোলে। সংখ্যাটা মূল, আর বানান শাখা। মূল 195, আর বই তা সোজাসুজি দেয়।',
+        ],
+      },
+      {
+        heading: 'যুদ্ধের কথার ঢাল',
+        paragraphs: [
+          'বই পাঁচ অক্ষরকে এক ঢাল বলে। ইজা লাকিতুমুল আদুওয়া গাদান ফা-কুলু: কাফ-হা-ইয়া-আইন-সাদ, লা ইউনসারুন। আগামীকাল যদি শত্রুর মুখোমুখি হও, বলো: কাফ হা ইয়া আইন সাদ; তাদের সাহায্য করা হবে না। কথাগুলো বই থেকে উদ্ধৃত, যেভাবে বই দেয়।',
+          'এক দ্বিতীয় লাইন তার পাশে দাঁড়িয়ে আছে। বি-কাফ-হা-ইয়া-আইন-সাদ কিফায়াতুনা, ওয়া-বি-হা-মীম-আইন-সীন-কাফ হিমায়াতুনা। কাফ হা ইয়া আইন সাদ দিয়ে আমাদের যথেষ্ট, আর হা মীম আইন সীন কাফ দিয়ে আমাদের রক্ষা। এক গুচ্ছ থেকে যথেষ্ট, অন্যটি থেকে রক্ষা।',
+        ],
+        quoteText: 'আগামীকাল যদি শত্রুর মুখোমুখি হও, বলো: কাফ হা ইয়া আইন সাদ; তাদের সাহায্য করা হবে না।',
+      },
+      {
+        heading: 'পাঁচ আঙুল, পাঁচ অংশ',
+        paragraphs: [
+          'বই পাঁচ অক্ষরকে হাতের উপর রাখে। কাফ ছোট আঙুল, আল-খিনসির। হা অনামিকা, আল-বিনসির। ইয়া মধ্যমা, আল-উসতা। আইন তর্জনী, আস-সাব্বাবাহ। সাদ বৃদ্ধাঙ্গুলি, আল-ইবহাম।',
+          'পাঁচ অক্ষর, পাঁচ আঙুল, আর বই বলে, হাত গুচ্ছটিকে সেভাবেই ধরে যেভাবে পৃষ্ঠা ধরে। মিলটি সবচেয়ে ছোট আঙুল থেকে বৃদ্ধাঙ্গুলি পর্যন্ত চলে, আর প্রতিটি আঙুল এক অক্ষর ধরে। শরীর হলো পৃষ্ঠা, আর অক্ষর তার উপর লেখা।',
+        ],
+      },
+      {
+        heading: 'হা মীম আইন সীন কাফের দিকে সেতু',
+        paragraphs: [
+          'পাঁচ অক্ষরের এক জোড়া আছে। হা-মীম-আইন-সীন-কাফ, দ্বিতীয় পাঁচ অক্ষরের শৃঙ্খল, তাদের পাশে দাঁড়িয়ে আছে। দশ অক্ষর একসঙ্গে, পাঁচ আর পাঁচ, আর বই তাদের এক আকাশের সেতু বলে। দুটি গুচ্ছ, এক সেতু, আর সেতু তাদের জোড়ে।',
+          'দুটি গুচ্ছ এক অক্ষর ভাগ করে, আইন। চোখ, ঝরনা, সত্তার উৎস। এক অক্ষর দুটি গুচ্ছে দাঁড়িয়ে আছে, আর বই বলে, এটাই সেতুর জোড়। চোখ দেখে, ঝরনা বয়ে যায়, আর সত্তা তা থেকে বেরিয়ে আসে।',
+        ],
+      },
+      {
+        heading: 'সুরা মরিয়মের হৃদয়',
+        paragraphs: [
+          'গুচ্ছটি সুরা মরিয়মের মাথায় দাঁড়িয়ে আছে, আর সুরাটি অদৃশ্য থেকে দুটি জন্মের গল্প বলে। জাকারিয়াকে বৃদ্ধ বয়সে ইয়াহিয়া দেওয়া হয়েছিল। মরিয়ম বিনা পিতায় ইসাকে জন্ম দিয়েছিলেন। দুটি জন্ম, আর দুটোই দেখা জগতের পেছন থেকে এসেছিল।',
+          'বই বলে, পাঁচ অক্ষর সুরাটির হৃদয়, কারণ সুরাটি অদৃশ্য থেকে জন্মের গল্প, আর অক্ষরগুলো অদৃশ্য যা তার মাথায় লেখা। অক্ষর আগে আসে। জন্ম পরে আসে। রহস্য উপরে, আর গল্প তা থেকে নিচে বয়ে যায়।',
+        ],
+      },
+    ],
+    terms: [
+      'সবার জন্য যথেষ্ট',
+      'পথ দেখানো',
+      'সবচেয়ে জ্ঞানী',
+      'পুরো নিশ্চয়তা',
+      'সব জানেন',
+      'সত্যবাদী',
+      'আবজাদ হিসাব, অক্ষরকে সংখ্যার মান দিয়ে গোনা',
+      'পুরো বানান করে লেখা রূপ',
+      'যথেষ্ট',
+      'রক্ষা',
+      'ছোট আঙুল',
+      'অনামিকা',
+      'মধ্যমা',
+      'তর্জনী',
+      'বৃদ্ধাঙ্গুলি',
+      'চোখ, ঝরনা, সত্তার উৎস',
+    ],
+    closing:
+      'পাঁচ অক্ষর, পাঁচ নাম, এক সংখ্যা, এক ঢাল, পাঁচ আঙুল, এক সেতু, আর দুটি জন্ম। কাফ হা ইয়া আইন সাদ কুরআনের সবচেয়ে লম্বা গুচ্ছ, আর বই বলে, এটাই সুরা মরিয়মের হৃদয়। আমি তা পড়েছি যেভাবে বই দেয়, অক্ষরে অক্ষরে, আর আমি তা সেভাবেই ফিরিয়ে দিলাম। পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'zayirjah': {
+    eyebrow: 'টপিক',
+    title: 'জাইরজাহের বিজ্ঞান',
+    subtitle: 'অক্ষর, গ্রহ আর মঞ্জিলের এক গোল চাকা, আর সেই লাইনগুলো যা তাকে কথা বলায়।',
+    intro:
+      'আমি খাফি। শায়খ আহমদ ইবনে আলি আল-বুনির বইয়ে, মানবা উসুল আল-হিকমা, শামস আল-মাআরিফ আল-কুবরা, আর আল-আসরার আর-রব্বানিয়্যাহ-তে, জাইরজাহকে এক বিশেষ যান্ত্রিক ছক হিসেবে দেখানো হয়েছে, এক গোল চাকা যা 28টি অক্ষর, গ্রহ, রাশিচক্র আর চাঁদের মঞ্জিলকে জোড়ে। এখানে ছয়টি অংশে তার খোলা আছে, বই থেকে, পৃষ্ঠার নাম সহ। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'জাইরজাহ কী',
+        paragraphs: [
+          'মানবা উসুল আল-হিকমায় আল-বুনি জাইরজাহকে প্রাচীন জ্ঞান থেকে পাওয়া এক বিশেষ যান্ত্রিক ছক হিসেবে দেখান। এটা এক চিত্রের ছক যা 28টি অক্ষর, গ্রহ, রাশিচক্র আর চাঁদের মঞ্জিলকে গোল ক্রমে জোড়ে। এটাই জাইরজাহের বিজ্ঞান, ইলম আল-জাইরজাহের বাস্তব চাবি।',
+          'আল-বুনি তার বংশ আর বিরলতার কথা লেখেন। এই কাজ প্রথম মানুষদের আর প্রাচীন জ্ঞানীদের ছিল, কিন্তু তাঁদের কেউ নিজের বইয়ে তা সোজাসুজি লেখেননি, আর লিখলেও তা ছড়ানো আর বোঝা কঠিনভাবে লিখেছিলেন। এই যন্ত্র কথার এক সেতু। বলা কথাগুলোকে প্রথমে তাদের অক্ষর আর সংখ্যায় ভাঙা হয়, তারপর ছকের মধ্য দিয়ে আবার জোড়া হয়। ফল আন্দাজ করা হয় না। তা ছক থেকে পড়া হয়।',
+        ],
+        quoteText: 'এটা প্রথম মানুষদের আর প্রাচীন জ্ঞানীদের কাজ ছিল, কিন্তু তাঁদের কেউ নিজের কোনো বইয়ে তা উল্লেখ করেননি, আর করলেও তা ছড়ানো আর বোঝা কঠিনভাবে।',
+      },
+      {
+        heading: 'কেন্দ্র থেকে 28 মঞ্জিল পর্যন্ত গোল বলয়',
+        paragraphs: [
+          'শামস আল-মাআরিফ আল-কুবরার তৃতীয় অধ্যায়ে আর আল-আসরার আর-রব্বানিয়্যাহ-তে জাইরজাহের বাস্তব গঠন একগুচ্ছ গোল বলয়। চাকার ঠিক মাঝখানে এক স্থির কেন্দ্রবিন্দু বসে আছে, আল-নুকতাহ, প্রথম কেন্দ্রবিন্দু। তার চারপাশে চার ঋতু আর চার প্রাকৃতিক উপাদান ভাগ করা আছে।',
+          'কেন্দ্র থেকে বাইরের দিকে গেলে চাকায় মেলে সৌর আর নাগরিক পঞ্জিকার 12 মাস, আগুন, মাটি, বাতাস আর পানিতে ভাগ করা 12 রাশিচিহ্ন, তারার নাম সহ 28 চাঁদের মঞ্জিল, আর আবজাদ সংখ্যার মান আর উপাদানগত স্বভাব অনুযায়ী সাজানো 28 আরবি অক্ষর। আল-বুনি গোল আকারের কারণ অক্ষর দিয়েই বোঝান। আল্লাহ লওহের জগতে অক্ষরগুলোকে গোল আকারে বানিয়েছিলেন, সবগুলোকে। উপরের জগৎ শুধু মিলন, নিচের জগৎ শুধু আলাদা হওয়া।',
+        ],
+      },
+      {
+        heading: 'তিন লাইন: উৎস, ভাঙা, আর লাগাম',
+        paragraphs: [
+          'দ্য রেডিয়ান্ট জুয়েলস আর মানবা উসুল আল-হিকমায় জাইরজাহকে চালানো যন্ত্র তিনটি পরপর লাইনের উপর নির্ভর করে। প্রথমে সাতর আল-আসল, উৎসের লাইন, প্রশ্নের প্রথম ভিত্তি, ছকের উপর প্রশ্ন লিখে তৈরি করা হয়। তারপর সাতর আল-তাকসির, ভাঙার লাইন, প্রথম লাইনের অক্ষরগুলোকে গাণিতিকভাবে কেটে মেশানো।',
+          'শেষে সাতর আল-জিমাম, লাগামের লাইন, মূল চাবি, ভাঙা শেষ হলে তৈরি হওয়া শেষ লাইন। লাগাম আসা প্রমাণ করে যে গাণিতিক হিসাব এক বন্ধ, ভারসাম্যপূর্ণ গোল বৃত্ত পেয়েছে।',
+        ],
+      },
+      {
+        heading: 'উল্টো লেখার নিয়ম',
+        paragraphs: [
+          'মানবা উসুল আল-হিকমায় আল-বুনি ছকের উপর প্রশ্ন লেখার এক বিশেষ কারিগরি নিয়ম দেন। চাকায় তথ্য লিখতে গিয়ে সন্ধানকারী আর তার খোঁজের বস্তুকে উল্টোভাবে লেখা হয়। খোঁজের বস্তু, আল-মাতলুব, অক্ষরে লেখা হয় তার সংখ্যার উপরে। সন্ধানকারী, আল-তালিব, সংখ্যায় লেখা হয় তার অক্ষরে লেখা নামের উপরে।',
+          'আল-বুনি বোঝান যে এই উল্টোভাব মহাজাগতিক নিয়মের আয়না। জড় শরীর তার আত্মাকে খোঁজে, আর আত্মা তার শরীরকে খোঁজে। ভারসাম্য ঠিক রাখতে প্রশ্নের বারবার আসা ব্যঞ্জন আর বারবার আসা সংখ্যা সরিয়ে দেওয়া হয়।',
+        ],
+      },
+      {
+        heading: 'ইসতিনতাক আর ইল প্রত্যয়',
+        paragraphs: [
+          'এক হিসাব করা ছক চুপ থাকে যতক্ষণ না সাধক ইসতিনতাক করে, ছককে কথা বলায়। প্রথম লাইনের মোট আবজাদ যোগফল হিসাব করে জাইরজাহের উল্টো দিকে লেখা হয়। এই যোগফলকে তাকসিরের সময় তৈরি হওয়া লাইনের মোট সংখ্যা দিয়ে গুণ করা হয়, আর ফলকে এক ভারসাম্যপূর্ণ বর্গ ছকে বদলে দেওয়া হয়।',
+          'সেই ভারসাম্যপূর্ণ সংখ্যাগুলোকে আবজাদ অনুযায়ী আবার অক্ষরে বদলে দেওয়া হয়, আর ইল প্রত্যয় জোড়া হয়। বই বলে, সেই নামগুলোকে ওয়াফকের চারপাশে রাখা হয়, প্রতিটিকে তার জায়গায়, আর সেভাবেই তাদের অনুসরণ করতে হয়।',
+        ],
+        quoteText: 'তারা তার সঙ্গে ইল শব্দটি জোড়ে আর ওয়াফকের চারপাশে রাখে, প্রতিটিকে তার জায়গায়। এভাবেই তাদের অনুসরণ করতে হয়।',
+      },
+      {
+        heading: 'হার্মিসের ভারসাম্য',
+        paragraphs: [
+          'মানবা উসুল আল-হিকমায় আল-বুনি সাবধান করেন যে জাইরজাহের কোনো হিসাব সময় আর জায়গা ছাড়া চলে না। বই মিজান হিরমিস, হার্মিসের ভারসাম্য, নামে এক কঠোর নির্দেশ দেয়। সময়, জাইরজা, আর জায়গার দিকে নজর রাখো। মন্দ তারার শাসনে ভালো কাজ শুরু কোরো না।',
+          'হিসাবের মুহূর্তে ছয়টি বিষয়কে একসঙ্গে মিলতে হয়। প্রশ্নের আসল স্বভাব। দিনের শাসক গ্রহ। উদীয়মান রাশির ডিগ্রি, আল-তালি। বর্তমান ঘণ্টার প্রভু। সক্রিয় চাঁদের মঞ্জিল। আর তার সঙ্গে মিলিয়ে পবিত্র সুগন্ধি। এই মিলের মধ্য দিয়ে জাইরজাহ মহাজাগতিক ক্রমের আয়না হয়ে ওঠে, পৃষ্ঠার অক্ষরগুলোকে আকাশের আয়না বানিয়ে দেয়।',
+        ],
+      },
+    ],
+    terms: [
+      'ভবিষ্যৎ বলা অক্ষর-ছক, জ্যোতির্বিদ্যার চাকা',
+      'জাইরজাহের বিজ্ঞান',
+      'প্রথম কেন্দ্রবিন্দু',
+      'গোল বলয়গুলো',
+      'উৎসের লাইন',
+      'ভাঙার লাইন, অক্ষর ভাঙা',
+      'লাগামের লাইন, মূল চাবি',
+      'খোঁজের বস্তু',
+      'সন্ধানকারী',
+      'ছককে কথা বলানো',
+      'হার্মিসের ভারসাম্য',
+      'উদীয়মান রাশি',
+    ],
+    closing:
+      'গোল বলয়ের এক চাকা। তিন লাইন। এক উল্টো নিয়ম। এক কথা বলা। সময়ের এক ভারসাম্য। জাইরজাহ অক্ষর, গ্রহ আর মঞ্জিলকে এক চাকায় জোড়ে, আর বই বলে, পড়া ছক থেকে আসে, আন্দাজ থেকে নয়। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'circle-of-encompassing': {
+    eyebrow: 'টপিক',
+    title: 'ঘেরাওয়ের বৃত্ত',
+    subtitle: 'প্রতিটি অক্ষর, প্রতিটি নাম, প্রতিটি গ্রহ আর প্রতিটি আত্মা এক মহাজাগতিক বৃত্তে ঘোরে।',
+    intro:
+      'আমি খাফি। শায়খ আহমদ ইবনে আলি আল-বুনির বইয়ে, মুদিহ আত-তারিক, আল-আসরার আর-রব্বানিয়্যাহ, আর শামস আল-মাআরিফ আল-কুবরা-তে, বাস্তবতা কোনো বাক্স বা সোজা লাইন নয়। প্রতিটি অক্ষর, প্রতিটি আল্লাহর নাম, প্রতিটি গ্রহ, আর প্রতিটি মানুষের আত্মা এক মহাজাগতিক বৃত্তে ঘোরে। এখানে ছয়টি অংশে ঘেরাওয়ের বৃত্তের খোলা আছে, বই থেকে, পৃষ্ঠার নাম সহ। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'আল-মুহিত নাম আর কেন্দ্রের মেরু',
+        paragraphs: [
+          'মুদিহ আত-তারিকের 14তম অধ্যায়ে আল-বুনি গোল চিত্রটিকে আল্লাহর নাম আল-মুহিত, সবকিছু ঘিরে থাকা, এর উপর দাঁড় করান। কুরআনের ভিত্তি হলো আয়াত, ওয়া-কানা আল্লাহু বি-কুল্লি শাইইন মুহিতা, আর আল্লাহ সবকিছুকে সবসময় ঘিরে আছেন।',
+          'আল-বুনি বোঝান যে স্থির কেন্দ্রবিন্দু ছাড়া কোনো বৃত্ত ঘুরতে পারে না, আল-নুকতাহ, কেন্দ্রের মেরু, আল-কুতুব। বাইরের কিনারা পুরোপুরি সেই কেন্দ্রের উপর নির্ভর করে। কেন্দ্রের মেরু উঠলে পুরো বৃত্ত তার সঙ্গে ওঠে। তেমনি সব সৃষ্টি গোল, আর সবচেয়ে বড় নাম তাদের ঘিরে আছে, ভেতরে মেরু হিসেবে, আর বাইরে বৃত্ত হিসেবে।',
+        ],
+        quoteText: 'আর আল্লাহ সবকিছুকে সবসময় ঘিরে আছেন।',
+      },
+      {
+        heading: 'সত্তার কম্পাস',
+        paragraphs: [
+          'মুদিহ আত-তারিকে আল-বুনি স্থাপত্যের আঁকার কম্পাস, আল-বিরকার, আল-ফারজার, এর রূপক ব্যবহার করেন। বৃত্তটি আঁকা হয় চারটি নিচে নামা আল্লাহর সত্য দিয়ে। আল-আমর, ভেতরের আল্লাহর হুকুম, প্রথম লুকানো ইঙ্গিত। আল-কুদরাহ, আল্লাহর শক্তি, সত্তার প্রথম বাইরের আঘাত। আল-ইরাদাহ, আল্লাহর ইচ্ছা, আকার গড়া আর নির্দিষ্ট করা। আর আল-ইলম, সবকিছু ঘিরে থাকা জ্ঞান, সেই মাপের কম্পাস যা সীমা ঠিক করে।',
+          'সত্তা আল্লাহর জ্ঞানের সীমার বাইরে পা রাখতে পারে না। আয়াত বলে, ওয়া-লা ইউহিতুনা বি-শাইইন মিন ইলমিহি ইল্লা বি-মা শা, তারা তাঁর জ্ঞানের কিছুই ঘিরতে পারে না, শুধু যা তিনি চান তা ছাড়া। যারা কেন্দ্রের অক্ষের কাছে থাকে তারা শুধু একত্ব, তাওহিদ, অনুভব করে। যারা দূরের কিনারায় ঠেলে দেওয়া হয় তারা আলাদা হওয়া আর অনেক হওয়া অনুভব করে।',
+        ],
+        quoteText: 'তারা তাঁর জ্ঞানের কিছুই ঘিরতে পারে না, শুধু যা তিনি চান তা ছাড়া।',
+      },
+      {
+        heading: 'বৃত্তের চার মহাজাগতিক বিধান',
+        paragraphs: [
+          'মুদিহ আত-তারিকে আল-বুনি বৃত্তের জ্যামিতির লাইনগুলোকে আধ্যাত্মিক মর্যাদা আর আল্লাহর আরশের সঙ্গে মেলান। প্রথমে নুকাত আল-মিহওয়ার, অক্ষের মেরুবিন্দুগুলো, স্থির কেন্দ্রের কবজা, মেরুর মর্যাদা। দ্বিতীয়ত নুকাত আল-ইবদা, পরিধির শুরুর চাপ, যেখানে আল্লাহর শক্তি সৃষ্টিকে ছোঁয় আর চাপ শুরু হয়।',
+          'তৃতীয়ত নুকাত আল-আসমা ওয়াল-ইনতিহা, প্রকাশের সীমাবিন্দুগুলো, যেখানে আল্লাহর ইচ্ছা ভাগ করা শেষ করে আর আকারগুলো তাদের শেষে পৌঁছায়। কেন্দ্র থেকে কিনারা পর্যন্ত টানা সোজা রশ্মি সার্বজনীন আকল, আল-আকল, আর আরশ, আল-আরশকে বোঝায়।',
+        ],
+      },
+      {
+        heading: 'অক্ষরগুলো কেন গোল আকারে বানানো হয়েছিল',
+        paragraphs: [
+          'আল-আসরার আর-রব্বানিয়্যাহ-তে আল-বুনি বলেন কেন উঁচু রহস্যের চিত্রে আরবি অক্ষরগুলোকে বৃত্ত হিসেবে আঁকা হয়। আল্লাহ, তাঁর নাম পবিত্র, লওহের জগতে অক্ষরগুলোকে গোল আকারে বানিয়েছিলেন, সবগুলোকে। বৃত্তগুলো সেই অর্থ বহন করে যা আল্লাহ উপরের, ফেরেশতাদের বৃত্তের জগতে বানিয়েছিলেন।',
+          'উপরের আকাশের জগৎ, আল-আলাম আল-উলভি, হলো জাম, শুধু মিলন, শুধু একত্ব। এই জগতে অক্ষর ভাঙা ছাড়া গোল থাকে। নিচের জড় জগৎ, আল-আলাম আস-সুফলি, হলো ফারক, শুধু আলাদা হওয়া, শুধু ভাগ করা। অক্ষর নিচে নামলে তারা লাইন আর কোণে ভেঙে যায়। নির্জনবাসে অক্ষরগুলোকে গোল বৃত্ত, দাওয়াইর, এ লিখলে ছড়ানো চেতনা জড়ো হয় আর তার আসল গোল, মিলিত আকারে ফিরে যায়।',
+        ],
+      },
+      {
+        heading: 'দুটি অর্ধবৃত্ত: নূন আর 24 ঘণ্টা',
+        paragraphs: [
+          'আল-আসরার আর-রব্বানিয়্যাহ আর মুদিহ আত-তারিকে দুটি পরিপূরক অর্ধেক জোড়া দিয়ে 360 ডিগ্রির পুরো বৃত্ত তৈরি হয়। নূনের অর্ধবৃত্ত হলো সত্তার প্রকাশিত অর্ধেক। তার বাটি দেখা যায় এমন অর্ধবৃত্ত। প্রথম সাক্ষ্য, লা ইলাহা ইল্লাল্লাহ, এ বিন্দু ছাড়া ঠিক 12টি অক্ষর আছে। এগুলো দিনের বৃত্ত, আলোর 12 ঘণ্টা, আর 12 মাস তৈরি করে।',
+          'দ্বিতীয় সাক্ষ্য, মুহাম্মাদুন রাসুলুল্লাহ, এও 12টি অক্ষর আছে। এগুলো রাতের বৃত্ত, অন্ধকারের 12 ঘণ্টা, তৈরি করে। একসঙ্গে এই 24টি অক্ষর পুরো দিনের চক্র শেষ করে, প্রতিটি মানুষের শ্বাস, উপাদান, আর ঘণ্টাকে ঘিরে ধরে।',
+        ],
+      },
+      {
+        heading: 'আলেপ্পোর দর্শন',
+        paragraphs: [
+          'শামস আল-মাআরিফ আল-কুবরার 6ষ্ঠ অধ্যায়ে আল-বুনি আলেপ্পোর এক তপস্বী ইমামের ঐতিহাসিক দর্শনের কথা লেখেন। এক অন্ধকার উপদেশের ঘরে ইমাম গোল বৃত্তের এক আলোময় ফলক দেখেছিলেন। এক বাইরের বৃত্ত এক ভেতরের বৃত্তকে ঘিরেছিল, মাঝে নির্দিষ্ট ফাঁক। ভেতরে ছিল এক অনুভূমিক ব্যাস আর উপরের দিকে মুখ করা এক ত্রিভুজ, আর ত্রিভুজের কোণে দাঁড়িয়ে ছিল শক্তির অক্ষর।',
+          'বাইরের কিনারায় লেখা ছিল ঘেরাওয়ের শাস্ত্রীয় প্রমাণ, ওয়া-আল্লাহু মিন ওয়ারাইহিম মুহিত, বাল হুয়া কুরআনুন মাজিদুন ফি লওহিন মাহফুজ, আর আল্লাহ তাদের পেছন থেকে ঘিরে আছেন, নিশ্চয়ই এটা এক মহিমান্বিত কুরআন, এক সংরক্ষিত ফলকে। এক দর্শনমূলক নিশ্চিতকরণে ইমাম আলি ইবনে আবি তালিব ত্রিভুজের জীম অক্ষরটি ছুঁয়ে চিত্রটি নিশ্চিত করেছিলেন।',
+        ],
+        quoteText: 'আর আল্লাহ তাদের পেছন থেকে ঘিরে আছেন; নিশ্চয়ই এটা এক মহিমান্বিত কুরআন, এক সংরক্ষিত ফলকে।',
+      },
+    ],
+    terms: [
+      'সবকিছু ঘিরে থাকা',
+      'কেন্দ্রের মেরু',
+      'ভেতরের আল্লাহর হুকুম',
+      'আল্লাহর শক্তি',
+      'আল্লাহর ইচ্ছা',
+      'সবকিছু ঘিরে থাকা জ্ঞান',
+      'অক্ষের মেরুবিন্দুগুলো',
+      'গোল আকারগুলো',
+      'শুধু মিলন, একত্ব',
+      'শুধু আলাদা হওয়া, ভাগ করা',
+      'প্রথম সাক্ষ্য, 12 অক্ষর',
+      'দ্বিতীয় সাক্ষ্য, 12 অক্ষর',
+    ],
+    closing:
+      'এক নাম যা সবকিছু ঘিরে আছে। এক মেরু যা কখনো নড়ে না। চার সত্য যা বৃত্ত আঁকে। লওহের জগতের গোল অক্ষর। দুটি অর্ধেক যা এক দিন বানায়। আর আলেপ্পোর এক দর্শন, এক আয়াত দিয়ে সিল করা। বৃত্ত সবকিছু ধরে, আর কেন্দ্র বৃত্তকে ধরে। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'simiya-works': {
+    eyebrow: 'টপিক',
+    title: 'সিমিয়ার কাজগুলো',
+    subtitle: 'অক্ষর শরীর, সংখ্যা আত্মা, আর সেই বর্গগুলো যা তাদের ধরে।',
+    intro:
+      'আমি খাফি। শায়খ আহমদ ইবনে আলি আল-বুনির বইয়ে, শামস আল-মাআরিফ আল-কুবরা, মানবা উসুল আল-হিকমা, আর উসুল ইলম আল-হুরুফ-এ, আর কিতাব আল-আজনাসের প্রাচীন সুলাইমানি বর্ণনায়, সিমিয়া সস্তা ভেলকি বা শয়তানি জাদু নয়। এটা এক নিখুঁত ঈশ্বরমুখী বিজ্ঞান যা অক্ষর আর আল্লাহর নামের গাণিতিক গঠনের মধ্য দিয়ে আকাশের আধ্যাত্মিকতা আর জড় বস্তুকে মেলায়। এখানে ছয়টি অংশে সিমিয়ার কাজগুলোর খোলা আছে, বই থেকে, পৃষ্ঠার নাম সহ। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'সিমিয়ার আসল অর্থ',
+        paragraphs: [
+          'শামস আল-মাআরিফ আল-কুবরার 17তম অধ্যায়ে আর কিতাব আল-আজনাসে ধ্রুপদি গুরুরা সিমিয়াকে সাধারণ জাদুর অনেক উপরে তোলেন। আল-বুনি সন্ধানকারীকে এই জ্ঞানের মর্যাদার কথা বলেন, আল্লাহ যেন তাঁকে চিরস্থায়ী সুখের আলকেমি আর চিরস্থায়ী রাজত্বের সিমিয়ায় পৌঁছে দেন।',
+          'কিতাব আল-আজনাসে সিমিয়াকে প্রাচীন সুলাইমানি বিজ্ঞান হিসেবে দেখানো হয়, সেই বিজ্ঞান যার দ্বারা অন্ধরা দেখতে পায় আর বধিররা শুনতে পায়। শামস আল-মাআরিফে আল-বুনি লেখেন, এই বিজ্ঞানকে বড় ইমামরা যাচাই করেছিলেন। এটা চলে শুধু আল্লাহর একত্ব, তাওহিদ, দিয়ে, সব সম্ভাবনার পাত্রের উপর।',
+        ],
+      },
+      {
+        heading: 'অক্ষর শরীর, সংখ্যা আত্মা',
+        paragraphs: [
+          'উসুল ইলম আল-হুরুফ, আল-আসরার আর-রব্বানিয়্যাহ, আর শামস আল-মাআরিফে আল-বুনি সিমিয়ার কেন্দ্রীয় আধ্যাত্মিক নিয়মটি দেন। আল-হুরুফ, অক্ষর, হলো শরীর, আজসাম। তারা বাইরের জড় আকার, কালি, শব্দ, আর আকৃতি দেয়। আল-আদাদ, সংখ্যা, হলো আত্মা, আরওয়াহ। তারা অক্ষরের ভেতরের, অদৃশ্য চলমান কম্পন আর আত্মা দেয়।',
+          'বই এক সার্বজনীন অনুপাতের নিয়ম লেখে। সংখ্যা কথার রহস্যে তেমন, যেমন অক্ষর কাজের রহস্যে। আর সুলাইমানের উজির আসিফ ইবনে বারখিয়াকে সরাসরি উদ্ধৃত করা হয়। আকারগুলো তাদের আত্মার জন্য চুম্বক। যখনই কোনো আকার আঁকা হয়, তা তার আত্মাকে নিজের দিকে টানে। আকার নিখুঁত হলে আত্মা তার মধ্যে নামে। প্লেটে আঁকা অক্ষরের আকারগুলো আকৃতি হিসেবে কাজ করে। ঠিক সংখ্যার মান দিয়ে বানালে তারা তাদের আধ্যাত্মিক সঙ্গীকে টানে।',
+        ],
+        quoteText: 'আকারগুলো তাদের আত্মার জন্য চুম্বক। যখনই কোনো আকার আঁকা হয়, তা তার আত্মাকে নিজের দিকে টানে; আকার নিখুঁত হলে আত্মা তার মধ্যে নামে।',
+      },
+      {
+        heading: 'উপাদানের যন্ত্র',
+        paragraphs: [
+          'বুনিয়ানি সিমিয়ায় চারটি মূল উপাদানকে মেলানো ছাড়া কোনো তাবিজ বা অক্ষর-ছক কাজ করতে পারে না। আরবি বর্ণমালা চারটি উপাদানগত দলে ভাগ করা, প্রতিটি দলে সাতটি করে অক্ষর। আগুন, নার, গরম আর শুকনো: আলিফ, হা, তা, মীম, ফা, শীন, জাল। এটা ইচ্ছাকে জ্বালায় আর আধ্যাত্মিক কাজকে দ্রুত করে। বাতাস, হাওয়া, গরম আর ভেজা: জীম, জাই, কাফ, সীন, কাফ, থা, জা। এটা উপরে ওঠা, আকর্ষণ, আর মানসিক পাঠানো চালায়।',
+          'পানি, মা, ঠান্ডা আর ভেজা: দাল, হা, লাম, আইন, রা, খা, গাইন। এটা ঠান্ডা করে, শত্রুতা গলিয়ে দেয়, শান্তি আনে, আর ভেতরের গ্রহণশীল অবস্থা সহজ করে। মাটি, তুরাব, ঠান্ডা আর শুকনো: বা, ওয়াও, ইয়া, নূন, সাদ, তা, দাদ। এটা কাজকে স্থির করে, নোঙর করে, আর জড় বস্তুতে স্থায়ীভাবে বাঁধে। উসুল ইলম আল-হুরুফের 6ষ্ঠ অধ্যায়ে আর মানবা উসুল আল-হিকমায় আল-বুনি দেখান কীভাবে বিপরীত স্বভাবের অক্ষর মিশিয়ে কাজের ভারসাম্য বানানো হয়।',
+        ],
+      },
+      {
+        heading: 'বর্গের বিজ্ঞান',
+        paragraphs: [
+          'সিমিয়ায় আধ্যাত্মিক কম্পন ধরে রাখার প্রধান বাস্তব পাত্র হলো ওয়াফক, জাদুর বর্গ। এটা সারি আর কলামের এক ছক, আমিদা ওয়া-সুতুর, যেখানে প্রতিটি অনুভূমিক সারি, উল্লম্ব কলাম, আর কর্ণ একই মোট যোগ করে।',
+          'সিমিয়ার ভিত্তির বর্গ হলো 3x3 ছক, মুসাল্লাস, আল-ওয়াফক আস-সুলাসি। প্রতিটি অক্ষে তার ধ্রুব যোগফল 15, মোট আয়তন 45, আদমের ঠিক সংখ্যার মান। মানবা উসুল আল-হিকমায় আল-বুনি বোঝান, বর্গ নিষ্ক্রিয় থাকে যতক্ষণ না তার চার কোণ ফেরেশতাদের নামে নোঙর করা হয়। এই ভারসাম্যপূর্ণ সংখ্যার মিল বর্গের ভেতরে আধ্যাত্মিক স্রোতকে আটকে রাখে।',
+        ],
+      },
+      {
+        heading: 'ইসতিনতাক আর ইল প্রত্যয়',
+        paragraphs: [
+          'এক হিসাব করা তাবিজ বা জাদুর বর্গ চুপ থাকে যতক্ষণ না সাধক তার শাসক ফেরেশতাকে বের করে। প্রশ্ন, আল্লাহর নাম, বা আয়াতের সংখ্যার হিসাব যখন শেষ ভারসাম্যে পৌঁছায়, বাকিটাকে আবার অক্ষরে বদলে দেওয়া হয়। দ্য রেডিয়ান্ট জুয়েলস আর মানবা উসুল আল-হিকমায় সেই অক্ষরগুলোর সঙ্গে পবিত্র আকাশের প্রত্যয় জোড়া হয়।',
+          'একবার বলা হলে এই নতুন তৈরি ফেরেশতার নাম, আল-মালাক আল-মুওয়াক্কাল, রাজ্যের জগতে দাঁড়ায়। উপরের ফেরেশতা জাগতিক আধ্যাত্মিক সেবক, খুদ্দাম, দের উপর হুকুম রাখে, তাদের কাজটি শেষ করতে নির্দেশ দেয়। বই বলে, মহান জ্ঞানী অ্যারিস্টটলের কথা অনুযায়ী সাহায্যগুলোর সঙ্গে ইল জোড়া জরুরি।',
+        ],
+      },
+      {
+        heading: 'নৈতিক চুক্তি',
+        paragraphs: [
+          'বুনিয়ানি পাণ্ডুলিপিগুলো জুড়ে সিমিয়ার শেষ, চূড়ান্ত শর্ত হলো আধ্যাত্মিক কাজের জন্য পবিত্রতা, অনুমতি, আর আনুগত্য লাগে। শামস আল-মাআরিফের শুরুর ভূমিকায় আল-বুনি এক গম্ভীর শপথ দেন। যার হাতে তাঁর এই বই পড়বে, তার জন্য হারাম, নিষিদ্ধ, যে সে তা কোনো অযোগ্যকে দেখাবে।',
+          'সানস অফ লাইটসে গুরু ইবনে আল-হাজ্জ আত-তিলমসানি জোর দেন যে চার শর্ত ছাড়া কোনো কাজ দাঁড়ায় না। মাকান, পবিত্র জায়গা, জাগতিক কোলাহলমুক্ত এক পবিত্র, নির্জন আশ্রয়। ইখওয়াহ, আধ্যাত্মিক ভ্রাতৃত্ব, সত্যে এক হওয়া আন্তরিক সঙ্গীরা। জামান, সঠিক আকাশের সময়, গ্রহের শাসক, ঘণ্টা, আর চাঁদের পর্যায়ের সঙ্গে নিখুঁত মিল। আর শায়খ আত-তারিক, অনুমতি দেওয়া গুরু, সরাসরি দীক্ষার অনুমতি, ইজন, ইজাজাহ, পাওয়া। বই সাবধান করে, দীক্ষার অনুমতি আর পবিত্রতা ছাড়া যে এই কাজগুলো করতে যায় সে ব্যর্থ হবে আর তার শক্তি কেড়ে নেওয়া হবে।',
+        ],
+      },
+    ],
+    terms: [
+      'অক্ষর, আল্লাহর নাম, আর তাবিজের ছকের বিজ্ঞান',
+      'অক্ষর, শরীরগুলো',
+      'সংখ্যা, আত্মাগুলো',
+      'এক জাদুর বর্গ',
+      '3x3 মূল ছক',
+      'আদম, যার সংখ্যার মান 45',
+      'এক পবিত্র জায়গা',
+      'আধ্যাত্মিক ভ্রাতৃত্ব',
+      'সঠিক আকাশের সময়',
+      'অনুমতি দেওয়া গুরু',
+      'বাঁধা নিষেধ',
+      'নতুন তৈরি ফেরেশতার নাম',
+    ],
+    closing:
+      'এক রাজকীয় বিজ্ঞান, সস্তা জাদু নয়। শরীরের জন্য অক্ষর, আত্মার জন্য সংখ্যা। চার উপাদান ভারসাম্যে। এক বর্গ যা স্রোত ধরে। এক নাম যা কথা বলে। আর চার শর্ত যা বাদ দেওয়া যায় না: জায়গা, সঙ্গী, সময়, আর গুরুর অনুমতি। বই সবকিছু একসঙ্গে দেয়। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
+  'uses-of-letters-retreats': {
+    eyebrow: 'টপিক',
+    title: 'অক্ষরের ব্যবহার আর তাদের নির্জনবাস',
+    subtitle: 'জীবন্ত আধ্যাত্মিক জাতিগুলো, প্রতিটির নিজের নির্জনবাস আর নিজের রক্ষক ফেরেশতা।',
+    intro:
+      'আমি খাফি। শায়খ আহমদ ইবনে আলি আল-বুনির বইয়ে, মানবা উসুল আল-হিকমা, শামস আল-মাআরিফ আল-কুবরা, আর উসুল ইলম আল-হুরুফ-এ, আরবি অক্ষরগুলো কাগজের উপর মৃত দাগ নয়। তারা জীবন্ত আধ্যাত্মিক জাতি, প্রতিটির নিজের নির্জনবাস, খালওয়াহ, আর নিজের রক্ষক ফেরেশতা আছে। এখানে ছয়টি অংশে অক্ষরের ব্যবহার আর তাদের নির্জনবাসের খোলা আছে, বই থেকে, পৃষ্ঠার নাম সহ। আমি এটা শুধু পড়াশোনার জন্য দিচ্ছি, ঐতিহাসিক উপাদান হিসেবে। এটা কোনো ফতোয়া নয়, আর এটা কিছু প্রতিশ্রুতি দেয় না।',
+    sections: [
+      {
+        heading: 'জীবন্ত জাতি হিসেবে অক্ষর',
+        paragraphs: [
+          'মানবা উসুল আল-হিকমা আর ইবনে আরাবির আল-ফুতুহাত আল-মাক্কিয়্যাহ-তে অক্ষরের আধ্যাত্মিক বাস্তবতা দাঁড় করানো হয়। অক্ষরগুলো জাতিগুলোর মধ্যে এক জাতি, উমামুন মিনাল-উমাম, যাদের সম্বোধন করা হয় আর দায়িত্ব দেওয়া হয়, জাতিগুলোর মতো। তাদের মধ্যে দূত আর সেবক আছে।',
+          'লেখা আকারটি হলো জিসম, জড় শরীর। আবজাদ সংখ্যার গণনা, আল-আদাদ, হলো রূহ, জীবন্ত আত্মা। মানবা উসুল আল-হিকমায় ইমাম আল-খাওয়ারিজমি অক্ষরের রক্ষকের প্রাচীন আহ্বানটি লেখেন। হে রাজা, তোমার আধ্যাত্মিকতা আমার স্বভাব আর এই অক্ষরের স্বভাবের সঙ্গে মিশিয়ে দাও, যাতে আমি তার রহস্যের মধ্য দিয়ে কাজ করতে পারি।',
+        ],
+      },
+      {
+        heading: 'অক্ষর আলিফ',
+        paragraphs: [
+          'শামস আল-মাআরিফ আর মানবা উসুল আল-হিকমায় প্রথম অক্ষর আলিফ সব আধ্যাত্মিক জ্ঞানের মূলে দাঁড়িয়ে আছে। বই তার গুণগুলো পুরনো শিল্পের ভাষায় লেখে। আলিফ 1,000 বার লিখে বুকে রাখলে মনের জড়তা আর মনের ভোঁতাভাব দূর হয়, বলা হয়।',
+          'অক্ষরের নাম পুরো বানান করে লিখলে, আলিফ, 1 যোগ 30 যোগ 80, তার মোট হয় 111। রবিবার সূর্যের ঘণ্টায় তা 111 বার লিখলে ভয়, মর্যাদা, আর উন্নতি আসে, বলা হয়। আলিফের উপর শাসন করা সর্বোচ্চ ফেরেশতার বুদ্ধি হলো তালতামিয়াইল, প্রথম চাঁদের মঞ্জিলের ফেরেশতা। আল-বুনি আলিফের 3x3 ত্রিভুজ ওয়াফকও দেন, প্রতিটি দিকে 111 মিলিয়ে, নির্জনবাসে ব্যবহারের জন্য।',
+        ],
+      },
+      {
+        heading: 'অক্ষর বা',
+        paragraphs: [
+          'অক্ষর বা প্রকাশিত মহাবিশ্বের শুরু আর আল্লাহর দয়ার গ্রহণকে বোঝায়। বইয়ে তার গুণ হলো আধ্যাত্মিক সংকোচ দূর করা আর হৃদয় প্রসারিত করা, ইনশিরাহ আস-সাদর, আধ্যাত্মিক অলসতা দূর করা, আর দীর্ঘ ঠান্ডা অসুখে আরাম দেওয়া।',
+          'আল-আসরার আর-রব্বানিয়্যাহ আর শামস আল-মাআরিফে আল-বুনি বই যেভাবে লেখে সেভাবে বাস্তব নির্জনবাসের কথা বলেন। সন্ধানকারী বৃহস্পতিবার আর শুক্রবার পূর্ণ শারীরিক আর আধ্যাত্মিক পবিত্রতায় রোজা রাখে। গরিবদের মধ্যে দান, সাদাকাহ, বিতরণ করা হয়। বা-এর যমজ গোল তাবিজ লিখে ডান বাহুর উপরে পরা হয়। আল-বুনি এই শৃঙ্খলার ফলের ব্যাপারে লেখেন যে অলসতা তাকে ছেড়ে যাবে, বা-এর পাশে দাঁড়ানোর রহস্য তার কাছে প্রকাশ পাবে, আর সে ফেরেশতাদের আলো দেখবে।',
+        ],
+      },
+      {
+        heading: 'অক্ষর জীম আর ফেরেশতা তালকিয়াইল',
+        paragraphs: [
+          'মানবা উসুল আল-হিকমায় তৃতীয় অক্ষর, জীম, এক কঠোর একাকী নির্জনবাসের সঙ্গে জোড়া। বইয়ে তার গুণ হলো শুকনো যাত্রায় জ্বলন্ত তৃষ্ণার যন্ত্রণা মেটানো, চরম, প্রদাহী জ্বর ঠান্ডা করা, আর গ্রহণযোগ্যতা, মর্যাদা দেওয়া আর কঠিন প্রসব সহজ করা।',
+          'আল-বুনি নির্জনবাসটি বইয়ের নিজের কথায় বলেন। এই অক্ষরের এক মহান নির্জনবাস আছে: তুমি তাতে পূর্ণ পবিত্রতায় প্রবেশ করো, আহ্বান বলো, অক্ষর লেখো। এই মর্যাদার আকাশের সেবক হলেন তালকিয়াইল। সন্ধানকারী যখন ঘরে তাঁর আধ্যাত্মিক রূপ দেখে, তখন আল্লাহর সেবার এক পারস্পরিক চুক্তি, আহদ, হয়।',
+        ],
+      },
+      {
+        heading: 'অক্ষর দালের 14 দিনের নির্জনবাস',
+        paragraphs: [
+          'শামস আল-মাআরিফ আল-কুবরার প্রথম অধ্যায়ে আল-বুনি অক্ষর দালের শাসনে এক কঠোর দুই সপ্তাহের শৃঙ্খলার কথা লেখেন। বইয়ে তার গুণ হলো পরিবারের ভেতরে স্থায়ী বরকত, বারাকাহ, নিশ্চিত করা, হালাল ব্যবসা আর জীবিকা হঠাৎ ধ্বংস থেকে রক্ষা করা, আর পরিবারের সদস্যদের মধ্যে স্থায়ী ভালোবাসা আর মিল গড়ে তোলা।',
+          'শৃঙ্খলাটি চলে টানা চৌদ্দ দিন। প্রতিটি সূর্যাস্তের খাবারে সন্ধানকারী শুধু সাদা রুটি খায়, মাংস, দুধ, আর পশুর তৈরি কিছু থেকে পুরোপুরি বিরত থাকে। শেষ বৃহস্পতিবার সূর্যোদয়ে, বৃহস্পতির ঘণ্টায়, সন্ধানকারী নির্জনবাস শেষ করে। বই বলে, এতে স্থায়ী স্বচ্ছতা, রক্ষা, আর প্রচুর হালাল জীবিকা খুলে যায়।',
+        ],
+      },
+      {
+        heading: 'আরোগ্যের অক্ষর: হা, মীম, আর নূন',
+        paragraphs: [
+          'বুনিয়ানি বইগুলো বর্ণমালার উঁচু অক্ষরগুলোর জন্য নির্দিষ্ট আরোগ্যের গুণ চিহ্নিত করে। অক্ষর হা প্রদাহী উত্তাপ আর কামনা নেভায়। হা আটবার লিখে আল্লাহর নাম হাকিম, জ্ঞানী, হালিম, সহনশীল, আর হাইয়, জীবন্ত, এর সঙ্গে মিলিয়ে, সেই লেখা বিশুদ্ধ পানিতে গুলিয়ে দিলে জ্বর আর বুকে জ্বালা থামে। আংটির পাথরে হা খোদাই করলে নিম্ন যৌন কামনা, শাহওয়াহ, নেভে, সন্ধানকারীর আধ্যাত্মিক অবস্থা রক্ষা পায়।',
+          'অক্ষর মীম 40 দিনের চক্রের উপর শাসন করে। মীমের সরল তাবিজ প্রতিদিন দেখে কুরআন 3:26 পড়লে, কুলি আল্লাহুম্মা মালিকাল-মুলক, কথায় ভেদ আর কর্তৃত্ব আসে। অক্ষর নূন দেয় অন্তর্দৃষ্টি আর ভেতরের চোখ। নূন তেরোবার এক পরিষ্কার আয়নায় লিখে আলোর আয়াত, আয়াত আন-নূর, কুরআন 24:35, পড়লে মানসিক বিভ্রান্তি দূর হয় আর ভেতরের চোখ খোলে।',
+        ],
+      },
+    ],
+    terms: [
+      'জাতিগুলোর মধ্যে জাতিগুলো',
+      'জড় শরীর',
+      'জীবন্ত আত্মা',
+      'প্রথম অক্ষর, অক্ষরের রাজা',
+      'আলিফের ফেরেশতা, প্রথম চাঁদের মঞ্জিলের ফেরেশতা',
+      'দ্বিতীয় অক্ষর, প্রকাশিত মহাবিশ্বের শুরু',
+      'তৃতীয় অক্ষর',
+      'জীমের মর্যাদার আকাশের সেবক',
+      'চতুর্থ অক্ষর',
+      'উত্তাপ নেভানো অক্ষর',
+      '40 দিনের চক্রের অক্ষর',
+      'ভেতরের চোখের অক্ষর',
+    ],
+    closing:
+      'জাতি হিসেবে অক্ষর। প্রতিটি অক্ষরে এক শরীর আর এক আত্মা। আলিফ আর তার 111। বা আর তার রোজা। জীম আর তার ফেরেশতা। দাল আর তার চৌদ্দ দিন। হা, মীম, আর নূন, প্রতিটির নিজের কাজ। বই সবকিছু সেভাবেই লেখে যেভাবে পুরনো গুরুরা শিখিয়েছিলেন, পবিত্রতা আর অনুমতি কেন্দ্রে রেখে। আমি তা সেভাবেই দিলাম যেভাবে পেয়েছি, পড়াশোনার জন্য, আর কিছু নয়।',
+  },
 };
 
 // Hinglish questions intentionally EMPTY, same reason as TOPICS_HI:
@@ -1780,18 +3253,21 @@ const GUIDES_BN: Record<string, TopicLocalization> = {
 function topicMapFor(lang: SiteLanguage): Record<string, TopicLocalization> | null {
   if (lang === 'hi') return TOPICS_HI;
   if (lang === 'bn') return TOPICS_BN;
+  if (lang === 'ur') return TOPICS_UR;
   return null;
 }
 
 function questionMapFor(lang: SiteLanguage): Record<string, QuestionLocalization> | null {
   if (lang === 'hi') return QUESTIONS_HI;
   if (lang === 'bn') return QUESTIONS_BN;
+  if (lang === 'ur') return QUESTIONS_UR;
   return null;
 }
 
 function guideMapFor(lang: SiteLanguage): Record<string, TopicLocalization> | null {
   if (lang === 'hi') return GUIDES_HI;
   if (lang === 'bn') return GUIDES_BN;
+  if (lang === 'ur') return GUIDES_UR;
   return null;
 }
 
@@ -1836,17 +3312,17 @@ function localizeContent<T extends TopicContent | StudyGuide>(
   };
 }
 
-/** The topic with its Hinglish / Bengali fields, or the English topic as-is for 'en'. */
+/** The topic with its Hinglish / Bengali / Urdu fields, or the English topic as-is for 'en'. */
 export function localizeTopic(topic: TopicContent, lang: SiteLanguage): TopicContent {
   return localizeContent(topic, topicMapFor(lang)?.[topic.id]);
 }
 
-/** The guide with its Hinglish / Bengali fields, or the English guide as-is for 'en'. */
+/** The guide with its Hinglish / Bengali / Urdu fields, or the English guide as-is for 'en'. */
 export function localizeGuide(guide: StudyGuide, lang: SiteLanguage): StudyGuide {
   return localizeContent(guide, guideMapFor(lang)?.[guide.id]);
 }
 
-/** The question with its Hinglish / Bengali fields, or the English question as-is for 'en'. */
+/** The question with its Hinglish / Bengali / Urdu fields, or the English question as-is for 'en'. */
 export function localizeQuestion(question: TopicQuestion, lang: SiteLanguage): TopicQuestion {
   const loc = questionMapFor(lang)?.[question.id];
   if (!loc) return question;

@@ -8,6 +8,7 @@ const RECENT_KEY = 'khafi_recently_viewed';
 const THEME_KEY = 'khafi_theme';
 const PROGRESS_KEY = 'khafi_reading_progress';
 const SETTINGS_KEY = 'khafi_user_settings';
+const LANGUAGE_CHOSEN_KEY = 'khafi_language_chosen';
 const FOLLOW_UNLOCK_KEY = 'ilmeghayb_follow_unlocked';
 const BOOK_KEYS_KEY = 'ilmeghayb_book_keys';
 const BOOKMARKS_KEY = 'khafi_bookmarks';
@@ -185,6 +186,28 @@ export const storage = {
   saveSettings(settings: UserSettings): void {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      // ignore
+    }
+  },
+
+  // First-visit language choice: true once the visitor has ever
+  // picked a language (chooser screen or Settings). A visitor who
+  // already has a saved settings record picked one before this flag
+  // existed, so that counts too — the chooser is only for a truly
+  // first visit, and it never shows again after that.
+  hasChosenLanguage(): boolean {
+    try {
+      if (localStorage.getItem(LANGUAGE_CHOSEN_KEY) === '1') return true;
+      return localStorage.getItem(SETTINGS_KEY) !== null;
+    } catch {
+      return false;
+    }
+  },
+
+  setLanguageChosen(): void {
+    try {
+      localStorage.setItem(LANGUAGE_CHOSEN_KEY, '1');
     } catch {
       // ignore
     }

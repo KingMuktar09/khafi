@@ -1,10 +1,13 @@
 /**
- * Site languages: English, Hinglish, Bengali.
+ * Site languages: English, Hinglish, Bengali, Urdu.
  *
  * English is the primary language and the default for every visitor.
- * Hinglish (Roman-script Hindi/Urdu, in the channel's reel voice) and
- * Bengali (easy familiar words) are options in Settings only. The
- * choice is remembered on the device (UserSettings.language).
+ * Hinglish (Roman-script Hindi/Urdu, in the channel's reel voice),
+ * Bengali (easy familiar words) and Urdu (proper Urdu script, RTL)
+ * are options. The language is picked once, on the first visit, on
+ * a big chooser screen; after that it can only be changed in
+ * Settings. The choice is remembered on the device
+ * (UserSettings.language).
  *
  * What NEVER changes with the language:
  * - book titles, author names, and the @ghayb.chronicles handle
@@ -29,24 +32,25 @@ import { I18N_LIBRARY } from './i18n-library';
 import { I18N_TOOLS } from './i18n-tools';
 import { I18N_TOPICS } from './i18n-topics';
 
-export type SiteLanguage = 'en' | 'hi' | 'bn';
+export type SiteLanguage = 'en' | 'hi' | 'bn' | 'ur';
 
-/** The three choices, in the order the Settings picker shows them. */
+/** The four choices, in the order the Settings picker shows them. */
 export const SITE_LANGUAGES: { id: SiteLanguage; label: string; nativeLabel: string }[] = [
   { id: 'en', label: 'English', nativeLabel: 'English' },
   { id: 'hi', label: 'Hinglish', nativeLabel: 'Hinglish' },
   { id: 'bn', label: 'Bengali', nativeLabel: 'বাংলা' },
+  { id: 'ur', label: 'Urdu', nativeLabel: 'اردو' },
 ];
 
 /** Unknown or missing stored value falls back to English, the default. */
 export function resolveLanguage(value: unknown): SiteLanguage {
-  if (value === 'hi' || value === 'bn' || value === 'en') return value;
+  if (value === 'hi' || value === 'bn' || value === 'ur' || value === 'en') return value;
   return 'en';
 }
 
-/** True when the language reads right-to-left. None of ours does. */
-export function isRtlLanguage(_lang: SiteLanguage): boolean {
-  return false;
+/** True when the language reads right-to-left. Only Urdu does. */
+export function isRtlLanguage(lang: SiteLanguage): boolean {
+  return lang === 'ur';
 }
 
 type Dict = Record<string, string>;
@@ -113,10 +117,11 @@ const en: Dict = {
   'settings.animReduced': 'Reduced Motion',
   'settings.animReducedDesc': 'Minimal motion',
   'settings.language': 'Language',
-  'settings.languageNote': 'English is the main language. Pick Hinglish or Bengali to read the whole site in that language.',
+  'settings.languageNote': 'English is the main language. Pick Hinglish, Bengali or Urdu to read the whole site in that language.',
   'settings.languageEnglish': 'English',
   'settings.languageHinglish': 'Hinglish',
   'settings.languageBengali': 'Bengali',
+  'settings.languageUrdu': 'Urdu',
   'settings.done': 'Done',
 
   // ---- Follow gate ----
@@ -145,6 +150,10 @@ const en: Dict = {
   'home.languageSubtitle': 'Read the whole library in the language that feels easy to you.',
   'home.languageBarLabel': 'Language',
   'gate.keyLabel': 'Gate key',
+
+  // ---- First-visit language chooser ----
+  'chooser.title': 'Choose your language',
+  'chooser.subtitle': 'Tap your language. You can change it later in Settings.',
 };
 
 const hi: Dict = {
@@ -209,10 +218,11 @@ const hi: Dict = {
   'settings.animReduced': 'Kam Harkat',
   'settings.animReducedDesc': 'Bilkul kam harkat',
   'settings.language': 'Bhasha',
-  'settings.languageNote': 'English hi main language hai. Poori site Hinglish ya Bengali mein padhne ke liye yahan se chunein.',
+  'settings.languageNote': 'English hi main language hai. Poori site Hinglish, Bengali ya Urdu mein padhne ke liye yahan se chunein.',
   'settings.languageEnglish': 'English',
   'settings.languageHinglish': 'Hinglish',
   'settings.languageBengali': 'Bengali',
+  'settings.languageUrdu': 'Urdu',
   'settings.done': 'Ho gaya',
 
   // ---- Follow gate ----
@@ -241,6 +251,10 @@ const hi: Dict = {
   'home.languageSubtitle': 'Poori library us bhasha mein padhein jo aapko aasan lagti hai.',
   'home.languageBarLabel': 'Bhasha',
   'gate.keyLabel': 'Gate key',
+
+  // ---- First-visit language chooser ----
+  'chooser.title': 'Apni bhasha chunein',
+  'chooser.subtitle': 'Apni bhasha par tap karein. Baad mein Settings mein badal sakte hain.',
 };
 
 const bn: Dict = {
@@ -305,10 +319,11 @@ const bn: Dict = {
   'settings.animReduced': 'কম নড়াচড়া',
   'settings.animReducedDesc': 'একদম কম নড়াচড়া',
   'settings.language': 'ভাষা',
-  'settings.languageNote': 'ইংরেজিই মূল ভাষা। পুরো সাইট হিংলিশ বা বাংলায় পড়তে চাইলে এখান থেকে বেছে নিন।',
+  'settings.languageNote': 'ইংরেজিই মূল ভাষা। পুরো সাইট হিংলিশ, বাংলা বা উর্দুতে পড়তে চাইলে এখান থেকে বেছে নিন।',
   'settings.languageEnglish': 'ইংরেজি',
   'settings.languageHinglish': 'হিংলিশ',
   'settings.languageBengali': 'বাংলা',
+  'settings.languageUrdu': 'উর্দু',
   'settings.done': 'হয়ে গেছে',
 
   // ---- Follow gate ----
@@ -337,12 +352,118 @@ const bn: Dict = {
   'home.languageSubtitle': 'পুরো লাইব্রেরি সেই ভাষায় পড়ুন যেটা আপনার সহজ লাগে।',
   'home.languageBarLabel': 'ভাষা',
   'gate.keyLabel': 'গেটের চাবি',
+
+  // ---- First-visit language chooser ----
+  'chooser.title': 'আপনার ভাষা বেছে নিন',
+  'chooser.subtitle': 'আপনার ভাষায় ট্যাপ করুন। পরে সেটিংসে বদলাতে পারবেন।',
+};
+
+const ur: Dict = {
+  // ---- Navbar ----
+  'nav.home': 'ہوم',
+  'nav.library': 'لائبریری',
+  'nav.studyTools': 'مطالعے کے ٹولز',
+  'nav.topics': 'موضوعات',
+  'nav.more': 'مزید',
+  'nav.readingPaths': 'پڑھنے کے راستے',
+  'nav.timeline': 'تاریخ کی ٹائم لائن',
+  'nav.myShelf': 'میری شیلف',
+  'nav.findBook': 'کتاب تلاش کریں',
+  'nav.magicSquare': 'میجک اسکوائر',
+  'nav.magicSquareMaker': 'میجک اسکوائر بنانے والا',
+  'nav.amals': 'اعمال',
+  'nav.favorites': 'پسندیدہ',
+  'nav.info': 'معلومات',
+  'nav.instagram': 'Instagram',
+  'nav.admin': 'ایڈمن',
+  'nav.adminSignedIn': 'ایڈمن (سائن ان ہے)',
+  'nav.authenticated': 'سائن ان ہے',
+  'nav.settings': 'سیٹنگز',
+  'nav.lightTheme': 'ہلکی تھیم',
+  'nav.darkTheme': 'گہری تھیم',
+  'nav.searchPlaceholder': 'اس لائبریری میں تلاش کریں...',
+  'nav.closeMenu': 'مینیو بند کریں',
+  'nav.toggleMenu': 'مینیو کھولیں یا بند کریں',
+  'nav.switchLight': 'ہلکی تھیم پر جائیں',
+  'nav.switchDark': 'گہری تھیم پر جائیں',
+  'nav.byGhayb': 'by Ghayb Chronicles',
+
+  // ---- Footer ----
+  'footer.freeLine': 'اسلامی تاریخ اور حکمت پر مفت کتابیں • سب کے لیے کھلا ہے',
+  'footer.disclaimer':
+    'اعمال اور میجک اسکوائر آپ کی اپنی ذمہ داری پر ہیں۔ Ghayb Chronicles اور یہ لائبریری کسی بھی نتیجے کی ذمہ دار نہیں۔',
+
+  // ---- Settings modal ----
+  'settings.title': 'سیٹنگز',
+  'settings.subtitle': 'علمِ غیب لائبریری کو اپنے حساب سے سیٹ کریں',
+  'settings.close': 'سیٹنگز بند کریں',
+  'settings.appearance': 'شکل',
+  'settings.dark': 'گہری',
+  'settings.light': 'ہلکی',
+  'settings.system': 'سسٹم',
+  'settings.accentColor': 'رنگ',
+  'settings.colorGold': 'سنہری',
+  'settings.colorBlue': 'نیلا',
+  'settings.colorGreen': 'سبز',
+  'settings.colorPurple': 'جامنی',
+  'settings.colorRose': 'گلابی',
+  'settings.viewMode': 'دیکھنے کا طریقہ',
+  'settings.listView': 'لسٹ',
+  'settings.gridView': 'گرڈ',
+  'settings.fontScale': 'لفظوں کا سائز',
+  'settings.small': 'چھوٹا',
+  'settings.medium': 'درمیانہ',
+  'settings.large': 'بڑا',
+  'settings.animations': 'حرکت',
+  'settings.animNormal': 'عام',
+  'settings.animNormalDesc': 'ہلکی پھلکی حرکت',
+  'settings.animReduced': 'کم حرکت',
+  'settings.animReducedDesc': 'بالکل کم حرکت',
+  'settings.language': 'زبان',
+  'settings.languageNote': 'انگریزی ہی اصل زبان ہے۔ پوری سائٹ ہنگلش، بنگالی یا اردو میں پڑھنے کے لیے یہاں سے چنیں۔',
+  'settings.languageEnglish': 'انگریزی',
+  'settings.languageHinglish': 'ہنگلش',
+  'settings.languageBengali': 'بنگالی',
+  'settings.languageUrdu': 'اردو',
+  'settings.done': 'ہو گیا',
+
+  // ---- Follow gate ----
+  'gate.tagline':
+    'قرآن، نبی کی زندگی، صوفی حکمت اور اسلامی تاریخ پر کتابیں۔ ہر کتاب کے ساتھ اس کا ماخذ لکھا ہے۔ سب کا خیر مقدم ہے، کوئی اکاؤنٹ نہیں چاہیے۔',
+  'gate.followToEnter': 'لائبریری میں جانے کے لیے فالو کریں',
+  'gate.oneFollow': 'ایک فالو سے اس ڈیوائس پر ہر کتاب کھل جائے گی۔',
+  'gate.collections': 'مجموعے',
+  'gate.books': 'کتابیں',
+  'gate.free': 'مفت',
+  'gate.afterFollow': 'فالو کے بعد',
+  'gate.loading': 'لائبریری لوڈ ہو رہی ہے…',
+  'gate.followOnInstagram': 'Instagram پر @ghayb.chronicles کو فالو کریں',
+  'gate.followedUnlock': 'میں نے فالو کر لیا، لائبریری کھولیں',
+  'gate.orKey': 'یا چابی سے کھولیں',
+  'gate.keyPlaceholder': 'چابی ہے؟ یہاں لکھیں',
+  'gate.unlock': 'کھولیں',
+  'gate.checking': 'جانچ ہو رہی ہے…',
+  'gate.wrongKey': 'غلط چابی۔ دوبارہ کوشش کریں۔',
+  'gate.joinChannel': 'چابی پانے کے لیے براڈکاسٹ چینل جوائن کریں',
+  'gate.trustNote':
+    'یہ مفت لائبریری ہے، اس لیے کھولنا بھروسے پر ہوتا ہے۔ یہ آپ کا Instagram اکاؤنٹ نہیں جانچتی۔ پہلے فالو کریں، پھر انلاک دبائیں۔',
+  'gate.footnote': 'اسلامی تاریخ اور حکمت • تصوف اور چھپا ہوا علم، فن کے ذریعے',
+  'gate.adminSignIn': 'لائبریری ایڈمن؟ یہاں سائن ان کریں',
+  'home.languageTitle': 'اپنی زبان چنیں',
+  'home.languageSubtitle': 'پوری لائبریری اس زبان میں پڑھیں جو آپ کو آسان لگتی ہے۔',
+  'home.languageBarLabel': 'زبان',
+  'gate.keyLabel': 'گیٹ کی چابی',
+
+  // ---- First-visit language chooser ----
+  'chooser.title': 'اپنی زبان چنیں',
+  'chooser.subtitle': 'اپنی زبان پر ٹیپ کریں۔ بعد میں سیٹنگز میں بدل سکتے ہیں۔',
 };
 
 export const STRINGS: Record<SiteLanguage, Dict> = {
   en: { ...en, ...I18N_HOME.en, ...I18N_LIBRARY.en, ...I18N_TOOLS.en, ...I18N_TOPICS.en },
   hi: { ...hi, ...I18N_HOME.hi, ...I18N_LIBRARY.hi, ...I18N_TOOLS.hi, ...I18N_TOPICS.hi },
   bn: { ...bn, ...I18N_HOME.bn, ...I18N_LIBRARY.bn, ...I18N_TOOLS.bn, ...I18N_TOPICS.bn },
+  ur: { ...ur, ...I18N_HOME.ur, ...I18N_LIBRARY.ur, ...I18N_TOOLS.ur, ...I18N_TOPICS.ur },
 };
 
 /**

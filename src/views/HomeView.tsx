@@ -27,7 +27,6 @@ import { greetingForHour } from '../utils/greeting';
 import { t, tf } from '../data/i18n';
 import { HomeSkyCards } from '../components/special/HomeSkyCards';
 import { HomeReckonBox } from '../components/special/HomeReckonBox';
-import { LanguagePicker } from '../components/ui/LanguagePicker';
 
 export const HomeView: React.FC = () => {
   // Browse by topic and category, NOT by folders: the folders only say
@@ -154,9 +153,6 @@ export const HomeView: React.FC = () => {
           </form>
         </div>
       </div>
-
-      {/* Language picker — big, right at the top of Home, same choice as the top bar and Settings. */}
-      <LanguagePicker variant="large" />
 
       {/* The sky right now: live stat cards, then the reckon box. */}
       <HomeSkyCards />

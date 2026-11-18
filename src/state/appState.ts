@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import { storage } from '../services/storage';
 import { router } from '../router/router';
 import { ACCENT_PALETTES } from '../config/accentPalettes';
+import { isRtlLanguage } from '../data/i18n';
 import { JOURNEYS } from '../data/specialFeatures';
 import type { ReadingStats, ShelfMap, ShelfStatus } from '../data/tools';
 import { computeReadingStats, shelfBooks } from '../data/tools';
@@ -329,9 +330,12 @@ class AppState {
 
     // Language: the html lang attribute follows the Settings choice,
     // so the browser (and screen readers) know the page language, and
-    // the Bengali font rules in index.css (html[lang="bn"]) apply.
-    // English is the default; Hinglish keeps the Latin fonts.
-    root.setAttribute('lang', language === 'hi' ? 'hi' : language === 'bn' ? 'bn' : 'en');
+    // the Bengali / Urdu font rules in index.css (html[lang="bn"],
+    // html[lang="ur"]) apply. English is the default; Hinglish keeps
+    // the Latin fonts. Urdu also sets dir="rtl" so the whole layout
+    // mirrors for right-to-left reading.
+    root.setAttribute('lang', language);
+    root.setAttribute('dir', isRtlLanguage(language) ? 'rtl' : 'ltr');
 
     // 1. Appearance / Dark-Light Mode
     let isDark = true;
