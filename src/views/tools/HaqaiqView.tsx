@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
-import { ToolsLayout } from './ToolsLayout';
-import { ShellEmptyState } from './ShellEmptyState';
+import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { FilledToolPage } from './FilledToolPage';
 
 /**
- * Tier B shell only. Haqa'iq will hold records, when material is
- * supplied with a source, page, and permission note. No records
- * are shown here.
+ * Filled in Stage 3A from the Al Asrar notebook. Entries are listed
+ * below with their source named; the search box filters them.
  */
 export const HaqaiqView: React.FC = () => {
   const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filter = q
+    ? (entry: { title: string; body: string; source: string; arabic?: string; transliteration?: string; meaning?: string }) =>
+        [entry.title, entry.body, entry.source, entry.arabic ?? '', entry.transliteration ?? '', entry.meaning ?? '']
+          .some((field) => field.toLowerCase().includes(q))
+    : undefined;
 
   return (
-    <ToolsLayout
+    <FilledToolPage
+      content={AL_ASRAR_TOOLS['haqaiq']}
       title="Haqa'iq (Realities)"
       eyebrow="Realities"
-      subtitle="Records, listed and searchable — when supplied."
+      subtitle="Realities that live in the heart, not in books."
+      filter={filter}
     >
-      <section className="ms-card space-y-3">
-        <h2 className="ms-h2">What this section will hold</h2>
-        <p className="ms-body">
-          Haqa'iq is a set of records. When material is supplied, each record will appear here
-          with its source and page named, so a reader can look it up and check it.
-        </p>
-        <p className="ms-body">
-          Until then this page is only a template: a search box and a place where records will
-          be listed. No records have been added yet.
-        </p>
-      </section>
-
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" aria-label="Records">
         <label className="ms-label" htmlFor="haqaiq-search">
           Search records
         </label>
@@ -41,10 +36,6 @@ export const HaqaiqView: React.FC = () => {
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
-
-      <section className="ms-card" aria-label="Records">
-        <ShellEmptyState />
-      </section>
-    </ToolsLayout>
+    </FilledToolPage>
   );
 };

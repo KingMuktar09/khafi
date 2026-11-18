@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { router } from '../../router/router';
 import { TOOLS_INDEX } from '../../data/toolsIndex';
+import { TOPICS, topicRouteFor } from '../../data/topicsContent';
+import { TOPIC_QUESTIONS } from '../../data/topicsQuestions';
 import { ASMA_NAMES } from '../../data/asmaNames';
 import type { ViewName } from '../../types';
 
@@ -21,7 +23,7 @@ interface SearchHit {
 const MAX_NAME_HITS = 8;
 
 /**
- * Ctrl+K search overlay: searches the tool pages and the 99 Names
+ * Ctrl+K search overlay: searches the tool pages, the Topics and the 99 Names
  * (by Arabic, transliteration or meaning). Enter or a tap navigates;
  * a Name result opens the Asma page. Escape closes.
  */
@@ -70,7 +72,29 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
         arabic: name.arabic,
         route: 'tools-asma',
       }));
-    return [...toolHits, ...nameHits];
+    const topicHits: SearchHit[] = TOPICS.filter((topic) =>
+      [
+        topic.title,
+        topic.subtitle,
+        ...topic.terms.map((term) => term.transliteration),
+        ...topic.terms.map((term) => term.meaning),
+        ...topic.sections.map((section) => section.heading),
+      ].some((field) => field.toLowerCase().includes(q)),
+    ).map((topic) => ({
+      key: `topic-${topic.id}`,
+      title: topic.title,
+      detail: topic.subtitle,
+      route: topicRouteFor(topic.id),
+    }));
+    const questionHits: SearchHit[] = TOPIC_QUESTIONS.filter((item) =>
+      [item.question, ...item.answer].some((field) => field.toLowerCase().includes(q)),
+    ).map((item) => ({
+      key: `question-${item.id}`,
+      title: item.question,
+      detail: item.answer[0],
+      route: 'topics-questions' as ViewName,
+    }));
+    return [...toolHits, ...topicHits, ...questionHits, ...nameHits];
   }, [query]);
 
   if (!open) return null;
@@ -106,8 +130,8 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
             onKeyDown={(event) => {
               if (event.key === 'Enter') onEnter();
             }}
-            placeholder="Search tools and the 99 Names…"
-            aria-label="Search tools and the 99 Names"
+            placeholder="Search tools, topics and the 99 Names…"
+            aria-label="Search tools, topics and the 99 Names"
             className="ms-search-input flex-1 min-w-0 bg-transparent focus:outline-none"
           />
           <button
@@ -123,7 +147,7 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
         <div className="max-h-[60vh] overflow-y-auto">
           {query.trim() === '' ? (
             <p className="px-4 py-5 ms-body">
-              Try “letters”, “counter”, “notes”, or a Name such as “Rahman”.
+              Try “letters”, “counter”, “notes”, “Malakut”, or a Name such as “Rahman”.
             </p>
           ) : hits.length === 0 ? (
             <p className="px-4 py-5 ms-body">

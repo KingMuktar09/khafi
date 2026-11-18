@@ -159,3 +159,52 @@ describe('The four Tier A tools (Fawatih, Sawaqit, Shields, About) are wired', (
     expect(hub).not.toContain('still to be built');
   });
 });
+
+/** Stage 3A Topics: hub + eight topic pages + Questions. No index entry is needed. */
+const TOPIC_ROUTES = [
+  { route: 'topics', url: '/topics', view: 'TopicsHubView' },
+  { route: 'topic-retreat', url: '/topics/40-day-retreat', view: 'TopicRetreatView' },
+  { route: 'topic-malakut', url: '/topics/alam-al-malakut', view: 'TopicMalakutView' },
+  { route: 'topic-ruh', url: '/topics/ruh-and-soul', view: 'TopicRuhView' },
+  { route: 'topic-alif', url: '/topics/letter-alif', view: 'TopicAlifView' },
+  { route: 'topic-seal', url: '/topics/seal-of-solomon', view: 'TopicSealView' },
+  { route: 'topic-dreams', url: '/topics/three-kinds-of-dreams', view: 'TopicDreamsView' },
+  { route: 'topic-saba', url: '/topics/surah-saba-34-14', view: 'TopicSabaView' },
+  { route: 'topic-khidr', url: '/topics/al-khidr', view: 'TopicKhidrView' },
+  { route: 'topics-questions', url: '/topics/questions', view: 'QuestionsView' },
+] as const;
+
+describe('Stage 3A topic routes are wired', () => {
+  it('types.ts lists every topic ViewName', () => {
+    const types = readSource('src/types.ts');
+    for (const topic of TOPIC_ROUTES) {
+      expect(types).toContain(`'${topic.route}'`);
+    }
+  });
+
+  it('router.ts has a buildUrl case and a parseUrl case for every topic route', () => {
+    const router = readSource('src/router/router.ts');
+    for (const topic of TOPIC_ROUTES) {
+      expect(router).toContain(`case '${topic.route}':`);
+      expect(router).toContain(`return '${topic.url}';`);
+      expect(router).toContain(`pathname === '${topic.url}'`);
+      expect(router).toContain(`view: '${topic.route}'`);
+    }
+  });
+
+  it('App.tsx imports and renders every topic view', () => {
+    const app = readSource('src/App.tsx');
+    for (const topic of TOPIC_ROUTES) {
+      expect(app).toContain(`import { ${topic.view} }`);
+      expect(app).toContain(`case '${topic.route}':`);
+      expect(app).toContain(`<${topic.view} />`);
+    }
+  });
+
+  it('the Navbar links to Topics in the desktop More menu and the mobile drawer', () => {
+    const navbar = readSource('src/components/layout/Navbar.tsx');
+    expect(navbar).toContain(`moreLink('topics'`);
+    expect(navbar).toContain(`handleNav('topics')`);
+    expect(navbar).toContain(`'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topics-questions'`);
+  });
+});

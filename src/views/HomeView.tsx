@@ -22,6 +22,7 @@ import { HijriDate } from '../components/special/HijriDate';
 import { ReadingStats } from '../components/special/ReadingStats';
 import { RandomBookCard } from '../components/books/RandomBookCard';
 import { JOURNEYS, resolveJourneys, journeyProgress } from '../data/specialFeatures';
+import { getTopicOfTheDay, formatTopicDate, topicRouteFor } from '../data/topicsContent';
 
 export const HomeView: React.FC = () => {
   // Browse by topic and category, NOT by folders: the folders only say
@@ -31,6 +32,7 @@ export const HomeView: React.FC = () => {
   const allBooks = appState.getVisibleBooks();
   const booksInProgress = appState.getBooksInProgress();
   const journeys = resolveJourneys(allBooks);
+  const topicOfTheDay = getTopicOfTheDay(new Date());
 
   // Recent books (sorted by id or added date if available)
   const recentBooks = [...allBooks].slice(0, 5);
@@ -244,6 +246,24 @@ export const HomeView: React.FC = () => {
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">{tool.blurb}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Topic of the Day: one pre-made topic per day, in fixed order. */}
+      <section className="space-y-3 animate-fade-up" style={{ animationDelay: '90ms' }}>
+        <div
+          onClick={() => router.navigate(topicRouteFor(topicOfTheDay.topic.id))}
+          className="motion-item card-lift p-5 bg-[var(--bg-surface)] border border-[var(--gold)]/40 hover:border-[var(--gold)] rounded-xl cursor-pointer space-y-2 shadow-2xs"
+        >
+          <p className="text-[11px] tracking-[0.18em] uppercase text-[var(--gold)] font-semibold">
+            Topic of the Day · Day {topicOfTheDay.dayNumber} · {formatTopicDate(topicOfTheDay.date)}
+          </p>
+          <h2 className="font-display font-semibold text-lg text-[var(--text-main)] flex items-center gap-2">
+            <span>{topicOfTheDay.topic.title}</span>
+            <ArrowRight className="w-4 h-4 text-[var(--gold)] shrink-0" aria-hidden="true" />
+          </h2>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">{topicOfTheDay.topic.subtitle}</p>
+          <p className="text-xs text-[var(--gold)] font-medium">Read today&rsquo;s topic</p>
         </div>
       </section>
 

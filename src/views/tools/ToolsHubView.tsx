@@ -30,8 +30,24 @@ export const ToolsHubView: React.FC = () => {
         ))}
       </div>
 
+      <button
+        type="button"
+        onClick={() => router.navigate('topics')}
+        className="ms-card ms-card-hover text-left space-y-3 w-full"
+      >
+        <span className="ms-hub-index block">T</span>
+        <span className="flex items-center justify-between gap-3">
+          <span className="ms-hub-title">Topics</span>
+          <ArrowRight className="w-5 h-5 ms-gold shrink-0" aria-hidden="true" />
+        </span>
+        <span className="ms-body block">
+          Longer discussions from the books, with their sources named. 2 topics so far.
+        </span>
+      </button>
+
       <p className="ms-body text-center pt-2">
-        The shells below are empty for now — they hold only content supplied with its source and page.
+        4 shells remain empty for now (Works, Bakhur and Adad, Shurut, Glossary). They hold only
+        content supplied with its source and page.
       </p>
     </ToolsLayout>
   );

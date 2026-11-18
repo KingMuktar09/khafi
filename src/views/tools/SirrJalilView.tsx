@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
-import { ToolsLayout } from './ToolsLayout';
-import { ShellEmptyState } from './ShellEmptyState';
+import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { FilledToolPage } from './FilledToolPage';
 
 /**
- * Tier B shell only. al-Sirr al-Jalil will hold a monograph section,
- * when material is supplied with a source, page, and permission note.
- * No monograph text is shown here.
+ * Filled in Stage 3A from the Al Asrar notebook. Entries are listed
+ * below with their source named; the search box filters them.
  */
 export const SirrJalilView: React.FC = () => {
   const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filter = q
+    ? (entry: { title: string; body: string; source: string; arabic?: string; transliteration?: string; meaning?: string }) =>
+        [entry.title, entry.body, entry.source, entry.arabic ?? '', entry.transliteration ?? '', entry.meaning ?? '']
+          .some((field) => field.toLowerCase().includes(q))
+    : undefined;
 
   return (
-    <ToolsLayout
+    <FilledToolPage
+      content={AL_ASRAR_TOOLS['sirr-al-jalil']}
       title="al-Sirr al-Jalil"
       eyebrow="Monograph"
-      subtitle="A monograph section — when supplied."
+      subtitle="The Great Secret, and the Name that opens it."
+      filter={filter}
     >
-      <section className="ms-card space-y-3">
-        <h2 className="ms-h2">What this section will hold</h2>
-        <p className="ms-body">
-          al-Sirr al-Jalil is a single monograph — one longer piece of writing, kept in one place.
-          When material is supplied, it will appear here with its source and page named.
-        </p>
-        <p className="ms-body">
-          Until then this page is only a template: a search box and a place where the monograph
-          will be shown. Nothing has been added yet.
-        </p>
-      </section>
-
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" aria-label="Monograph">
         <label className="ms-label" htmlFor="sirr-jalil-search">
           Search the monograph
         </label>
@@ -41,10 +36,6 @@ export const SirrJalilView: React.FC = () => {
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
-
-      <section className="ms-card" aria-label="Monograph">
-        <ShellEmptyState />
-      </section>
-    </ToolsLayout>
+    </FilledToolPage>
   );
 };

@@ -112,6 +112,26 @@ class Router {
         return '/wafq';
       case 'amals':
         return '/amals';
+      case 'topics':
+        return '/topics';
+      case 'topic-retreat':
+        return '/topics/40-day-retreat';
+      case 'topic-malakut':
+        return '/topics/alam-al-malakut';
+      case 'topic-ruh':
+        return '/topics/ruh-and-soul';
+      case 'topic-alif':
+        return '/topics/letter-alif';
+      case 'topic-seal':
+        return '/topics/seal-of-solomon';
+      case 'topic-dreams':
+        return '/topics/three-kinds-of-dreams';
+      case 'topic-saba':
+        return '/topics/surah-saba-34-14';
+      case 'topic-khidr':
+        return '/topics/al-khidr';
+      case 'topics-questions':
+        return '/topics/questions';
       case 'tools':
         return '/tools';
       case 'tools-huruf':
@@ -252,6 +272,46 @@ class Router {
 
     if (pathname === '/amals') {
       return { view: 'amals' };
+    }
+
+    if (pathname === '/topics') {
+      return { view: 'topics' };
+    }
+
+    if (pathname === '/topics/40-day-retreat') {
+      return { view: 'topic-retreat' };
+    }
+
+    if (pathname === '/topics/alam-al-malakut') {
+      return { view: 'topic-malakut' };
+    }
+
+    if (pathname === '/topics/ruh-and-soul') {
+      return { view: 'topic-ruh' };
+    }
+
+    if (pathname === '/topics/letter-alif') {
+      return { view: 'topic-alif' };
+    }
+
+    if (pathname === '/topics/seal-of-solomon') {
+      return { view: 'topic-seal' };
+    }
+
+    if (pathname === '/topics/three-kinds-of-dreams') {
+      return { view: 'topic-dreams' };
+    }
+
+    if (pathname === '/topics/surah-saba-34-14') {
+      return { view: 'topic-saba' };
+    }
+
+    if (pathname === '/topics/al-khidr') {
+      return { view: 'topic-khidr' };
+    }
+
+    if (pathname === '/topics/questions') {
+      return { view: 'topics-questions' };
     }
 
     if (pathname === '/tools') {

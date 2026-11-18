@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ToolsLayout } from './ToolsLayout';
-import { ShellEmptyState } from './ShellEmptyState';
+import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { FilledToolPage } from './FilledToolPage';
 
 const CHAPTERS = [
   'Front matter',
@@ -9,31 +9,20 @@ const CHAPTERS = [
 ];
 
 /**
- * Tier B shell only. Kitab will hold the 20 chapters plus front and
- * back matter, when material is supplied with a source, page, and
- * permission note. No chapter text is shown here.
+ * Filled in Stage 3A from the Al Asrar notebook. The chapter filter
+ * is kept from the shell; the entries here are general notes about
+ * the Book, not chapter text, so the filter does not narrow them.
  */
 export const KitabView: React.FC = () => {
   const [chapter, setChapter] = useState('All chapters');
 
   return (
-    <ToolsLayout
+    <FilledToolPage
+      content={AL_ASRAR_TOOLS['kitab']}
       title="Kitab (The Book)"
       eyebrow="The Book"
-      subtitle="The book, chapter by chapter — front matter, 20 chapters, and back matter, when supplied."
+      subtitle="What the books say about the Book, from the books themselves."
     >
-      <section className="ms-card space-y-3">
-        <h2 className="ms-h2">What this section will hold</h2>
-        <p className="ms-body">
-          Kitab is the book itself, laid out so a reader can find a chapter and read it in order.
-          When material is supplied, each chapter will appear here with its source and page named.
-        </p>
-        <p className="ms-body">
-          Until then this page is only a template: a chapter filter and a place where chapters
-          will be listed. Nothing has been filled in yet.
-        </p>
-      </section>
-
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor="kitab-chapter">
           Chapter
@@ -51,17 +40,12 @@ export const KitabView: React.FC = () => {
             </button>
           ))}
         </div>
+        {chapter !== 'All chapters' ? (
+          <p className="ms-note-box">
+            These entries are general notes about the Book, not chapter text, so the chapter filter does not narrow them.
+          </p>
+        ) : null}
       </div>
-
-      <section className="ms-card" aria-label="Chapters">
-        <ShellEmptyState
-          message={
-            chapter === 'All chapters'
-              ? 'Nothing here yet — chapters are added only from material supplied with a source, page, and permission note.'
-              : `Nothing in ${chapter} yet — chapters are added only from material supplied with a source, page, and permission note.`
-          }
-        />
-      </section>
-    </ToolsLayout>
+    </FilledToolPage>
   );
 };

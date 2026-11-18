@@ -20,6 +20,18 @@ import { BookFinderView } from './views/BookFinderView';
 import { WafqView } from './views/WafqView';
 import { AmalsView } from './views/AmalsView';
 
+// Topics (Stage 3A): long-form discussions, behind the gate.
+import { TopicsHubView } from './views/topics/TopicsHubView';
+import { TopicRetreatView } from './views/topics/TopicRetreatView';
+import { TopicMalakutView } from './views/topics/TopicMalakutView';
+import { TopicRuhView } from './views/topics/TopicRuhView';
+import { TopicAlifView } from './views/topics/TopicAlifView';
+import { TopicSealView } from './views/topics/TopicSealView';
+import { TopicDreamsView } from './views/topics/TopicDreamsView';
+import { TopicSabaView } from './views/topics/TopicSabaView';
+import { TopicKhidrView } from './views/topics/TopicKhidrView';
+import { QuestionsView } from './views/topics/QuestionsView';
+
 // Study tools (Phase 1): calculators + device-only tools, behind the gate.
 import { ToolsHubView } from './views/tools/ToolsHubView';
 import { HurufView } from './views/tools/HurufView';
@@ -158,6 +170,26 @@ export default function App() {
         return <WafqView />;
       case 'amals':
         return <AmalsView />;
+      case 'topics':
+        return <TopicsHubView />;
+      case 'topic-retreat':
+        return <TopicRetreatView />;
+      case 'topic-malakut':
+        return <TopicMalakutView />;
+      case 'topic-ruh':
+        return <TopicRuhView />;
+      case 'topic-alif':
+        return <TopicAlifView />;
+      case 'topic-seal':
+        return <TopicSealView />;
+      case 'topic-dreams':
+        return <TopicDreamsView />;
+      case 'topic-saba':
+        return <TopicSabaView />;
+      case 'topic-khidr':
+        return <TopicKhidrView />;
+      case 'topics-questions':
+        return <QuestionsView />;
       case 'tools':
         return <ToolsHubView />;
       case 'tools-huruf':
