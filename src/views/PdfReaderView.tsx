@@ -112,10 +112,11 @@ export const PdfReaderView: React.FC = () => {
   }
 
   // Paid gate (closes the direct /read/<id> bypass): a paid book never
-  // opens its reader, download or Drive link for a normal user. Admins
-  // read paid books directly; everyone else gets the locked pay screen.
+  // opens its reader, download or Drive link for a locked visitor. Admins
+  // read paid books directly, and so do gate-unlocked followers — paid
+  // books are FREE for followers, no payment at all.
   const isAdmin = appState.adminAuthenticated;
-  if (book.isPaid && !isAdmin) {
+  if (book.isPaid && !isAdmin && !storage.hasFollowUnlocked()) {
     return (
       <div className="animate-fade-in py-2 max-w-2xl mx-auto font-sans">
         <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-5 sm:p-6">

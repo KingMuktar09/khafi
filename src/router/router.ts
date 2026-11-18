@@ -128,6 +128,60 @@ class Router {
         return '/tools/grimoire';
       case 'tools-method':
         return '/tools/method';
+      case 'tools-today':
+        return '/tools/today';
+      case 'tools-hours':
+        return '/tools/hours';
+      case 'tools-moon':
+        return '/tools/moon';
+      case 'tools-mansions':
+        return '/tools/mansions';
+      case 'tools-falak':
+        return '/tools/falak';
+      case 'tools-majlis':
+        return '/tools/majlis';
+      case 'tools-forge':
+        return '/tools/forge';
+      case 'tools-qawaid':
+        return '/tools/qawaid';
+      case 'tools-kitab':
+        return '/tools/kitab';
+      case 'tools-talasim':
+        return '/tools/talasim';
+      case 'tools-ashkal':
+        return '/tools/ashkal';
+      case 'tools-figure-forge':
+        return '/tools/figure-forge';
+      case 'tools-talism-studio':
+        return '/tools/talism-studio';
+      case 'tools-haqaiq':
+        return '/tools/haqaiq';
+      case 'tools-shart':
+        return '/tools/shart';
+      case 'tools-sirr-al-jalil':
+        return '/tools/sirr-al-jalil';
+      case 'tools-durus':
+        return '/tools/durus';
+      case 'tools-index':
+        return '/tools/index';
+      case 'tools-library':
+        return '/tools/library';
+      case 'tools-atlas':
+        return '/tools/atlas';
+      case 'tools-qalam':
+        return '/tools/qalam';
+      case 'tools-khatam':
+        return '/tools/khatam';
+      case 'tools-plate':
+        return '/tools/plate';
+      case 'tools-works':
+        return '/tools/works';
+      case 'tools-bakhur-adad':
+        return '/tools/bakhur-adad';
+      case 'tools-shurut':
+        return '/tools/shurut';
+      case 'tools-glossary':
+        return '/tools/glossary';
       default:
         return '/';
     }
@@ -222,6 +276,114 @@ class Router {
 
     if (pathname === '/tools/method') {
       return { view: 'tools-method' };
+    }
+
+    if (pathname === '/tools/today') {
+      return { view: 'tools-today' };
+    }
+
+    if (pathname === '/tools/hours') {
+      return { view: 'tools-hours' };
+    }
+
+    if (pathname === '/tools/moon') {
+      return { view: 'tools-moon' };
+    }
+
+    if (pathname === '/tools/mansions') {
+      return { view: 'tools-mansions' };
+    }
+
+    if (pathname === '/tools/falak') {
+      return { view: 'tools-falak' };
+    }
+
+    if (pathname === '/tools/majlis') {
+      return { view: 'tools-majlis' };
+    }
+
+    if (pathname === '/tools/forge') {
+      return { view: 'tools-forge' };
+    }
+
+    if (pathname === '/tools/qawaid') {
+      return { view: 'tools-qawaid' };
+    }
+
+    if (pathname === '/tools/kitab') {
+      return { view: 'tools-kitab' };
+    }
+
+    if (pathname === '/tools/talasim') {
+      return { view: 'tools-talasim' };
+    }
+
+    if (pathname === '/tools/ashkal') {
+      return { view: 'tools-ashkal' };
+    }
+
+    if (pathname === '/tools/figure-forge') {
+      return { view: 'tools-figure-forge' };
+    }
+
+    if (pathname === '/tools/talism-studio') {
+      return { view: 'tools-talism-studio' };
+    }
+
+    if (pathname === '/tools/haqaiq') {
+      return { view: 'tools-haqaiq' };
+    }
+
+    if (pathname === '/tools/shart') {
+      return { view: 'tools-shart' };
+    }
+
+    if (pathname === '/tools/sirr-al-jalil') {
+      return { view: 'tools-sirr-al-jalil' };
+    }
+
+    if (pathname === '/tools/durus') {
+      return { view: 'tools-durus' };
+    }
+
+    if (pathname === '/tools/index') {
+      return { view: 'tools-index' };
+    }
+
+    if (pathname === '/tools/library') {
+      return { view: 'tools-library' };
+    }
+
+    if (pathname === '/tools/atlas') {
+      return { view: 'tools-atlas' };
+    }
+
+    if (pathname === '/tools/qalam') {
+      return { view: 'tools-qalam' };
+    }
+
+    if (pathname === '/tools/khatam') {
+      return { view: 'tools-khatam' };
+    }
+
+    if (pathname === '/tools/plate') {
+      return { view: 'tools-plate' };
+    }
+
+    if (pathname === '/tools/works') {
+      return { view: 'tools-works' };
+    }
+
+    if (pathname === '/tools/bakhur-adad') {
+      return { view: 'tools-bakhur-adad' };
+    }
+
+    if (pathname === '/tools/shurut') {
+      return { view: 'tools-shurut' };
+    }
+
+    if (pathname === '/tools/glossary') {
+      return { view: 'tools-glossary' };
     }
 
     return { view: 'home' };

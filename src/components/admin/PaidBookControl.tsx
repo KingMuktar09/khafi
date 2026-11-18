@@ -12,11 +12,10 @@ interface PaidBookControlProps {
  * The one place where a book is made paid or free.
  *
  * - One toggle: "Paid book". Off = free, anyone can read it.
- * - One price field in ₹ (INR), shown only when paid. A paid book needs a price.
- * - One optional note for readers (e.g. where to send payment proof).
- * - Payment itself is always by UPI (set once in Payment settings). There is
- *   no payment gateway and no automatic check — after a visitor pays, the
- *   admin unlocks access by hand.
+ * - One optional price field in ₹ (INR), shown only when paid. The price
+ *   is kept for reference only: paid books are FREE for followers, no
+ *   payment is ever taken, so a paid book needs no price.
+ * - One optional note for readers.
  */
 export const PaidBookControl: React.FC<PaidBookControlProps> = ({ book, onChange }) => {
   const isPaid = Boolean(book.isPaid);
@@ -45,7 +44,7 @@ export const PaidBookControl: React.FC<PaidBookControlProps> = ({ book, onChange
           Paid book
         </span>
         <span className="text-[11px] text-[var(--text-muted)]">
-          {isPaid ? 'Visitors pay before reading.' : 'Free — anyone can read it.'}
+          {isPaid ? 'Followers read it free once unlocked.' : 'Free — anyone can read it.'}
         </span>
       </label>
 
@@ -53,7 +52,7 @@ export const PaidBookControl: React.FC<PaidBookControlProps> = ({ book, onChange
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-[var(--text-muted)] mb-1 font-medium text-xs">
-              Price (₹ INR) *
+              Price (₹ INR) (optional, reference only — no payment is taken)
             </label>
             <input
               type="number"
@@ -78,15 +77,15 @@ export const PaidBookControl: React.FC<PaidBookControlProps> = ({ book, onChange
               value={book.paymentNote || ''}
               onChange={(e) => onChange({ paymentNote: e.target.value })}
               className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
-              placeholder="e.g. Message @ghayb.chronicles after paying"
+              placeholder="e.g. Free for followers — follow @ghayb.chronicles to unlock"
             />
           </div>
         </div>
       )}
 
       <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">
-        Paid by UPI (set once in Payment settings below). No automatic check —
-        after a visitor pays, you unlock their access by hand.
+        Paid books are free for followers — locked visitors see a
+        followers-only lock screen, never a payment screen.
       </p>
     </div>
   );

@@ -9,27 +9,30 @@ export const ToolsHubView: React.FC = () => {
   return (
     <ToolsLayout
       title="Study Tools"
+      eyebrow="The Study Tools"
       subtitle="Small tools for studying letters, numbers and your own reading notes. Nothing here promises an outcome — it is all for study."
     >
-      <div className="grid gap-3 sm:grid-cols-2">
-        {TOOLS_INDEX.map((tool) => (
+      <div className="grid gap-4 sm:grid-cols-2">
+        {TOOLS_INDEX.map((tool, index) => (
           <button
             key={tool.id}
             type="button"
             onClick={() => router.navigate(tool.route)}
-            className="text-left bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-5 space-y-2 hover:border-[var(--gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] transition-colors"
+            className="ms-card ms-card-hover text-left space-y-3"
           >
+            <span className="ms-hub-index block">{String(index + 1).padStart(2, '0')}</span>
             <span className="flex items-center justify-between gap-3">
-              <span className="font-display font-semibold text-lg text-[var(--text-main)]">{tool.title}</span>
-              <ArrowRight className="w-5 h-5 text-[var(--gold)] shrink-0" aria-hidden="true" />
+              <span className="ms-hub-title">{tool.title}</span>
+              <ArrowRight className="w-5 h-5 ms-gold shrink-0" aria-hidden="true" />
             </span>
-            <span className="block text-sm text-[var(--text-muted)] leading-relaxed">{tool.blurb}</span>
+            <span className="ms-body block">{tool.blurb}</span>
           </button>
         ))}
       </div>
 
-      <p className="text-sm text-[var(--text-muted)] text-center pt-2">
-        More tools are coming in later phases — planetary hours, the moon and mansions, and magic squares.
+      <p className="ms-body text-center pt-2">
+        The shells below are empty for now — they hold only content supplied with its source and page.
+        Four more tools (Fawatih, Sawaqit, Shields, About) are still to be built.
       </p>
     </ToolsLayout>
   );

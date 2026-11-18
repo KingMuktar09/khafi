@@ -3,6 +3,7 @@ import { AlertCircle, RefreshCw, Download } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { downloadFileFromUrl } from '../../utils/fileUtils';
+import { getFollowUnlockHeaders } from '../../services/api';
 
 // Configure PDF.js worker using Vite asset URL or CDN fallback
 if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
@@ -385,6 +386,9 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
       try {
         activeTask = pdfjsLib.getDocument({
           url: pdfUrl,
+          // Paid books are free for followers: send the unlock flag so
+          // the server streams a paid file instead of 402.
+          httpHeaders: getFollowUnlockHeaders(),
           cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version || '4.0.379'}/cmaps/`,
           cMapPacked: true,
           enableXfa: true,
@@ -400,7 +404,10 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
         if (isCancelled) throw primaryErr;
 
         // Secondary Fallback: Direct fetch -> ArrayBuffer -> Uint8Array
-        const response = await fetch(pdfUrl, { credentials: 'same-origin' });
+        const response = await fetch(pdfUrl, {
+          credentials: 'same-origin',
+          headers: getFollowUnlockHeaders(),
+        });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText || 'Failed to fetch PDF file'}`);
         }

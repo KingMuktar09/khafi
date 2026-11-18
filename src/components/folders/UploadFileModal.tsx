@@ -618,10 +618,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
   // one file never stops the others.
   const startUpload = async () => {
     if (queue.length === 0) return;
-    if (batchPaid.isPaid && !(typeof batchPaid.price === 'number' && batchPaid.price > 0)) {
-      setGeneralError('Set a price in ₹ for the paid books before uploading.');
-      return;
-    }
+    // No price needed for batch paid: paid books are free for followers.
     setIsUploading(true);
     setGeneralError('');
     cancelledRef.current = false;
@@ -1145,7 +1142,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
                       onChange={(patch) => setBatchPaid((prev) => ({ ...prev, ...patch }))}
                     />
                     <p className="text-[11px] text-[var(--text-faint)] mt-1">
-                      One price applies to every book in this batch. Payment is by UPI; you unlock access by hand.
+                      One price applies to every book in this batch. Paid books are free for followers — locked visitors see a followers-only lock, never a payment screen.
                     </p>
                   </div>
                   <div>

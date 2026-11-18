@@ -30,6 +30,39 @@ import { WirdView } from './views/tools/WirdView';
 import { GrimoireView } from './views/tools/GrimoireView';
 import { MethodView } from './views/tools/MethodView';
 
+// Study tools (Phase 2): time and sky facts, behind the gate.
+import { TodayView } from './views/tools/TodayView';
+import { HoursView } from './views/tools/HoursView';
+import { MoonView } from './views/tools/MoonView';
+import { MansionsView } from './views/tools/MansionsView';
+import { FalakView } from './views/tools/FalakView';
+import { MajlisView } from './views/tools/MajlisView';
+
+// Study tools (Phase 3): magic squares with a separate validator.
+import { ForgeView } from './views/tools/ForgeView';
+import { QawaidView } from './views/tools/QawaidView';
+
+// Study tools (Phase 4): Tier B shells — templates and empty states only.
+import { KitabView } from './views/tools/KitabView';
+import { TalasimView } from './views/tools/TalasimView';
+import { AshkalView } from './views/tools/AshkalView';
+import { FigureForgeView } from './views/tools/FigureForgeView';
+import { TalismStudioView } from './views/tools/TalismStudioView';
+import { HaqaiqView } from './views/tools/HaqaiqView';
+import { ShartView } from './views/tools/ShartView';
+import { SirrJalilView } from './views/tools/SirrJalilView';
+import { DurusView } from './views/tools/DurusView';
+import { IndexView } from './views/tools/IndexView';
+import { ToolsLibraryView } from './views/tools/ToolsLibraryView';
+import { AtlasView } from './views/tools/AtlasView';
+import { QalamView } from './views/tools/QalamView';
+import { KhatamView } from './views/tools/KhatamView';
+import { PlateView } from './views/tools/PlateView';
+import { WorksView } from './views/tools/WorksView';
+import { BakhurAdadView } from './views/tools/BakhurAdadView';
+import { ShurutView } from './views/tools/ShurutView';
+import { GlossaryView } from './views/tools/GlossaryView';
+
 // Heavy views are lazy-loaded so the first paint stays light on mobile:
 // the PDF reader (pdf.js) and the admin dashboard only download when opened.
 const PdfReaderView = lazy(() => import('./views/PdfReaderView').then((m) => ({ default: m.PdfReaderView })));
@@ -137,6 +170,60 @@ export default function App() {
         return <GrimoireView />;
       case 'tools-method':
         return <MethodView />;
+      case 'tools-today':
+        return <TodayView />;
+      case 'tools-hours':
+        return <HoursView />;
+      case 'tools-moon':
+        return <MoonView />;
+      case 'tools-mansions':
+        return <MansionsView />;
+      case 'tools-falak':
+        return <FalakView />;
+      case 'tools-majlis':
+        return <MajlisView />;
+      case 'tools-forge':
+        return <ForgeView />;
+      case 'tools-qawaid':
+        return <QawaidView />;
+      case 'tools-kitab':
+        return <KitabView />;
+      case 'tools-talasim':
+        return <TalasimView />;
+      case 'tools-ashkal':
+        return <AshkalView />;
+      case 'tools-figure-forge':
+        return <FigureForgeView />;
+      case 'tools-talism-studio':
+        return <TalismStudioView />;
+      case 'tools-haqaiq':
+        return <HaqaiqView />;
+      case 'tools-shart':
+        return <ShartView />;
+      case 'tools-sirr-al-jalil':
+        return <SirrJalilView />;
+      case 'tools-durus':
+        return <DurusView />;
+      case 'tools-index':
+        return <IndexView />;
+      case 'tools-library':
+        return <ToolsLibraryView />;
+      case 'tools-atlas':
+        return <AtlasView />;
+      case 'tools-qalam':
+        return <QalamView />;
+      case 'tools-khatam':
+        return <KhatamView />;
+      case 'tools-plate':
+        return <PlateView />;
+      case 'tools-works':
+        return <WorksView />;
+      case 'tools-bakhur-adad':
+        return <BakhurAdadView />;
+      case 'tools-shurut':
+        return <ShurutView />;
+      case 'tools-glossary':
+        return <GlossaryView />;
       case 'info':
         return <InfoView />;
       case 'admin':

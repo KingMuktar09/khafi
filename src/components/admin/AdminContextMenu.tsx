@@ -35,8 +35,8 @@ interface AdminContextMenuProps {
   onEditDescription: () => void;
   onMove: () => void;
   onToggleVisibility: () => void;
-  /** Book only: one-click paid/free toggle (opens the edit form when a
-   * price is needed first). */
+  /** Book only: one-click paid/free toggle (no price needed — paid books
+   * are free for followers). */
   onTogglePaid?: () => void;
   onDelete: () => void;
 }

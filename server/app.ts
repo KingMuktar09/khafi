@@ -159,6 +159,24 @@ export function verifyAdminRequest(req: express.Request): boolean {
   return verifySessionToken(token);
 }
 
+// Paid books are FREE for followers: a visitor who unlocked the library
+// gate (follow tap or gate key) sends `x-follow-unlocked: 1` with catalog
+// and file requests, and the server believes it. TRUST-BASED, exactly like
+// the gate itself — the header carries only a boolean, never the gate key
+// or any secret, and anyone can send it. It is NOT a verified check.
+export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
+
+export function hasFollowUnlocked(req: express.Request): boolean {
+  return req.headers[FOLLOW_UNLOCK_HEADER] === '1';
+}
+
+// One predicate for the paid-book rule, used by sanitizeBook and by the
+// stream/download guards: a paid book is locked only for a visitor who is
+// neither the admin nor a gate-unlocked follower.
+export function isPaidBookLocked(book: any, isAdmin: boolean, isFollowUnlocked: boolean): boolean {
+  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlocked;
+}
+
 // Ensure data and uploads directories exist (using /tmp on serverless environments like Vercel)
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const baseDataDir = isServerless ? "/tmp" : process.cwd();
@@ -695,7 +713,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token");
+  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked");
   res.setHeader(
     "Access-Control-Expose-Headers",
     "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type"
@@ -1024,12 +1042,13 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
     );
   }
 
-  // Paid gate: a paid catalog book is never streamed to a normal user.
+  // Paid gate: a paid catalog book is never streamed to a locked visitor.
   // Admins (and the admin previewing a just-uploaded file, which has no
-  // catalog book yet) are unaffected.
-  if (book?.isPaid && !verifyAdminRequest(req)) {
+  // catalog book yet) are unaffected, and so are followers: a visitor who
+  // unlocked the gate reads paid books free (see hasFollowUnlocked).
+  if (isPaidBookLocked(book, verifyAdminRequest(req), hasFollowUnlocked(req))) {
     res.status(402).json({
-      error: `This book is paid${typeof book.price === 'number' ? ` (₹${book.price})` : ''}. Pay by UPI on its book page and message @ghayb.chronicles with your payment proof to unlock it.`,
+      error: 'This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it.',
     });
     return;
   }
@@ -1077,7 +1096,7 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
       "Content-Disposition": "inline",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-      "Access-Control-Allow-Headers": "Range, Authorization, Content-Type, Accept, Origin, x-admin-token",
+      "Access-Control-Allow-Headers": "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked",
       "Access-Control-Expose-Headers": "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type",
     };
 
@@ -1138,7 +1157,7 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
         "Content-Disposition": "inline",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-        "Access-Control-Allow-Headers": "Range, Authorization, Content-Type, Accept, Origin, x-admin-token",
+        "Access-Control-Allow-Headers": "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked",
         "Access-Control-Expose-Headers":
           "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type",
       };
@@ -1267,10 +1286,11 @@ app.get(pdfDownloadRoutes, async (req, res) => {
     (b: any) => b.id === cleanId || b.id === rawId || b.driveFileId === cleanId
   );
 
-  // Paid gate: a paid catalog book is never downloadable by a normal user.
-  if (book?.isPaid && !verifyAdminRequest(req)) {
+  // Paid gate: a paid catalog book is never downloadable by a locked
+  // visitor. Admins and gate-unlocked followers download it free.
+  if (isPaidBookLocked(book, verifyAdminRequest(req), hasFollowUnlocked(req))) {
     res.status(402).json({
-      error: `This book is paid${typeof book.price === 'number' ? ` (₹${book.price})` : ''}. Pay by UPI on its book page and message @ghayb.chronicles with your payment proof to unlock it.`,
+      error: 'This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it.',
     });
     return;
   }
@@ -1479,7 +1499,7 @@ app.get(["/api/download", "/download"], async (req, res) => {
   res.sendFile(filePath);
 });
 
-export function sanitizeBook(book: any, isAdmin = true) {
+export function sanitizeBook(book: any, isAdmin = true, isFollowUnlocked = false) {
   if (!book) return book;
   const {
     driveUrl,
@@ -1495,10 +1515,12 @@ export function sanitizeBook(book: any, isAdmin = true) {
     ...rest
   } = book;
 
-  // Paid books: a normal visitor must never be handed a working open or
-  // download link. Admins keep the links (they read paid books directly).
-  // The pay screen is the only thing a visitor sees for a paid book.
-  if (!isAdmin && rest.isPaid) {
+  // Paid books: a locked visitor must never be handed a working open or
+  // download link. Admins keep the links (they read paid books directly),
+  // and so do followers — paid books are FREE for gate-unlocked visitors,
+  // no payment at all. The lock screen is the only thing a locked visitor
+  // sees for a paid book.
+  if (isPaidBookLocked(rest, isAdmin, isFollowUnlocked)) {
     const { driveFileId, externalUrl, fileUrl, pdfUrl, ...paidRest } = rest;
     return { ...paidRest, fileUrl: '', pdfUrl: '' };
   }
@@ -1551,10 +1573,10 @@ export function sanitizeFolder(folder: any) {
   return folderRest;
 }
 
-export function sanitizeCatalog(catalog: any, isAdmin = true) {
+export function sanitizeCatalog(catalog: any, isAdmin = true, isFollowUnlocked = false) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
-  const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin));
+  const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin, isFollowUnlocked));
   // Admin-chosen topic/category order survives the sanitiser — without
   // these, the public site would lose the arrange order on every load.
   const categoryOrder = Array.isArray(catalog.categoryOrder)
@@ -1588,10 +1610,12 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
     catalog = readCatalog();
   }
 
-  // Non-admin catalogs have paid-book links stripped (see sanitizeBook)
-  // and oversized inline covers dropped, so the public payload stays
-  // small and a paid book can never be opened from it.
-  const safeCatalog = sanitizeCatalog(catalog, isAdmin);
+  // Non-admin catalogs have locked paid-book links stripped (see
+  // sanitizeBook) and oversized inline covers dropped, so the public
+  // payload stays small and a paid book can never be opened from it —
+  // unless the visitor unlocked the gate, in which case paid books are
+  // free for them and the links stay.
+  const safeCatalog = sanitizeCatalog(catalog, isAdmin, hasFollowUnlocked(req));
 
   if (isAdmin) {
     // Admin edits must never be served stale.
@@ -1601,9 +1625,10 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
     // Filter visible folders & books for normal readers. A short shared
     // edge cache (60s) makes repeat loads fast and, as a side effect,
     // serves one consistent catalog while the function instances behind
-    // it may hold different /tmp copies. Vary on the admin token so an
-    // admin response is never served to a visitor.
-    res.set('Vary', 'x-admin-token');
+    // it may hold different /tmp copies. Vary on the admin token and the
+    // follow-unlock flag so an admin or unlocked response is never served
+    // to a locked visitor (and vice versa).
+    res.set('Vary', 'x-admin-token, x-follow-unlocked');
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
     const visibleFolders = (safeCatalog.folders || []).filter((f: any) => f.visible !== false);
     const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);

@@ -1,5 +1,6 @@
 import { Book, CatalogData, Folder, ItemType } from '../types';
 import { uploadFileOptimized, UploadOptions, UploadResult } from '../utils/uploader';
+import { storage } from './storage';
 
 const ADMIN_TOKEN_KEY = 'khafi_admin_token';
 
@@ -134,10 +135,43 @@ export function isGateKeySet(status: GateStatus | null | undefined): boolean {
   return Boolean(status?.keySet);
 }
 
+// Follow-unlock header: paid books are FREE for followers. A visitor who
+// unlocked the library gate (follow tap or gate key) sends this header with
+// catalog and file requests so the server exposes paid-book links and
+// serves paid files. TRUST-BASED, exactly like the gate itself — the header
+// carries only the boolean unlock flag, never the gate key or any secret.
+// One helper, used by every catalog/file call (catalog fetch here, file
+// downloads in utils/fileUtils, and the in-app viewers).
+export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
+
+export function getFollowUnlockHeaders(): Record<string, string> {
+  return storage.hasFollowUnlocked() ? { [FOLLOW_UNLOCK_HEADER]: '1' } : {};
+}
+
 let inFlightCatalogPromise: Promise<CatalogData> | null = null;
 let inFlightCheckAdminPromise: Promise<{ authenticated: boolean; username?: string }> | null = null;
 
+// Where the catalog in hand came from: 'live' (the API), 'static' (the
+// build-time public/catalog.json fallback, whose paid-book links are
+// always stripped), or 'cached' (this browser session's last copy).
+// Views use it to tell an unlocked follower honestly when a paid book's
+// link is missing only because the live catalog did not load.
+let lastCatalogSource: 'live' | 'static' | 'cached' | 'none' = 'none';
+
 export const api = {
+  /** Where the current catalog came from (see lastCatalogSource). */
+  getCatalogSource(): 'live' | 'static' | 'cached' | 'none' {
+    return lastCatalogSource;
+  },
+
+  /** Drop the in-flight / cached catalog promise so the next getCatalog()
+   *  re-requests the live API (used by the "retry" action when the live
+   *  catalog failed and only the stripped static copy is in hand). */
+  async reloadCatalog(): Promise<CatalogData> {
+    inFlightCatalogPromise = null;
+    return this.getCatalog();
+  },
+
   async getCatalog(): Promise<CatalogData> {
     if (inFlightCatalogPromise) {
       return inFlightCatalogPromise;
@@ -148,11 +182,12 @@ export const api = {
       // edits, paid marks and Drive sync made after this build.
       try {
         const res = await fetchWithRetry('/api/catalog', {
-          headers: getAuthHeaders(),
+          headers: getAuthHeaders(getFollowUnlockHeaders()),
         });
         const parsed = await safeParseJson<CatalogData>(res);
         if (parsed.ok && parsed.data && (parsed.data.books?.length || parsed.data.folders?.length)) {
           cachedCatalog = parsed.data;
+          lastCatalogSource = 'live';
           try {
             sessionStorage.setItem('khafi_last_catalog', JSON.stringify(parsed.data));
           } catch {}
@@ -169,12 +204,17 @@ export const api = {
       // on a static-only deploy where /api/catalog 404s (Vercel Drop
       // deploy without the serverless api/index.ts). It is a snapshot
       // from build time, and paid-book links are stripped in the copy,
-      // exactly as the API does for visitors.
+      // exactly as the API does for locked visitors. That means an
+      // unlocked follower on this fallback sees paid books WITHOUT their
+      // links: the book page says so honestly and offers a retry instead
+      // of silently showing a lock screen. The static copy is never
+      // "fixed up" with links client-side.
       try {
         const staticRes = await fetch('/catalog.json', { cache: 'no-cache' });
         const staticParsed = await safeParseJson<CatalogData>(staticRes);
         if (staticParsed.ok && staticParsed.data && (staticParsed.data.books?.length || staticParsed.data.folders?.length)) {
           cachedCatalog = staticParsed.data;
+          lastCatalogSource = 'static';
           try {
             sessionStorage.setItem('khafi_last_catalog', JSON.stringify(staticParsed.data));
           } catch {}
@@ -187,6 +227,7 @@ export const api = {
 
       // 3) Last resort: the catalog cached in this browser session.
       if (cachedCatalog && (cachedCatalog.folders?.length > 0 || cachedCatalog.books?.length > 0)) {
+        lastCatalogSource = 'cached';
         return cachedCatalog;
       }
       return { folders: [], books: [] };

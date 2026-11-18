@@ -1,10 +1,13 @@
 // Build step: copy data/catalog.json to public/catalog.json so the frontend
 // can still show all books when /api/catalog is down (e.g. a static-only
 // Vercel Drop deploy with no serverless function). The copy is sanitised
-// exactly like the server's non-admin catalog: paid books lose their open /
-// download links (driveFileId, externalUrl, fileUrl, pdfUrl) and oversized
-// inline covers are dropped. Today the catalog has 0 paid books, so nothing
-// is stripped in practice; this guard matters if a book is marked paid later.
+// exactly like the server's locked-visitor catalog: paid books lose their
+// open / download links (driveFileId, externalUrl, fileUrl, pdfUrl) and
+// oversized inline covers are dropped. The static copy is ALWAYS the
+// fully-stripped version — it can never tell whether a visitor unlocked
+// the gate, so an unlocked follower on this fallback sees paid books
+// without links and the book page says so honestly with a retry; the
+// client never "fixes up" links from the static file.
 // Run at build time (npm run build) and committed as public/catalog.json.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

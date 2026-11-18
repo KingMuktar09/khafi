@@ -105,21 +105,22 @@ export const JournalView: React.FC = () => {
   return (
     <ToolsLayout
       title="Journal — Reading Notes"
+      eyebrow="Reading Notes"
       subtitle="Notes on what you read, kept on this device only."
     >
-      <p className="text-xs sm:text-sm text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl px-4 py-3">
+      <p className="ms-note-box">
         {DEVICE_NOTE}
       </p>
 
       <form
         onSubmit={submit}
-        className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-5 space-y-3"
+        className="ms-card space-y-3"
       >
-        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
+        <h2 className="ms-h2">
           {editingId ? 'Edit note' : 'New note'}
         </h2>
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-[var(--text-muted)]" htmlFor="journal-title">
+          <label className="ms-label block" htmlFor="journal-title">
             Title
           </label>
           <input
@@ -128,11 +129,11 @@ export const JournalView: React.FC = () => {
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="What is this note about?"
-            className="w-full min-h-11 px-3.5 rounded-xl bg-[var(--bg-list)] border border-[var(--border-main)] text-base text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+            className="ms-field w-full min-h-11 px-3.5 text-base"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-xs font-medium text-[var(--text-muted)]" htmlFor="journal-text">
+          <label className="ms-label block" htmlFor="journal-text">
             Note
           </label>
           <textarea
@@ -141,13 +142,13 @@ export const JournalView: React.FC = () => {
             onChange={(event) => setText(event.target.value)}
             rows={4}
             placeholder="Write what you learned, questions you have, or a quote to remember…"
-            className="w-full px-3.5 py-3 rounded-xl bg-[var(--bg-list)] border border-[var(--border-main)] text-base text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] resize-y"
+            className="ms-field w-full px-3.5 py-3 text-base resize-y"
           />
         </div>
         <div className="flex gap-2">
           <button
             type="submit"
-            className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-xl bg-[var(--gold-faint)] border border-[var(--gold)] text-sm font-medium text-[var(--gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+            className="ms-btn-gold"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             {editingId ? 'Save changes' : 'Add note'}
@@ -156,7 +157,7 @@ export const JournalView: React.FC = () => {
             <button
               type="button"
               onClick={resetForm}
-              className="min-h-11 px-4 rounded-xl border border-[var(--border-main)] text-sm font-medium text-[var(--text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+              className="ms-btn"
             >
               Cancel
             </button>
@@ -168,7 +169,7 @@ export const JournalView: React.FC = () => {
         <button
           type="button"
           onClick={exportJson}
-          className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] text-sm font-medium text-[var(--text-main)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          className="ms-btn"
         >
           <Download className="w-4 h-4" aria-hidden="true" />
           Export JSON
@@ -176,7 +177,7 @@ export const JournalView: React.FC = () => {
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="inline-flex items-center gap-1.5 min-h-11 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] text-sm font-medium text-[var(--text-main)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          className="ms-btn"
         >
           <Upload className="w-4 h-4" aria-hidden="true" />
           Import JSON
@@ -185,17 +186,17 @@ export const JournalView: React.FC = () => {
       </div>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl px-4 py-5 text-center">
+        <p className="ms-body ms-surface px-4 py-5 text-center">
           No notes yet. Add your first note above.
         </p>
       ) : (
         <ul className="space-y-2">
           {entries.map((entry) => (
-            <li key={entry.id} className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-4 space-y-2">
+            <li key={entry.id} className="ms-surface p-4 space-y-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="font-medium text-[var(--text-main)]">{entry.title}</h3>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <h3 className="font-medium ms-ink">{entry.title}</h3>
+                  <p className="text-xs ms-muted">
                     {formatDate(entry.createdAt)}
                     {entry.updatedAt !== entry.createdAt ? ` · edited ${formatDate(entry.updatedAt)}` : ''}
                   </p>
@@ -205,7 +206,7 @@ export const JournalView: React.FC = () => {
                     type="button"
                     onClick={() => startEdit(entry)}
                     aria-label={`Edit ${entry.title}`}
-                    className="p-2.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                    className="p-2.5 rounded-xl ms-muted hover:text-[var(--ms-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)]"
                   >
                     <Pencil className="w-4 h-4" aria-hidden="true" />
                   </button>
@@ -213,14 +214,14 @@ export const JournalView: React.FC = () => {
                     type="button"
                     onClick={() => remove(entry.id)}
                     aria-label={`Delete ${entry.title}`}
-                    className="p-2.5 rounded-xl text-[var(--text-muted)] hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                    className="p-2.5 rounded-xl ms-muted hover:text-[var(--ms-red)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ms-gold)]"
                   >
                     <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
               {entry.text ? (
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed whitespace-pre-wrap break-words">{entry.text}</p>
+                <p className="ms-body whitespace-pre-wrap break-words">{entry.text}</p>
               ) : null}
             </li>
           ))}

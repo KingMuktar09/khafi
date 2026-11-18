@@ -134,7 +134,7 @@ function jsonResponse(data: any, status = 200, extraHeaders: Record<string, stri
       "Content-Type": "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, Range",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, x-follow-unlocked, Range",
       "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges",
       ...extraHeaders,
     },
@@ -214,6 +214,109 @@ function getAdminTokenFromRequest(req: Request): string | null {
   }
 
   return null;
+}
+
+// Paid books are FREE for followers: a visitor who unlocked the library
+// gate (follow tap or gate key) sends `x-follow-unlocked: 1` with catalog
+// and file requests, and the server believes it. TRUST-BASED, exactly like
+// the gate itself — the header carries only a boolean, never the gate key
+// or any secret, and anyone can send it. It is NOT a verified check.
+const FOLLOW_UNLOCK_HEADER = "x-follow-unlocked";
+
+function isFollowUnlocked(request: Request): boolean {
+  return request.headers.get(FOLLOW_UNLOCK_HEADER) === "1";
+}
+
+// One predicate for the paid-book rule, used by sanitizeBook and by the
+// stream/download guards: a paid book is locked only for a visitor who is
+// neither the admin nor a gate-unlocked follower. Same rule as
+// server/app.ts — keep in sync.
+export function isPaidBookLocked(book: any, isAdmin: boolean, isFollowUnlockedFlag: boolean): boolean {
+  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlockedFlag;
+}
+
+export function sanitizeBook(book: any, isAdmin = false, isFollowUnlocked = false) {
+  if (!book) return book;
+  const {
+    driveUrl,
+    webViewLink,
+    webContentLink,
+    accessToken,
+    clientEmail,
+    serviceAccountEmail,
+    privateKey,
+    googleDriveFolderId,
+    GOOGLE_DRIVE_FOLDER_ID,
+    driveFolderId,
+    ...rest
+  } = book;
+
+  // Paid books: a locked visitor must never be handed a working open or
+  // download link. Admins keep the links (they read paid books directly),
+  // and so do followers — paid books are FREE for gate-unlocked visitors,
+  // no payment at all. The lock screen is the only thing a locked visitor
+  // sees for a paid book. (Same rule as server/app.ts — keep in sync.)
+  if (isPaidBookLocked(rest, isAdmin, isFollowUnlocked)) {
+    const { driveFileId, externalUrl, fileUrl, pdfUrl, ...paidRest } = rest;
+    return { ...paidRest, fileUrl: '', pdfUrl: '' };
+  }
+
+  let fileUrl = rest.fileUrl;
+  let pdfUrl = rest.pdfUrl;
+
+  if (fileUrl && (fileUrl.includes("drive.google.com") || fileUrl.includes("googleusercontent.com"))) {
+    const driveId = rest.driveFileId || rest.id;
+    fileUrl = driveId ? `/api/files/${driveId}/preview` : `/api/books/${rest.id}/stream`;
+  }
+  if (pdfUrl && (pdfUrl.includes("drive.google.com") || pdfUrl.includes("googleusercontent.com"))) {
+    const driveId = rest.driveFileId || rest.id;
+    pdfUrl = driveId ? `/api/files/${driveId}/preview` : `/api/books/${rest.id}/stream`;
+  }
+
+  if (!fileUrl && rest.id) {
+    fileUrl = `/api/files/${rest.driveFileId || rest.id}/preview`;
+  }
+  if (!pdfUrl && rest.id) {
+    pdfUrl = `/api/files/${rest.driveFileId || rest.id}/preview`;
+  }
+
+  return {
+    ...rest,
+    fileUrl,
+    pdfUrl,
+  };
+}
+
+function sanitizeFolder(folder: any) {
+  if (!folder) return folder;
+  const {
+    webViewLink,
+    webContentLink,
+    driveUrl,
+    googleDriveFolderId,
+    GOOGLE_DRIVE_FOLDER_ID,
+    driveFolderId,
+    ...folderRest
+  } = folder;
+  return folderRest;
+}
+
+function sanitizeCatalog(catalog: any, isAdmin = false, isFollowUnlocked = false) {
+  if (!catalog) return { folders: [], books: [] };
+  const safeFolders = (catalog.folders || []).map(sanitizeFolder);
+  const safeBooks = (catalog.books || []).map((b: any) => sanitizeBook(b, isAdmin, isFollowUnlocked));
+  const categoryOrder = Array.isArray(catalog.categoryOrder)
+    ? catalog.categoryOrder.filter((n: any) => typeof n === 'string')
+    : undefined;
+  const topicOrder = Array.isArray(catalog.topicOrder)
+    ? catalog.topicOrder.filter((n: any) => typeof n === 'string')
+    : undefined;
+  return {
+    folders: safeFolders,
+    books: safeBooks,
+    ...(categoryOrder ? { categoryOrder } : {}),
+    ...(topicOrder ? { topicOrder } : {}),
+  };
 }
 
 async function sha256Hex(str: string): Promise<string> {
@@ -393,7 +496,7 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, HEAD, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, Range, Accept, Origin",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token, x-follow-unlocked, Range, Accept, Origin",
         "Access-Control-Expose-Headers": "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type",
         "Access-Control-Max-Age": "86400",
       },
@@ -513,93 +616,27 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     return jsonResponse({ success: true, ...status });
   }
 
-function sanitizeBook(book: any) {
-  if (!book) return book;
-  const {
-    driveUrl,
-    webViewLink,
-    webContentLink,
-    accessToken,
-    clientEmail,
-    serviceAccountEmail,
-    privateKey,
-    googleDriveFolderId,
-    GOOGLE_DRIVE_FOLDER_ID,
-    driveFolderId,
-    ...rest
-  } = book;
-
-  let fileUrl = rest.fileUrl;
-  let pdfUrl = rest.pdfUrl;
-
-  if (fileUrl && (fileUrl.includes("drive.google.com") || fileUrl.includes("googleusercontent.com"))) {
-    const driveId = rest.driveFileId || rest.id;
-    fileUrl = driveId ? `/api/files/${driveId}/preview` : `/api/books/${rest.id}/stream`;
-  }
-  if (pdfUrl && (pdfUrl.includes("drive.google.com") || pdfUrl.includes("googleusercontent.com"))) {
-    const driveId = rest.driveFileId || rest.id;
-    pdfUrl = driveId ? `/api/files/${driveId}/preview` : `/api/books/${rest.id}/stream`;
-  }
-
-  if (!fileUrl && rest.id) {
-    fileUrl = `/api/files/${rest.driveFileId || rest.id}/preview`;
-  }
-  if (!pdfUrl && rest.id) {
-    pdfUrl = `/api/files/${rest.driveFileId || rest.id}/preview`;
-  }
-
-  return {
-    ...rest,
-    fileUrl,
-    pdfUrl,
-  };
-}
-
-function sanitizeFolder(folder: any) {
-  if (!folder) return folder;
-  const {
-    webViewLink,
-    webContentLink,
-    driveUrl,
-    googleDriveFolderId,
-    GOOGLE_DRIVE_FOLDER_ID,
-    driveFolderId,
-    ...folderRest
-  } = folder;
-  return folderRest;
-}
-
-function sanitizeCatalog(catalog: any) {
-  if (!catalog) return { folders: [], books: [] };
-  const safeFolders = (catalog.folders || []).map(sanitizeFolder);
-  const safeBooks = (catalog.books || []).map(sanitizeBook);
-  const categoryOrder = Array.isArray(catalog.categoryOrder)
-    ? catalog.categoryOrder.filter((n: any) => typeof n === 'string')
-    : undefined;
-  const topicOrder = Array.isArray(catalog.topicOrder)
-    ? catalog.topicOrder.filter((n: any) => typeof n === 'string')
-    : undefined;
-  return {
-    folders: safeFolders,
-    books: safeBooks,
-    ...(categoryOrder ? { categoryOrder } : {}),
-    ...(topicOrder ? { topicOrder } : {}),
-  };
-}
+  // sanitizeBook / sanitizeFolder / sanitizeCatalog live at module
+  // level now (below isPaidBookLocked), so tests can import them.
 
   // 7. Catalog Fetch: GET /api/catalog
   if (path === "/api/catalog" && method === "GET") {
     const token = getAdminTokenFromRequest(request);
     const isAdmin = await verifySessionToken(token, sessionSecret);
+    const followUnlocked = isFollowUnlocked(request);
     const catalog = await getCatalogData(driveConfig);
-    const safeCatalog = sanitizeCatalog(catalog);
+    const safeCatalog = sanitizeCatalog(catalog, isAdmin, followUnlocked);
 
     const totalFolders = (safeCatalog.folders || []).length;
     const totalBooks = (safeCatalog.books || []).length;
     console.log(`[API /api/catalog] Returning catalog: ${totalFolders} folders, ${totalBooks} books (isAdmin=${isAdmin})`);
 
+    // Vary on the admin token and the follow-unlock flag so an admin or
+    // unlocked response is never served to a locked visitor (and vice
+    // versa). Same rule as server/app.ts — keep in sync.
+    const varyHeaders = { Vary: "x-admin-token, x-follow-unlocked" };
     if (isAdmin) {
-      return jsonResponse(safeCatalog, 200, { "Cache-Control": "public, max-age=10" });
+      return jsonResponse(safeCatalog, 200, { "Cache-Control": "public, max-age=10", ...varyHeaders });
     } else {
       const visibleFolders = (safeCatalog.folders || []).filter((f: any) => f.visible !== false);
       const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);
@@ -611,7 +648,7 @@ function sanitizeCatalog(catalog: any) {
           ...(safeCatalog.topicOrder ? { topicOrder: safeCatalog.topicOrder } : {}),
         },
         200,
-        { 'Cache-Control': 'public, max-age=10' }
+        { 'Cache-Control': 'public, max-age=10', ...varyHeaders }
       );
     }
   }
@@ -748,6 +785,17 @@ function sanitizeCatalog(catalog: any) {
       return jsonResponse({ error: "File ID could not be identified." }, 400);
     }
 
+    // Paid gate (same rule as server/app.ts — keep in sync): a paid book
+    // is never streamed to a locked visitor. Admins and gate-unlocked
+    // followers stream it free — paid books are free for followers.
+    {
+      const streamToken = getAdminTokenFromRequest(request);
+      const streamIsAdmin = await verifySessionToken(streamToken, sessionSecret);
+      if (isPaidBookLocked(book, streamIsAdmin, isFollowUnlocked(request))) {
+        return jsonResponse({ error: "This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it." }, 402);
+      }
+    }
+
     if (!isDriveConfigured(driveConfig)) {
       return jsonResponse({ error: "Google Drive is not configured on this server." }, 503);
     }
@@ -812,7 +860,7 @@ function sanitizeCatalog(catalog: any) {
       responseHeaders.set("Cache-Control", "public, max-age=86400");
       responseHeaders.set("Access-Control-Allow-Origin", "*");
       responseHeaders.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-      responseHeaders.set("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token");
+      responseHeaders.set("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked");
       responseHeaders.set(
         "Access-Control-Expose-Headers",
         "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type"
@@ -858,6 +906,16 @@ function sanitizeCatalog(catalog: any) {
     }
 
     const driveFileId = book?.driveFileId || fileIdFromPath || extractDriveFileId(book?.fileUrl || book?.pdfUrl);
+    // Paid gate (same rule as server/app.ts — keep in sync): a paid book
+    // is never downloadable by a locked visitor. Admins and gate-unlocked
+    // followers download it free.
+    {
+      const dlToken = getAdminTokenFromRequest(request);
+      const dlIsAdmin = await verifySessionToken(dlToken, sessionSecret);
+      if (isPaidBookLocked(book, dlIsAdmin, isFollowUnlocked(request))) {
+        return jsonResponse({ error: "This book is free for followers. Follow @ghayb.chronicles and unlock the library gate to read it." }, 402);
+      }
+    }
     if (driveFileId && isDriveConfigured(driveConfig)) {
       try {
         const accessToken = await getGoogleDriveAccessToken(driveConfig);
@@ -912,7 +970,7 @@ function sanitizeCatalog(catalog: any) {
       catalog.books = [newBook, ...(catalog.books || [])];
       await saveCatalogData(catalog, driveConfig);
 
-      return jsonResponse({ success: true, book: sanitizeBook(newBook) });
+      return jsonResponse({ success: true, book: sanitizeBook(newBook, true) });
     } catch (err: any) {
       return jsonResponse({ success: false, error: err.message || "Failed to add book." }, 500);
     }
@@ -939,7 +997,7 @@ function sanitizeCatalog(catalog: any) {
       catalog.books[index] = updatedBook;
       await saveCatalogData(catalog, driveConfig);
 
-      return jsonResponse({ success: true, book: sanitizeBook(updatedBook) });
+      return jsonResponse({ success: true, book: sanitizeBook(updatedBook, true) });
     } catch (err: any) {
       return jsonResponse({ success: false, error: err.message || "Failed to update book." }, 500);
     }
@@ -1581,7 +1639,7 @@ function sanitizeCatalog(catalog: any) {
 
         return jsonResponse({
           success: true,
-          book: sanitizeBook(bookToSave),
+          book: sanitizeBook(bookToSave, true),
           folderName: targetFolder ? targetFolder.name : "Library",
         });
       }

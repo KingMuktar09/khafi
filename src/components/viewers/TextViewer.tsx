@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Download, Copy, Check, ZoomIn, ZoomOut, FileCode, AlignLeft, RefreshCw } from 'lucide-react';
+import { getFollowUnlockHeaders } from '../../services/api';
 
 interface TextViewerProps {
   fileUrl: string;
@@ -21,7 +22,9 @@ export const TextViewer: React.FC<TextViewerProps> = ({ fileUrl, title, ext, onD
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(fileUrl);
+        // Paid books are free for followers: send the unlock flag so the
+        // server serves a paid file instead of 402 (see services/api).
+        const response = await fetch(fileUrl, { headers: getFollowUnlockHeaders() });
         if (!response.ok) {
           throw new Error(`Failed to load text file (${response.status})`);
         }

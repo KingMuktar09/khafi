@@ -550,12 +550,9 @@ export const AdminView: React.FC = () => {
       return;
     }
 
-    // A paid book must have a price. A free book must not keep stale paid
-    // data (price / payment link / note) from when it was paid before.
-    if (editingBook.isPaid && !(typeof editingBook.price === 'number' && editingBook.price > 0)) {
-      appState.showToast('Set a price in ₹ for this paid book.', 'error');
-      return;
-    }
+    // A paid book needs no price anymore (paid books are free for
+    // followers). A free book must not keep stale paid data (price /
+    // payment link / note) from when it was paid before.
 
     const folderIdToSet = editingBook.folderId || selectedFolderId || (folders[0]?.id || null);
     const targetFolder = folders.find((f) => f.id === folderIdToSet);
@@ -679,8 +676,8 @@ export const AdminView: React.FC = () => {
   };
 
   // One-click paid toggle from the book list. Paid -> free right away.
-  // Free -> paid right away when the book already has a price; otherwise the
-  // edit form opens so the admin enters a price first (no price is invented).
+  // Free -> paid right away too: a paid book needs no price anymore
+  // (paid books are free for followers), so no price is ever invented.
   const handleTogglePaid = async (book: Book) => {
     if (book.isPaid) {
       const res = await api.updateBook(book.id, {
@@ -698,22 +695,13 @@ export const AdminView: React.FC = () => {
       return;
     }
 
-    if (typeof book.price === 'number' && book.price > 0) {
-      const res = await api.updateBook(book.id, { isPaid: true });
-      if (res.success) {
-        appState.showToast(`"${book.title}" is now paid — ₹${book.price.toLocaleString('en-IN')}. ${durableSuffix(res)}`, durableToastType(res));
-        await appState.loadCatalog();
-      } else {
-        appState.showToast(res.error || 'Failed to mark this book as paid.', 'error');
-      }
-      return;
+    const res = await api.updateBook(book.id, { isPaid: true });
+    if (res.success) {
+      appState.showToast(`"${book.title}" is now paid — free for followers. ${durableSuffix(res)}`, durableToastType(res));
+      await appState.loadCatalog();
+    } else {
+      appState.showToast(res.error || 'Failed to mark this book as paid.', 'error');
     }
-
-    setEditingBook(book);
-    setInitialBookState(book);
-    setShowAdvancedBook(false);
-    setBookModalOpen(true);
-    appState.showToast('Set a price in ₹ to make this book paid.', 'info');
   };
 
   const handleQuickRenameSave = async (newName: string) => {
@@ -984,10 +972,8 @@ export const AdminView: React.FC = () => {
   // once for the whole batch. No price is ever invented — the admin types
   // it in the small dialog first. Folders in the selection are ignored.
   const handleBulkMarkPaid = async () => {
-    if (!(typeof bulkPaidState.price === 'number' && bulkPaidState.price > 0)) {
-      appState.showToast('Set a price in ₹ for the selected books.', 'error');
-      return;
-    }
+    // No price needed: paid books are free for followers, the price (if
+    // the admin set one) is kept for reference only.
     const bookIds = [...selectedKeys]
       .filter((k) => k.startsWith('book:'))
       .map((k) => k.slice('book:'.length));
@@ -1018,8 +1004,8 @@ export const AdminView: React.FC = () => {
       : 'Saved permanently.';
     appState.showToast(
       failed > 0
-        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}. ${failed} could not be updated. ${saveLine}`
-        : `${ok} book${ok === 1 ? '' : 's'} marked paid — ₹${bulkPaidState.price}. ${saveLine}`,
+        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — free for followers. ${failed} could not be updated. ${saveLine}`
+        : `${ok} book${ok === 1 ? '' : 's'} marked paid — free for followers. ${saveLine}`,
       failed > 0 ? 'error' : anyTemporary ? 'info' : 'success'
     );
   };
@@ -1585,8 +1571,8 @@ export const AdminView: React.FC = () => {
             <p className="text-[var(--text-muted)]">
               {[...selectedKeys].filter((k) => k.startsWith('book:')).length} book
               {[...selectedKeys].filter((k) => k.startsWith('book:')).length === 1 ? '' : 's'} selected.
-              One price below applies to all of them. Payment is by UPI and you
-              unlock access by hand, as usual.
+              One price below applies to all of them. Paid books are free
+              for followers — locked visitors see a followers-only lock.
             </p>
             <PaidBookControl
               book={bulkPaidState}
@@ -1987,7 +1973,7 @@ export const AdminView: React.FC = () => {
                     {b.isPaid ? (
                       <span className="px-2 py-0.5 rounded-full text-[10px] bg-[var(--gold-faint)] text-[var(--gold)] border border-[var(--gold)]/40 font-bold hover:bg-[var(--gold)]/20 transition-colors inline-flex items-center gap-1">
                         <IndianRupee className="w-3 h-3" />
-                        Paid{typeof b.price === 'number' ? ` ₹${b.price.toLocaleString('en-IN')}` : ''}
+                        Paid
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 rounded-full text-[10px] bg-[var(--bg-main)] text-[var(--text-muted)] border border-[var(--border-main)] font-medium hover:border-[var(--gold)]/50 hover:text-[var(--gold)] transition-colors inline-flex items-center gap-1">
@@ -2115,7 +2101,7 @@ export const AdminView: React.FC = () => {
                           <span>
                             {b.isPaid
                               ? 'Make free'
-                              : `Mark as paid${typeof b.price === 'number' && b.price > 0 ? ` — ₹${b.price.toLocaleString('en-IN')}` : ''}`}
+                              : 'Mark as paid'}
                           </span>
                         </button>
                       </div>

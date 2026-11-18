@@ -79,9 +79,10 @@ export const WirdView: React.FC = () => {
   return (
     <ToolsLayout
       title="Wird — Remembrance Counter"
+      eyebrow="Remembrance Counter"
       subtitle="A simple counter. Pick a phrase, tap the big button, and set a target if you like."
     >
-      <p className="text-xs sm:text-sm text-[var(--text-muted)] bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl px-4 py-3">
+      <p className="ms-note-box">
         {DEVICE_NOTE}
       </p>
 
@@ -92,11 +93,7 @@ export const WirdView: React.FC = () => {
             type="button"
             aria-pressed={selected === phrase}
             onClick={() => setSelected(phrase)}
-            className={`min-h-11 px-3.5 rounded-xl border text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)] ${
-              selected === phrase
-                ? 'bg-[var(--gold-faint)] border-[var(--gold)] text-[var(--gold)]'
-                : 'bg-[var(--bg-surface)] border-[var(--border-main)] text-[var(--text-muted)]'
-            }`}
+            className="ms-toggle ms-toggle-chip"
           >
             {phrase}
           </button>
@@ -111,49 +108,49 @@ export const WirdView: React.FC = () => {
           value={custom}
           onChange={(event) => setCustom(event.target.value)}
           placeholder="Add your own phrase…"
-          className="flex-1 min-w-0 min-h-11 px-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] text-base text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          className="ms-field flex-1 min-w-0 min-h-11 px-3.5 text-base"
         />
         <button
           type="submit"
           aria-label="Add phrase"
-          className="shrink-0 inline-flex items-center gap-1.5 min-h-11 px-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] text-sm font-medium text-[var(--text-main)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+          className="ms-btn shrink-0"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
           Add
         </button>
       </form>
 
-      <section className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-5 space-y-4 text-center">
+      <section className="ms-card space-y-4 text-center">
         {selectedPreset ? (
-          <p className="font-arabic text-3xl text-[var(--gold)]" dir="rtl" lang="ar">{selectedPreset.arabic}</p>
+          <p className="ms-arabic-xl ms-gold" dir="rtl" lang="ar">{selectedPreset.arabic}</p>
         ) : null}
-        <h2 className="font-display font-semibold text-xl text-[var(--text-main)]">{selected}</h2>
-        <p className="font-display text-6xl font-semibold text-[var(--text-main)] tabular-nums" aria-live="polite">
+        <h2 className="ms-h2">{selected}</h2>
+        <p className="ms-count" aria-live="polite">
           {count}
         </p>
-        <p className="text-sm text-[var(--text-muted)] tabular-nums">
+        <p className="ms-body ms-num">
           {count} of {target} · {progress}%
         </p>
         <div
-          className="h-2.5 rounded-full bg-[var(--bg-list)] overflow-hidden"
+          className="ms-progress"
           role="progressbar"
           aria-valuenow={count}
           aria-valuemin={0}
           aria-valuemax={target}
           aria-label={`Progress towards ${target}`}
         >
-          <div className="h-full bg-[var(--gold)] transition-all" style={{ width: `${progress}%` }} />
+          <div style={{ width: `${progress}%` }} />
         </div>
         <button
           type="button"
           onClick={tap}
           aria-label={`Count one for ${selected}`}
-          className="w-full min-h-16 rounded-2xl bg-[var(--gold)] text-black text-lg font-semibold hover:opacity-90 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--gold)]"
+          className="ms-btn-solid"
         >
           Tap to count
         </button>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <label className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)]" htmlFor="wird-target">
+          <label className="inline-flex items-center gap-2 ms-body" htmlFor="wird-target">
             Target
             <input
               id="wird-target"
@@ -162,13 +159,13 @@ export const WirdView: React.FC = () => {
               inputMode="numeric"
               value={target}
               onChange={(event) => setTarget(Number(event.target.value))}
-              className="w-20 min-h-10 px-2.5 rounded-xl bg-[var(--bg-list)] border border-[var(--border-main)] text-base text-center text-[var(--text-main)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+              className="ms-field w-20 min-h-10 px-2.5 text-base text-center"
             />
           </label>
           <button
             type="button"
             onClick={resetPhrase}
-            className="inline-flex items-center gap-1.5 min-h-10 px-3.5 rounded-xl border border-[var(--border-main)] text-sm font-medium text-[var(--text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+            className="ms-btn"
           >
             <RotateCcw className="w-4 h-4" aria-hidden="true" />
             Reset this phrase
@@ -176,7 +173,7 @@ export const WirdView: React.FC = () => {
           <button
             type="button"
             onClick={resetAll}
-            className="inline-flex items-center gap-1.5 min-h-10 px-3.5 rounded-xl border border-[var(--border-main)] text-sm font-medium text-[var(--text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+            className="ms-btn"
           >
             <RotateCcw className="w-4 h-4" aria-hidden="true" />
             Reset all

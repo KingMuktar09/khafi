@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, Download, ExternalLink, IndianRupee, Instagram, Star, Tag, Play, Image as ImageIcon, Music as AudioIcon, FileText, HardDrive, Folder as FolderIcon, Calendar, FileType, Hash } from 'lucide-react';
+import { ArrowLeft, BookOpen, Download, ExternalLink, Instagram, Star, Tag, Play, Image as ImageIcon, Music as AudioIcon, FileText, HardDrive, Folder as FolderIcon, Calendar, FileType, Hash } from 'lucide-react';
 import { appState } from '../state/appState';
 import { router } from '../router/router';
 import { api } from '../services/api';
+import { storage } from '../services/storage';
 import { Book } from '../types';
 import { CoverImage } from '../components/books/CoverImage';
 import { PaidLockScreen } from '../components/books/PaidLockScreen';
@@ -13,10 +14,10 @@ import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, downloadBookFile } from '../utils/fileUtils';
 import { AUTHENTIC_MEANING, formatVersionDate } from '../utils/bookOrder';
 
-// Admin-only: mark THIS already-added book paid (with a ₹ price) or free
-// again, right from its details page — no need to go back to the admin list
-// and open the edit form. Only the admin ever sees this panel; visitors see
-// the paid lock screen instead.
+// Admin-only: mark THIS already-added book paid or free again, right from
+// its details page — no need to go back to the admin list and open the edit
+// form. Only the admin ever sees this panel; visitors see the paid lock
+// screen instead.
 const AdminPaidPanel: React.FC<{ book: Book }> = ({ book }) => {
   const [draft, setDraft] = useState({
     isPaid: Boolean(book.isPaid),
@@ -38,10 +39,8 @@ const AdminPaidPanel: React.FC<{ book: Book }> = ({ book }) => {
   }, [book.id, book.isPaid, book.price, book.paymentNote]);
 
   const handleSavePaid = async () => {
-    if (draft.isPaid && !(typeof draft.price === 'number' && draft.price > 0)) {
-      setNotice({ text: 'Set a price in ₹ for this paid book.', ok: false });
-      return;
-    }
+    // A paid book needs no price anymore: paid books are FREE for
+    // followers, the price field is kept only for reference.
     setSaving(true);
     const res = await api.updateBook(book.id, {
       isPaid: draft.isPaid,
@@ -94,6 +93,7 @@ export const BookDetailsView: React.FC = () => {
   const bookId = appState.route.bookId;
   const book = bookId ? appState.getBookById(bookId) : undefined;
   const [showAdvisoryModal, setShowAdvisoryModal] = useState(false);
+  const [retryingCatalog, setRetryingCatalog] = useState(false);
 
   useEffect(() => {
     if (bookId) {
@@ -122,7 +122,22 @@ export const BookDetailsView: React.FC = () => {
 
   const isFav = appState.isFavorite(book.id);
   const isAdmin = appState.adminAuthenticated;
-  const isPaidForVisitor = Boolean(book.isPaid) && !isAdmin;
+  // Paid books are FREE for followers: a gate-unlocked visitor (follow tap
+  // or gate key) reads them like any free book. Only a locked visitor sees
+  // the followers-only lock screen.
+  const isFollowUnlocked = storage.hasFollowUnlocked();
+  const isPaidForVisitor = Boolean(book.isPaid) && !isAdmin && !isFollowUnlocked;
+  // Honest static-fallback case: when the live catalog did not load, the
+  // client falls back to public/catalog.json, whose paid-book links are
+  // always stripped. An unlocked follower then sees the book with no links
+  // — not a lock, just a missing link, with a retry to reload the live
+  // catalog. (Free books are unaffected.)
+  const paidLinksMissing =
+    Boolean(book.isPaid) &&
+    !book.driveFileId &&
+    !book.externalUrl &&
+    !book.fileUrl &&
+    !book.pdfUrl;
   const itemType = getItemType(book);
   const typeLabel = getTypeLabel(book);
   const badgeColor = getTypeBadgeColor(itemType);
@@ -311,9 +326,10 @@ export const BookDetailsView: React.FC = () => {
 
             {book.isPaid ? (
               <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] bg-[var(--gold-faint)] border border-[var(--gold)]/40 rounded-full px-3 py-1 w-fit">
-                <IndianRupee className="w-3.5 h-3.5" />
                 <span>
-                  Paid book{typeof book.price === 'number' ? ` — ₹${book.price.toLocaleString('en-IN')}` : ''}
+                  {isFollowUnlocked || isAdmin
+                    ? 'Paid book — free for followers'
+                    : 'Paid book — followers only'}
                 </span>
               </p>
             ) : (
@@ -346,11 +362,35 @@ export const BookDetailsView: React.FC = () => {
               <>
                 {isAdmin && book.isPaid && (
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
-                    Admin view: this book is marked Paid
-                    {typeof book.price === 'number' ? ` (₹${book.price.toLocaleString('en-IN')})` : ''}. Visitors see the UPI checkout instead of the reader.
+                    Admin view: this book is marked Paid. Locked visitors see the followers-only lock instead of the reader.
                   </p>
                 )}
                 {isAdmin && <AdminPaidPanel book={book} />}
+                {!isAdmin && book.isPaid && paidLinksMissing && (
+                  <div className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2 space-y-2">
+                    <p>
+                      Free for followers — this book is free for you. The live catalog didn’t load just now, so its Drive link is missing.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={retryingCatalog}
+                      onClick={async () => {
+                        setRetryingCatalog(true);
+                        await api.reloadCatalog();
+                        await appState.loadCatalog();
+                        setRetryingCatalog(false);
+                      }}
+                      className="tap-target px-3 py-1.5 rounded-lg bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black font-semibold cursor-pointer"
+                    >
+                      {retryingCatalog ? 'Retrying…' : 'Retry — reload the live catalog'}
+                    </button>
+                  </div>
+                )}
+                {!isAdmin && book.isPaid && !paidLinksMissing && (
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
+                    Free for followers — no payment needed.
+                  </p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {book.externalUrl ? (
                     <a

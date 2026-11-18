@@ -10,6 +10,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { Book, ItemType } from '../types';
+import { getFollowUnlockHeaders } from '../services/api';
 
 export function getFileExtension(filename?: string): string {
   if (!filename) return '';
@@ -203,6 +204,15 @@ export function getItemUrl(item: Partial<Book>): string {
   }
 
   return item.externalUrl || '';
+}
+
+/**
+ * Badge text for a paid book on cards and rows. Paid books are FREE for
+ * followers, so the badge never shows a price — there is no price anymore.
+ * Returns 'Paid' for a paid book, null otherwise.
+ */
+export function getPaidBadgeLabel(book: Partial<Book> | null | undefined): string | null {
+  return book?.isPaid ? 'Paid' : null;
 }
 
 export function getTypeLabel(itemOrType: Partial<Book> | ItemType, extension?: string): string {
@@ -404,6 +414,9 @@ export async function downloadBookFile(
     const response = await fetch(fetchUrl, {
       method: 'GET',
       credentials: 'same-origin',
+      // Paid books are free for followers: send the unlock flag so the
+      // server serves a paid file instead of 402 (see services/api).
+      headers: getFollowUnlockHeaders(),
     });
 
     if (!response.ok) {

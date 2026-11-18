@@ -45,6 +45,7 @@ import {
   getItemType,
   getTypeLabel,
   getTypeBadgeColor,
+  getPaidBadgeLabel,
   formatFileSize,
   formatCleanTitle,
   formatCatalogDate,
@@ -1001,9 +1002,9 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
                       {typeLabel}
                     </span>
-                    {book.isPaid && (
+                    {getPaidBadgeLabel(book) && (
                       <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border border-[var(--gold)]/60 bg-[var(--gold-faint)] text-[var(--gold)]">
-                        Paid{typeof book.price === 'number' ? ` ₹${book.price.toLocaleString('en-IN')}` : ''}
+                        {getPaidBadgeLabel(book)}
                       </span>
                     )}
                   </div>
@@ -1341,9 +1342,9 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                     <div className="text-[10px] text-[var(--text-faint)] flex items-center justify-between border-t border-[var(--border-subtle)] pt-1.5 font-sans">
                       <span className="flex items-center gap-1.5">
                         <span className={`font-bold ${badgeColor.text}`}>{typeLabel}</span>
-                        {book.isPaid && (
+                        {getPaidBadgeLabel(book) && (
                           <span className="font-bold text-[var(--gold)]">
-                            Paid{typeof book.price === 'number' ? ` ₹${book.price.toLocaleString('en-IN')}` : ''}
+                            {getPaidBadgeLabel(book)}
                           </span>
                         )}
                       </span>

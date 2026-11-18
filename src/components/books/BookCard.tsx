@@ -4,7 +4,7 @@ import { Book } from '../../types';
 import { CoverImage } from './CoverImage';
 import { appState } from '../../state/appState';
 import { router } from '../../router/router';
-import { getItemType, getTypeLabel, getTypeBadgeColor, getBookCoverUrl } from '../../utils/fileUtils';
+import { getItemType, getTypeLabel, getTypeBadgeColor, getBookCoverUrl, getPaidBadgeLabel } from '../../utils/fileUtils';
 
 interface BookCardProps {
   book: Book;
@@ -61,9 +61,9 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0, o
           <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border backdrop-blur-sm rounded ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
             {typeLabel}
           </span>
-          {book.isPaid ? (
+          {getPaidBadgeLabel(book) ? (
             <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-[var(--gold)]/60 bg-black/70 text-[var(--gold)] backdrop-blur-sm rounded">
-              Paid{typeof book.price === 'number' ? ` • ₹${book.price.toLocaleString('en-IN')}` : ''}
+              {getPaidBadgeLabel(book)}
             </span>
           ) : (
             <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 backdrop-blur-sm rounded">
