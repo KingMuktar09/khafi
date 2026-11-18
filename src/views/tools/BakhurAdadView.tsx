@@ -1,35 +1,29 @@
 import React, { useState } from 'react';
-import { ToolsLayout } from './ToolsLayout';
-import { ShellEmptyState } from './ShellEmptyState';
+import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { FilledToolPage } from './FilledToolPage';
 
 /**
- * Tier B shell only. Bakhur and Adad will hold catalogue entries
- * only — each substance named, paged, and counted — when material
- * is supplied with a source, page, and permission note. Never
- * quantities, preparation, or recipes.
+ * Filled in Stage 3B from the Al Asrar notebook. Catalogue entries
+ * only: each substance named, paged, and counted. Never quantities,
+ * preparation, or recipes. The search box filters the entries.
  */
 export const BakhurAdadView: React.FC = () => {
   const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filter = q
+    ? (entry: { title: string; body: string; source: string; arabic?: string; transliteration?: string; meaning?: string }) =>
+        [entry.title, entry.body, entry.source, entry.arabic ?? '', entry.transliteration ?? '', entry.meaning ?? '']
+          .some((field) => field.toLowerCase().includes(q))
+    : undefined;
 
   return (
-    <ToolsLayout
+    <FilledToolPage
+      content={AL_ASRAR_TOOLS['bakhur-adad']}
       title="Bakhur and Adad"
       eyebrow="Bakhur and Adad"
-      subtitle="A catalogue of named substances — nothing more."
+      subtitle="A catalogue of named substances and the number work, nothing more."
+      filter={filter}
     >
-      <section className="ms-card space-y-3">
-        <h2 className="ms-h2">What this section will hold</h2>
-        <p className="ms-body">
-          Bakhur and Adad is a catalogue. When material is supplied, each entry will name a
-          substance and give its source and page, so a reader can count the entries and look
-          each one up.
-        </p>
-        <p className="ms-body">
-          That is all it will hold: names, pages, and counts. It will never show quantities,
-          preparation, or recipes.
-        </p>
-      </section>
-
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor="bakhur-adad-search">
           Search the catalogue
@@ -43,10 +37,6 @@ export const BakhurAdadView: React.FC = () => {
           className="ms-field w-full min-h-11 px-3.5 text-base"
         />
       </div>
-
-      <section className="ms-card" aria-label="Catalogue entries">
-        <ShellEmptyState />
-      </section>
-    </ToolsLayout>
+    </FilledToolPage>
   );
 };

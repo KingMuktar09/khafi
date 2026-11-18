@@ -40,9 +40,9 @@ export interface FilledToolContent {
 }
 
 /**
- * The 15 Tier B tools filled in Stage 3A. Works, Bakhur and Adad,
- * Shurut and Glossary stay shells. Their material is in the second
- * batch and is not in hand yet.
+ * The 19 Tier B tools, filled from the Al Asrar notebook in two
+ * batches (Stage 3A and Stage 3B, 18 Nov 2026). No Tier B tool is
+ * still a shell.
  */
 export const AL_ASRAR_TOOLS: Record<string, FilledToolContent> = {
   kitab: {
@@ -895,6 +895,240 @@ export const AL_ASRAR_TOOLS: Record<string, FilledToolContent> = {
         title: 'Seven-Metal Casting',
         body: 'One plate is cast from seven metals together. The books name the seven-metal casting as a work of its own. Seven metals, seven planets, one plate. The casting joins them all.',
         source: 'Kitab al-Ajnas, p. 46',
+      },
+    ],
+  },
+  works: {
+    id: 'works',
+    intro:
+      'A work is a practical act, done with discipline and with God in mind. I gathered what the books say a work is, what it needs, and how knowledge and action belong together. Here it is, from the books themselves.',
+    entries: [
+      {
+        title: 'What a work is',
+        body: 'An operation is a practical, spiritually disciplined act. It has two purposes. The first is attaining proximity to the Lordly Presence. The second is attaining lawful worldly needs.',
+        source: 'Shams al-Ma\u2019arif al-Kubra, printed p. 1; Shams Vol. 1 Preface, p. 2',
+        arabic: 'عمل',
+        transliteration: 'amal',
+        meaning: 'work, operation',
+      },
+      {
+        title: 'God is the sole Agent',
+        body: 'God is the sole true Agent. Operations are only secondary instruments. Nothing in a work acts on its own. Everything acts by His leave.',
+        source: 'Manba\u2019 Usul al-Hikma, p. 43',
+      },
+      {
+        title: 'Intention is the anchor',
+        body: 'Intention is the anchor of every work. The Prophet said, "Actions are only by intentions." A work without intention is a body without a soul.',
+        source: 'Hadha Hijab \u2019Azim al-Sha\u2019n, p. 4; Majmu\u2019at Thalath Rasa\u2019il, pp. 26-27; Shams, p. 24',
+        arabic: 'نية',
+        transliteration: 'niyyah',
+        meaning: 'intention',
+      },
+      {
+        title: 'The 28 letters in four groups',
+        body: 'The 28 letters stand in four elemental groups: Fire, Earth, Air and Water. The Fire group is Alif, Ha, Ta, Mim, Fa, Shin and Dhal. The letters are the raw material of every work.',
+        source: 'Manba\u2019, pp. 2-3',
+      },
+      {
+        title: 'Square sizes and their uses',
+        body: 'The books give each square size a use. A 3x3 square is for good and easing. A 4x4 square is for harmony. A 6x6 square is for elevation. A 7x7 square is for overcoming obstacles. An 8x8 square is for health.',
+        source: 'Manba\u2019, p. 28',
+      },
+      {
+        title: 'Luminous and dark letters',
+        body: 'Luminous letters operate on spiritual entities. Dark letters operate on corporeal bodies. The books keep the two apart, because each kind of letter works on its own kind of thing.',
+        source: 'Usul \u2019Ilm al-Huruf, Ch. 7, p. 64',
+      },
+      {
+        title: 'Protocols of a work',
+        body: 'A work has protocols. Settled certainty. Perseverance. Mental voidness. Memorised formulas. The waxing moon and undotted days. And sealing with charity at the end.',
+        source: 'The Radiant Jewels, pp. 77-80; Tested Remedies, p. 77',
+        arabic: 'يقين',
+        transliteration: 'yaqin',
+        meaning: 'settled certainty',
+      },
+      {
+        title: 'Knowledge cries out for action',
+        body: 'Knowledge without action is dead weight. Al-Fath al-Rabbani says, "Knowledge cries out for action." Jila\u2019 al-Khatir says knowledge is like the sword and action is like the hand. And the books praise constancy in small, sustainable works over great bursts that do not last.',
+        source: 'al-Fath al-Rabbani, Discourse 3, p. 27; Jila\u2019 al-Khatir, p. 57; Mudih al-Tariq, p. 95; Nahj al-Balagha, pp. 326, 497',
+      },
+    ],
+  },
+  'bakhur-adad': {
+    id: 'bakhur-adad',
+    intro:
+      'Bakhur and Adad is a catalogue, nothing more. It names the aromatic substances and the number work, with the source and page for each, so a reader can count the entries and look each one up. It never gives quantities, preparation, or recipes.',
+    entries: [
+      {
+        title: 'What bakhur is',
+        body: 'Bakhur is the aromatic substance combusted as the subtle vehicle of the spirit. Spiritual entities lack dense digestive organs, so the smoke carries what the work needs.',
+        source: 'Kitab al-Ajnas, Glossary, p. 147; Shams Vol. 1 Preface, p. 3',
+        arabic: 'بخور',
+        transliteration: 'bakhur',
+        meaning: 'incense, aromatic substance',
+      },
+      {
+        title: 'Fumigation vitalises the written matrix',
+        body: 'Fumigation vitalises a written matrix. The smoke wakes the written work and gives it life. Without it, the writing stays still.',
+        source: 'Tested Remedies, p. 78',
+      },
+      {
+        title: 'Polarity: fragrant and acrid',
+        body: 'Substances have a polarity. Fragrant and sweet substances belong to benevolent works. Acrid and constrictive substances belong to constrictive works. The books keep the two apart.',
+        source: 'Kitab al-Ajnas, p. 83 and Glossary p. 147; Radiant Jewels, Ch. 17, p. 57',
+      },
+      {
+        title: 'Planetary correspondences are tabulated',
+        body: 'The planetary fumigation correspondences are tabulated in the books. This catalogue names the tables, not the ingredients. No ingredient lists are given here, and no quantities or recipes.',
+        source: 'The Radiant Jewels; Manba\u2019 Usul al-Hikma (planetary fumigation tables)',
+      },
+      {
+        title: 'What adad is',
+        body: 'Adad is the number work. Abjad, also called hisab al-jummal, is the numerical value of letters. The 28 letters and their abjad values are the foundation of all of it.',
+        source: 'Manba\u2019 Usul al-Hikma (Adad section)',
+        arabic: 'عدد',
+        transliteration: 'adad',
+        meaning: 'number',
+      },
+      {
+        title: 'The ninefold system, the Seven Seals, the correspondence tables',
+        body: 'The Adad section of the books gives the ninefold system, the Seven Seals, and the correspondence tables. Its summary table pairs each domain, bakhur polarity, planetary correspondence, abjad, and letter squares, with its source and page.',
+        source: 'Shams al-Ma\u2019arif and the Bunian manuals (Adad section)',
+      },
+    ],
+  },
+  shurut: {
+    id: 'shurut',
+    intro:
+      'Shurut are the conditions. A work done outside its conditions is a work done wrong. I gathered the conditions the books name, each with its source and page, so a reader can check them one by one.',
+    entries: [
+      {
+        title: 'Auspicious timing',
+        body: 'Timing is a condition. A work is done in its auspicious time, not at any hour. The books name the right times and warn against the wrong ones.',
+        source: 'The Radiant Jewels, pp. 79-80',
+      },
+      {
+        title: 'Elemental and letter harmony',
+        body: 'The letters and the elements must agree. A work done against the nature of its letters fights itself. Harmony between the letter and the element is a condition.',
+        source: 'Manba\u2019, pp. 2-3',
+      },
+      {
+        title: 'Consecration by fragrant smoke',
+        body: 'The work is consecrated by fragrant smoke. The smoke marks the work as set apart, and it carries the work to the spirits.',
+        source: 'Kitab al-Ajnas, p. 147',
+      },
+      {
+        title: 'Sealing with charity',
+        body: 'A work is sealed with charity. Giving at the end closes the work and fixes it in place. Without the seal, the work stays open.',
+        source: 'The Radiant Jewels, p. 80',
+      },
+      {
+        title: 'Purity, intention and certainty',
+        body: 'Purity, intention and certainty are the inner conditions. The body is clean, the intention is fixed, and the heart is certain. The books return to these three again and again.',
+        source: 'The Radiant Jewels, pp. 77-80; Shams, p. 24',
+        arabic: 'شروط',
+        transliteration: 'shurut',
+        meaning: 'conditions',
+      },
+      {
+        title: 'The full protocols',
+        body: 'The full protocols of a work are settled certainty, perseverance, mental voidness, memorised formulas, the waxing moon and undotted days, and sealing with charity. They are set out in full under Works.',
+        source: 'The Radiant Jewels, pp. 77-80; Tested Remedies, p. 77',
+      },
+    ],
+  },
+  glossary: {
+    id: 'glossary',
+    intro:
+      'The Glossary explains the words used across this section, in plain words. These are the terms gathered so far, each with its source and page. The full table is still being gathered from the notebook, and more terms will be added here.',
+    entries: [
+      {
+        title: 'Abjad',
+        body: 'Abjad is the name the books give to the letter-number system. Each Arabic letter carries a number, and the numbers are the spirits of the letters.',
+        source: 'Usul \u2019Ilm al-Huruf, p. 88',
+        arabic: 'أبجد',
+        transliteration: 'abjad',
+        meaning: 'the letter-number system',
+      },
+      {
+        title: 'Adad',
+        body: 'Adad means number. In these books it is the number work: the values of letters and the sums built from them.',
+        source: 'Suns of Lights, p. 132',
+        arabic: 'عدد',
+        transliteration: 'adad',
+        meaning: 'number',
+      },
+      {
+        title: 'Adhkar',
+        body: 'Adhkar are the remembrances: the repeated phrases of remembrance that the seeker says again and again.',
+        source: 'Manba\u2019, p. 144',
+        arabic: 'أذكار',
+        transliteration: 'adhkar',
+        meaning: 'remembrances',
+      },
+      {
+        title: 'Alam al-Malakut',
+        body: 'Alam al-Malakut is the World of Sovereignty, the luminous world behind the physical world. It is discussed in full under Topics.',
+        source: 'Manba\u2019, p. 63',
+        arabic: 'عالم الملكوت',
+        transliteration: '\u2019Alam al-Malakut',
+        meaning: 'the World of Sovereignty',
+      },
+      {
+        title: 'Amal',
+        body: 'An amal is a work, a practical operation. The Amals page holds the practices gathered from the books.',
+        source: 'Manba\u2019, p. 103',
+        arabic: 'عمل',
+        transliteration: '\u2019amal',
+        meaning: 'a work, a practical operation',
+      },
+      {
+        title: 'al-Aql',
+        body: 'Al-Aql is the Intellect, the highest part of man and the first thing God created in the books of the Sufis.',
+        source: 'al-Asrar al-Rabbaniyyah, p. 150',
+        arabic: 'العقل',
+        transliteration: 'al-\u2019Aql',
+        meaning: 'the Intellect',
+      },
+      {
+        title: 'al-Arsh wa-l-Kursi',
+        body: 'Al-Arsh wa-l-Kursi are the Throne and the Footstool, the two highest seats of the cosmos in the books.',
+        source: 'Mudih al-Tariq, p. 110',
+        arabic: 'العرش والكرسي',
+        transliteration: 'al-\u2019Arsh wa-l-Kursi',
+        meaning: 'the Throne and the Footstool',
+      },
+      {
+        title: 'al-Asma al-Husna',
+        body: 'Al-Asma al-Husna are the Most Beautiful Names of God. The Asma tool lists all ninety-nine of them with their values.',
+        source: 'Hadha Hijab, p. 30',
+        arabic: 'الأسماء الحسنى',
+        transliteration: 'al-Asma\u2019 al-Husna',
+        meaning: 'the Most Beautiful Names',
+      },
+      {
+        title: 'Asas',
+        body: 'Asas means foundation, the base on which a thing stands. The books use it for the groundwork of a science.',
+        source: 'The Radiant Jewels, p. 75',
+        arabic: 'أساس',
+        transliteration: 'asas',
+        meaning: 'foundation, basis',
+      },
+      {
+        title: 'Barzakh',
+        body: 'Barzakh is the in-between world, the barrier between two worlds. The soul crosses it, and dreams take place in it.',
+        source: 'The Journey to the Lord of Power, p. 107',
+        arabic: 'برزخ',
+        transliteration: 'barzakh',
+        meaning: 'the in-between world',
+      },
+      {
+        title: 'Bast',
+        body: 'Bast means expansion. It is the opening out of letters and numbers, the opposite of breaking them down.',
+        source: 'Usul \u2019Ilm al-Huruf, p. 88',
+        arabic: 'بسط',
+        transliteration: 'bast',
+        meaning: 'expansion',
       },
     ],
   },

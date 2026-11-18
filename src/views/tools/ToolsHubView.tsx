@@ -45,10 +45,6 @@ export const ToolsHubView: React.FC = () => {
         </span>
       </button>
 
-      <p className="ms-body text-center pt-2">
-        4 shells remain empty for now (Works, Bakhur and Adad, Shurut, Glossary). They hold only
-        content supplied with its source and page.
-      </p>
     </ToolsLayout>
   );
 };

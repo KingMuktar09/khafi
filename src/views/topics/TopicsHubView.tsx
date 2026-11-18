@@ -74,6 +74,23 @@ export const TopicsHubView: React.FC = () => {
 
       <button
         type="button"
+        onClick={() => router.navigate('topics-guides')}
+        className="ms-card ms-card-hover w-full text-left space-y-2"
+      >
+        <span className="ms-eyebrow block">Study Guides</span>
+        <span className="ms-h2 block">Study guides, in full</span>
+        <span className="ms-body block">
+          Short practical guides for the seeker, gathered from the books with their sources named.
+          All six guides on one page.
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-sm ms-gold font-semibold">
+          Read the guides
+          <ArrowRight className="w-4 h-4" aria-hidden="true" />
+        </span>
+      </button>
+
+      <button
+        type="button"
         onClick={() => router.navigate('topics-questions')}
         className="ms-card ms-card-hover w-full text-left space-y-2"
       >

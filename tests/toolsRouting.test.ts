@@ -205,6 +205,54 @@ describe('Stage 3A topic routes are wired', () => {
     const navbar = readSource('src/components/layout/Navbar.tsx');
     expect(navbar).toContain(`moreLink('topics'`);
     expect(navbar).toContain(`handleNav('topics')`);
-    expect(navbar).toContain(`'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topics-questions'`);
+    expect(navbar).toContain(`'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides'`);
+  });
+});
+
+/** Stage 3B Topics: four new topic pages + the Study Guides page. */
+const STAGE_3B_ROUTES = [
+  { route: 'topic-rijal', url: '/topics/rijal-al-ghayb', view: 'TopicRijalView' },
+  { route: 'topic-uwaisi', url: '/topics/uwaisi-transmission', view: 'TopicUwaisiView' },
+  { route: 'topic-renewal', url: '/topics/renewal-of-creation', view: 'TopicRenewalView' },
+  { route: 'topic-drinks', url: '/topics/quranic-drinks', view: 'TopicDrinksView' },
+  { route: 'topics-guides', url: '/topics/guides', view: 'GuidesView' },
+] as const;
+
+describe('Stage 3B topic routes are wired', () => {
+  it('types.ts lists every new ViewName', () => {
+    const types = readSource('src/types.ts');
+    for (const topic of STAGE_3B_ROUTES) {
+      expect(types).toContain(`'${topic.route}'`);
+    }
+  });
+
+  it('router.ts has a buildUrl case and a parseUrl case for every new route', () => {
+    const router = readSource('src/router/router.ts');
+    for (const topic of STAGE_3B_ROUTES) {
+      expect(router).toContain(`case '${topic.route}':`);
+      expect(router).toContain(`return '${topic.url}';`);
+      expect(router).toContain(`pathname === '${topic.url}'`);
+      expect(router).toContain(`view: '${topic.route}'`);
+    }
+  });
+
+  it('App.tsx imports and renders every new view', () => {
+    const app = readSource('src/App.tsx');
+    for (const topic of STAGE_3B_ROUTES) {
+      expect(app).toContain(`import { ${topic.view} }`);
+      expect(app).toContain(`case '${topic.route}':`);
+      expect(app).toContain(`<${topic.view} />`);
+    }
+  });
+
+  it('the Topics hub links to the Guides page', () => {
+    const hub = readSource('src/views/topics/TopicsHubView.tsx');
+    expect(hub).toContain(`router.navigate('topics-guides')`);
+  });
+
+  it('the search overlay finds guides and routes them to the Guides page', () => {
+    const overlay = readSource('src/views/tools/ToolsSearchOverlay.tsx');
+    expect(overlay).toContain(`STUDY_GUIDES`);
+    expect(overlay).toContain(`route: 'topics-guides'`);
   });
 });

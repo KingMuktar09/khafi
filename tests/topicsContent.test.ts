@@ -11,6 +11,7 @@ import {
   formatAddedDate,
 } from '../src/data/topicsContent';
 import { TOPIC_QUESTIONS } from '../src/data/topicsQuestions';
+import { STUDY_GUIDES } from '../src/data/studyGuides';
 import { isSupabaseConfigured, SUPABASE_URL, SUPABASE_ANON_KEY } from '../src/config/supabase';
 import { submitTopicRequest, fetchVisibleTopicRequests } from '../src/services/topicRequests';
 
@@ -37,18 +38,22 @@ describe('Topic of the Day rotates in fixed upload order', () => {
     expect(getTopicOfTheDay(new Date(2026, 10, 20)).topic.id).toBe('ruh-and-soul');
     expect(getTopicOfTheDay(new Date(2026, 10, 25)).topic.id).toBe('al-khidr');
     expect(getTopicOfTheDay(new Date(2026, 10, 25)).dayNumber).toBe(8);
+    expect(getTopicOfTheDay(new Date(2026, 10, 26)).topic.id).toBe('rijal-al-ghayb');
+    expect(getTopicOfTheDay(new Date(2026, 10, 27)).topic.id).toBe('uwaisi-transmission');
+    expect(getTopicOfTheDay(new Date(2026, 10, 28)).topic.id).toBe('renewal-of-creation');
+    expect(getTopicOfTheDay(new Date(2026, 10, 29)).topic.id).toBe('quranic-drinks');
   });
 
   it('cycles back to the start when the list ends', () => {
-    const day9 = getTopicOfTheDay(new Date(2026, 10, 26));
-    expect(day9.dayNumber).toBe(9);
-    expect(day9.topic.id).toBe('ibn-arabi-40-day-retreat');
+    const day13 = getTopicOfTheDay(new Date(2026, 10, 30));
+    expect(day13.dayNumber).toBe(13);
+    expect(day13.topic.id).toBe('ibn-arabi-40-day-retreat');
   });
 
-  it('gives day 45 on 1 Jan 2027, the Seal of Solomon', () => {
+  it('gives day 45 on 1 Jan 2027, Rijal al-Ghayb', () => {
     const day45 = getTopicOfTheDay(new Date(2027, 0, 1));
     expect(day45.dayNumber).toBe(45);
-    expect(day45.topic.id).toBe('seal-of-solomon');
+    expect(day45.topic.id).toBe('rijal-al-ghayb');
   });
 
   it('is the same for every visitor on the same day', () => {
@@ -86,13 +91,16 @@ describe('Topic of the Day rotates in fixed upload order', () => {
 });
 
 describe('Questions', () => {
-  it('has six answered questions, each with sources', () => {
+  it('has nine answered questions, each with sources', () => {
     expect(TOPIC_QUESTIONS.map((q) => q.id)).toEqual([
       'what-is-the-ruh',
       'what-is-special-about-alif',
       'did-solomon-have-a-ring',
       'three-kinds-of-dreams',
       'what-happened-when-solomon-died',
+      'what-is-alam-al-mithal',
+      'who-are-rijal-al-ghayb',
+      'why-do-letters-work',
       'is-the-picatrix-in-these-books',
     ]);
     for (const item of TOPIC_QUESTIONS) {
@@ -245,6 +253,52 @@ describe('Posting as anonymous', () => {
     expect(questions).toContain('post as anonymous');
     const hub = readSource('src/views/topics/TopicsHubView.tsx');
     expect(hub).toContain('post as anonymous');
+  });
+});
+
+describe('Study guides', () => {
+  it('has the six guides, in the order gathered, each with intro, sections, closing and sources', () => {
+    expect(STUDY_GUIDES.map((g) => g.id)).toEqual([
+      'tabdid-al-ilm',
+      'testing-inspirations',
+      'four-classes-of-people',
+      'knowledge-and-action',
+      'prerequisites-of-the-seeker',
+      'scattered-operations',
+    ]);
+    for (const guide of STUDY_GUIDES) {
+      expect(guide.intro.trim().length, `${guide.id} intro`).toBeGreaterThan(0);
+      expect(guide.closing.trim().length, `${guide.id} closing`).toBeGreaterThan(0);
+      expect(guide.sections.length, `${guide.id} sections`).toBeGreaterThanOrEqual(2);
+      expect(guide.sources.length, `${guide.id} sources`).toBeGreaterThanOrEqual(1);
+      for (const section of guide.sections) {
+        expect(section.heading.trim().length).toBeGreaterThan(0);
+        for (const paragraph of section.paragraphs) {
+          expect(paragraph.trim().length).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('the two guides with lists not in hand say so plainly instead of inventing them', () => {
+    const classes = STUDY_GUIDES.find((g) => g.id === 'four-classes-of-people');
+    expect(classes?.intro).toContain('not yet in hand');
+    const prereqs = STUDY_GUIDES.find((g) => g.id === 'prerequisites-of-the-seeker');
+    expect(prereqs?.intro).toContain('not yet in hand');
+  });
+});
+
+describe('Sawaqit names are sourced, not "source needed"', () => {
+  it('the Sawaqit page names all seven names with the John Friend Ch. 13 source', () => {
+    const view = readSource('src/views/tools/SawaqitView.tsx');
+    expect(view).not.toContain('Source needed');
+    for (const name of ['al-Fard', 'al-Jabbar', 'al-Shahid', 'al-Thabit', 'al-Zahir', 'al-Khabir', 'al-Zaki']) {
+      expect(view, `missing Sawaqit name ${name}`).toContain(name);
+    }
+    expect(view).toContain('John Friend');
+    expect(view).toContain('Ch. 13');
+    expect(view).toContain('Fa-Ja-Sha-Tha-Za-Kha-Za');
+    expect(view).toContain('Suns of Lights');
   });
 });
 

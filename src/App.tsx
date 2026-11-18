@@ -30,7 +30,12 @@ import { TopicSealView } from './views/topics/TopicSealView';
 import { TopicDreamsView } from './views/topics/TopicDreamsView';
 import { TopicSabaView } from './views/topics/TopicSabaView';
 import { TopicKhidrView } from './views/topics/TopicKhidrView';
+import { TopicRijalView } from './views/topics/TopicRijalView';
+import { TopicUwaisiView } from './views/topics/TopicUwaisiView';
+import { TopicRenewalView } from './views/topics/TopicRenewalView';
+import { TopicDrinksView } from './views/topics/TopicDrinksView';
 import { QuestionsView } from './views/topics/QuestionsView';
+import { GuidesView } from './views/topics/GuidesView';
 
 // Study tools (Phase 1): calculators + device-only tools, behind the gate.
 import { ToolsHubView } from './views/tools/ToolsHubView';
@@ -188,8 +193,18 @@ export default function App() {
         return <TopicSabaView />;
       case 'topic-khidr':
         return <TopicKhidrView />;
+      case 'topic-rijal':
+        return <TopicRijalView />;
+      case 'topic-uwaisi':
+        return <TopicUwaisiView />;
+      case 'topic-renewal':
+        return <TopicRenewalView />;
+      case 'topic-drinks':
+        return <TopicDrinksView />;
       case 'topics-questions':
         return <QuestionsView />;
+      case 'topics-guides':
+        return <GuidesView />;
       case 'tools':
         return <ToolsHubView />;
       case 'tools-huruf':

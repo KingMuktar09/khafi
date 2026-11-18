@@ -130,8 +130,18 @@ class Router {
         return '/topics/surah-saba-34-14';
       case 'topic-khidr':
         return '/topics/al-khidr';
+      case 'topic-rijal':
+        return '/topics/rijal-al-ghayb';
+      case 'topic-uwaisi':
+        return '/topics/uwaisi-transmission';
+      case 'topic-renewal':
+        return '/topics/renewal-of-creation';
+      case 'topic-drinks':
+        return '/topics/quranic-drinks';
       case 'topics-questions':
         return '/topics/questions';
+      case 'topics-guides':
+        return '/topics/guides';
       case 'tools':
         return '/tools';
       case 'tools-huruf':
@@ -310,8 +320,28 @@ class Router {
       return { view: 'topic-khidr' };
     }
 
+    if (pathname === '/topics/rijal-al-ghayb') {
+      return { view: 'topic-rijal' };
+    }
+
+    if (pathname === '/topics/uwaisi-transmission') {
+      return { view: 'topic-uwaisi' };
+    }
+
+    if (pathname === '/topics/renewal-of-creation') {
+      return { view: 'topic-renewal' };
+    }
+
+    if (pathname === '/topics/quranic-drinks') {
+      return { view: 'topic-drinks' };
+    }
+
     if (pathname === '/topics/questions') {
       return { view: 'topics-questions' };
+    }
+
+    if (pathname === '/topics/guides') {
+      return { view: 'topics-guides' };
     }
 
     if (pathname === '/tools') {

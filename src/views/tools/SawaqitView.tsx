@@ -8,8 +8,8 @@ import { ToolsLayout } from './ToolsLayout';
  * The Sawaqit: the seven letters that do not appear in al-Fatiha.
  * The letters are COMPUTED by counting which of the 28 letters appear
  * in the Fatiha text (see computeSawaqit in src/data/quranTexts.ts).
- * The traditional names attached to the seven absent letters are NOT
- * shown with values here: no source has been named for them yet.
+ * The traditional names attached to the seven absent letters ARE shown
+ * below, with their source: John Friend Shams, Ch. 13.
  */
 export const SawaqitView: React.FC = () => {
   const [system, setSystem] = useState<AbjadSystem>('kabir');
@@ -137,10 +137,63 @@ export const SawaqitView: React.FC = () => {
       <section className="ms-card space-y-3">
         <h2 className="ms-h2">Names for the seven letters</h2>
         <p className="ms-body">
-          Source needed. The traditional names attached to the seven absent letters are not shown
-          here, because no source has been named for them yet. The Inloes translation of Shams
-          al-Ma&apos;arif was checked and does not give them. If a named source is supplied, the
-          names will be added with that source shown.
+          The books give a Name of God for each absent letter. The seven names, in the order the
+          books give them, are Fa, Jim, Shin, Tha, Za, Kha, Zay. Remember them by the first
+          sounds: Fa-Ja-Sha-Tha-Za-Kha-Za. The two letters that sound like &ldquo;z&rdquo; are
+          different letters: Za&rsquo; (ظ) and Zay (ز).
+        </p>
+        <div className="ms-surface ms-table-wrap">
+          <table className="ms-table">
+            <thead>
+              <tr className="text-left">
+                <th scope="col" className="px-4 py-3 font-medium">Letter</th>
+                <th scope="col" className="px-4 py-3 font-medium">Name</th>
+                <th scope="col" className="px-4 py-3 font-medium">Also given as</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">ف</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الفرد</span> al-Fard, the Unique, the Singular</td>
+                <td className="px-4 py-2.5 ms-ink">al-Fatir</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">ج</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الجبار</span> al-Jabbar, the Compeller, the Restorer</td>
+                <td className="px-4 py-2.5 ms-ink">al-Jalil (جليل)</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">ش</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الشهيد</span> al-Shahid, the Witness</td>
+                <td className="px-4 py-2.5 ms-ink">al-Shakur (شكور)</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">ث</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الثابت</span> al-Thabit, the Firm, the Constant</td>
+                <td className="px-4 py-2.5 ms-ink">al-Ba&rsquo;ith (باعث), al-Warith (وارث)</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">ظ</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الظاهر</span> al-Zahir, the Manifest, the Helper</td>
+                <td className="px-4 py-2.5 ms-ink">al-Zahir, pp. 88-89</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">خ</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الخبير</span> al-Khabir, the All-Aware</td>
+                <td className="px-4 py-2.5 ms-ink">al-Khayyar, al-Khayr</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5"><span className="ms-arabic ms-ink" dir="rtl" lang="ar">ز</span></td>
+                <td className="px-4 py-2.5 ms-ink"><span className="ms-arabic" dir="rtl" lang="ar">الزكي</span> al-Zaki, the Pure</td>
+                <td className="px-4 py-2.5 ms-ink">al-&rsquo;Aziz (عزيز)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="ms-body">
+          Source: John Friend, Shams al-Ma&rsquo;arif al-Kubra, Ch. 13, &ldquo;On the Omitted Letters
+          of the Fatiha and What Belongs to Them of Magic Squares and Invocations&rdquo;, section
+          &ldquo;The Seven Wafqs of the Omitted Letters of al-Fatiha&rdquo;. Cross-check: Suns of Lights, p. 75, gives the same sequence, Fard, Jabbar, Shakur, Thabit, Zahir, Khabir, Zaki, with the seven planetary days.
         </p>
       </section>
 

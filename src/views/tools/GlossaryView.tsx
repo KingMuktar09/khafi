@@ -1,36 +1,38 @@
 import React, { useState } from 'react';
-import { ToolsLayout } from './ToolsLayout';
-import { ShellEmptyState } from './ShellEmptyState';
+import { AL_ASRAR_TOOLS } from '../../data/alAsrarContent';
+import { FilledToolPage } from './FilledToolPage';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 /**
- * Tier B shell only. Glossary will hold term entries, when material
- * is supplied with a source, page, and permission note. No terms
- * are shown here.
+ * Filled in Stage 3B from the Al Asrar notebook. Term entries are
+ * listed below with their source named; the search box and the A to Z
+ * chips filter them.
  */
 export const GlossaryView: React.FC = () => {
   const [query, setQuery] = useState('');
   const [letter, setLetter] = useState('All');
+  const q = query.trim().toLowerCase();
+  const filter =
+    q || letter !== 'All'
+      ? (entry: { title: string; body: string; source: string; arabic?: string; transliteration?: string; meaning?: string }) => {
+          const matchesQuery =
+            !q ||
+            [entry.title, entry.body, entry.source, entry.arabic ?? '', entry.transliteration ?? '', entry.meaning ?? '']
+              .some((field) => field.toLowerCase().includes(q));
+          const matchesLetter = letter === 'All' || entry.title.toUpperCase().startsWith(letter);
+          return matchesQuery && matchesLetter;
+        }
+      : undefined;
 
   return (
-    <ToolsLayout
+    <FilledToolPage
+      content={AL_ASRAR_TOOLS['glossary']}
       title="Glossary"
       eyebrow="Glossary"
-      subtitle="Term entries, A to Z — when supplied."
+      subtitle="The words used across this section, in plain words."
+      filter={filter}
     >
-      <section className="ms-card space-y-3">
-        <h2 className="ms-h2">What this section will hold</h2>
-        <p className="ms-body">
-          The Glossary explains the words used across this section, in plain words. When material
-          is supplied, each term will appear here with its source and page named.
-        </p>
-        <p className="ms-body">
-          Until then this page is only a template: a search box, an A to Z filter, and a place
-          where term entries will be listed. No terms have been added yet.
-        </p>
-      </section>
-
       <div className="space-y-1.5">
         <label className="ms-label" htmlFor="glossary-search">
           Search terms
@@ -62,17 +64,12 @@ export const GlossaryView: React.FC = () => {
             </button>
           ))}
         </div>
+        {letter !== 'All' ? (
+          <p className="ms-note-box">
+            Showing terms under {letter}. Tap All to see the whole glossary again.
+          </p>
+        ) : null}
       </div>
-
-      <section className="ms-card" aria-label="Term entries">
-        <ShellEmptyState
-          message={
-            letter === 'All'
-              ? 'Nothing here yet — terms are added only from material supplied with a source, page, and permission note.'
-              : `No terms under ${letter} yet — terms are added only from material supplied with a source, page, and permission note.`
-          }
-        />
-      </section>
-    </ToolsLayout>
+    </FilledToolPage>
   );
 };

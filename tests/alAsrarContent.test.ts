@@ -7,8 +7,8 @@ import { FRIEND_AMALS, FRIEND_AMALS_SOURCE, FRIEND_AMALS_WARNING } from '../src/
 import { ASMA_NAMES } from '../src/data/asmaNames';
 
 /**
- * Stage 3A content checks: the 15 filled Tier B tools, the two
- * Topics, and the 6 John Friend amals. Content prose is used exactly
+ * Stage 3A + 3B content checks: the 19 filled Tier B tools, the twelve
+ * Topics, and the 25 John Friend amals. Content prose is used exactly
  * as written in the data files; these tests only check shape,
  * completeness and honest sourcing, never the wording.
  */
@@ -29,10 +29,33 @@ const FILLED_TOOL_IDS = [
   'qalam',
   'khatam',
   'plate',
+  'works',
+  'bakhur-adad',
+  'shurut',
+  'glossary',
 ] as const;
 
 /** Friend amal number -> bare Arabic name in the 99 Names data. */
 const FRIEND_BARE: Record<number, string> = {
+  1: 'رحمن',
+  2: 'قدوس',
+  3: 'سلام',
+  4: 'عزيز',
+  5: 'وهاب',
+  6: 'رزاق',
+  7: 'فتاح',
+  8: 'عليم',
+  9: 'قابض',
+  10: 'باسط',
+  11: 'رافع',
+  12: 'حليم',
+  13: 'عظيم',
+  14: 'شكور',
+  15: 'ودود',
+  16: 'باعث',
+  17: 'حق',
+  18: 'قوي',
+  19: 'متين',
   20: 'ولي',
   21: 'مبدئ',
   22: 'محيي',
@@ -46,7 +69,7 @@ function readSource(relPath: string): string {
 }
 
 describe('Al Asrar filled tools', () => {
-  it('has exactly the 15 filled tools, no more and no fewer', () => {
+  it('has exactly the 19 filled tools, no more and no fewer', () => {
     expect(Object.keys(AL_ASRAR_TOOLS).sort()).toEqual([...FILLED_TOOL_IDS].sort());
   });
 
@@ -77,7 +100,7 @@ describe('Al Asrar filled tools', () => {
 });
 
 describe('Topics', () => {
-  it('has the eight topics, in fixed upload order, each with a non-empty intro and closing', () => {
+  it('has the twelve topics, in fixed upload order, each with a non-empty intro and closing', () => {
     expect(TOPICS.map((t) => t.id)).toEqual([
       'ibn-arabi-40-day-retreat',
       'alam-al-malakut',
@@ -87,6 +110,10 @@ describe('Topics', () => {
       'three-kinds-of-dreams',
       'surah-saba-34-14',
       'al-khidr',
+      'rijal-al-ghayb',
+      'uwaisi-transmission',
+      'renewal-of-creation',
+      'quranic-drinks',
     ]);
     for (const topic of TOPICS) {
       expect(topic.intro.trim().length, `${topic.id} intro`).toBeGreaterThan(0);
@@ -123,20 +150,45 @@ describe('Topics', () => {
     }
   });
 
-  it('the Malakut topic says plainly that the discussion continues', () => {
+  it('the Malakut topic is complete: no continues note, no "source needed", and the new sections are there', () => {
     const malakut = TOPICS.find((t) => t.id === 'alam-al-malakut');
-    expect(malakut?.continuesNote).toContain('This discussion continues');
-    expect(malakut?.sources.join(' ').toLowerCase()).toContain('source needed');
+    expect(malakut?.continuesNote).toBeUndefined();
+    expect(malakut?.sources.join(' ').toLowerCase()).not.toContain('source needed');
+    expect(malakut?.sections.length).toBeGreaterThanOrEqual(10);
+    const headings = malakut?.sections.map((s) => s.heading) ?? [];
+    expect(headings).toContain('The Genesis of the Malakut');
+    expect(headings).toContain('The Eight Pillars of the Highest Malakut');
+    expect(headings).toContain('The human microcosm');
+    expect(headings).toContain('The Veil of Food and the Threefold Unveiling');
+  });
+
+  it('the al-Khidr topic and the retreat topic have no continues note any more', () => {
+    const khidr = TOPICS.find((t) => t.id === 'al-khidr');
+    expect(khidr?.continuesNote).toBeUndefined();
+    const headings = khidr?.sections.map((s) => s.heading) ?? [];
+    expect(headings).toContain('First meeting: Seville');
+    expect(headings).toContain('Second meeting: the Port of Tunis');
+    expect(headings).toContain('Third meeting: the Atlantic coast of Spain');
+    const retreat = TOPICS.find((t) => t.id === 'ibn-arabi-40-day-retreat');
+    expect(retreat?.continuesNote).toBeUndefined();
+  });
+
+  it('no topic carries a continues note', () => {
+    for (const topic of TOPICS) {
+      expect(topic.continuesNote, `${topic.id} should be complete`).toBeUndefined();
+    }
   });
 });
 
 describe('John Friend amals', () => {
-  it('has numbers 20 to 25 with no duplicates', () => {
-    expect(FRIEND_AMALS.map((a) => a.number)).toEqual([20, 21, 22, 23, 24, 25]);
+  it('has numbers 1 to 25 with no duplicates', () => {
+    expect(FRIEND_AMALS.map((a) => a.number)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+    ]);
     expect(new Set(FRIEND_AMALS.map((a) => a.id)).size).toBe(FRIEND_AMALS.length);
   });
 
-  it('every amal has title, purpose, how, section and a page within 42 to 50', () => {
+  it('every amal has title, purpose, how, section and a page within 37 to 50', () => {
     for (const amal of FRIEND_AMALS) {
       expect(amal.title.trim().length).toBeGreaterThan(0);
       expect(amal.purpose.trim().length).toBeGreaterThan(0);
@@ -144,7 +196,7 @@ describe('John Friend amals', () => {
       expect(amal.section.trim().length).toBeGreaterThan(0);
       const page = Number(amal.page);
       expect(Number.isInteger(page)).toBe(true);
-      expect(page).toBeGreaterThanOrEqual(42);
+      expect(page).toBeGreaterThanOrEqual(37);
       expect(page).toBeLessThanOrEqual(50);
     }
   });
@@ -168,7 +220,8 @@ describe('John Friend amals', () => {
       const name = ASMA_NAMES.find((n) => n.bare === bare);
       expect(name, `no 99 Names entry with bare "${bare}"`).toBeDefined();
       // Transliteration without the article prefix appears in the title.
-      const namePart = name!.transliteration.replace(/^(Al|Ar|As)-/, '');
+      // The prefix strip also handles the sun-letter form Ash- (Ash-Shakur).
+      const namePart = name!.transliteration.replace(/^(Al|Ar|As|Ash)-/, '');
       expect(amal.title.toLowerCase()).toContain(namePart.toLowerCase());
       // Meaning (without a leading "The ") appears in the title or how,
       // except amal 23, whose gloss is not in hand yet.
@@ -181,13 +234,14 @@ describe('John Friend amals', () => {
   });
 });
 
-describe('No em dashes in the Stage 3A content files', () => {
-  it('alAsrarContent.ts, topicsContent.ts, topicsQuestions.ts and friendAmals.ts contain no em dash', () => {
+describe('No em dashes in the Stage 3A/3B content files', () => {
+  it('alAsrarContent.ts, topicsContent.ts, topicsQuestions.ts, friendAmals.ts and studyGuides.ts contain no em dash', () => {
     for (const file of [
       'src/data/alAsrarContent.ts',
       'src/data/topicsContent.ts',
       'src/data/topicsQuestions.ts',
       'src/data/friendAmals.ts',
+      'src/data/studyGuides.ts',
     ]) {
       const text = readSource(file);
       expect(text, `${file} must not contain an em dash`).not.toContain('\u2014');

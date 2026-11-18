@@ -4,6 +4,7 @@ import { router } from '../../router/router';
 import { TOOLS_INDEX } from '../../data/toolsIndex';
 import { TOPICS, topicRouteFor } from '../../data/topicsContent';
 import { TOPIC_QUESTIONS } from '../../data/topicsQuestions';
+import { STUDY_GUIDES } from '../../data/studyGuides';
 import { ASMA_NAMES } from '../../data/asmaNames';
 import type { ViewName } from '../../types';
 
@@ -23,9 +24,10 @@ interface SearchHit {
 const MAX_NAME_HITS = 8;
 
 /**
- * Ctrl+K search overlay: searches the tool pages, the Topics and the 99 Names
- * (by Arabic, transliteration or meaning). Enter or a tap navigates;
- * a Name result opens the Asma page. Escape closes.
+ * Ctrl+K search overlay: searches the tool pages, the Topics, the Study
+ * Guides and the 99 Names (by Arabic, transliteration or meaning). Enter
+ * or a tap navigates; a Name result opens the Asma page, a Guide result
+ * opens the Guides page. Escape closes.
  */
 export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, onClose }) => {
   const [query, setQuery] = useState('');
@@ -94,7 +96,21 @@ export const ToolsSearchOverlay: React.FC<ToolsSearchOverlayProps> = ({ open, on
       detail: item.answer[0],
       route: 'topics-questions' as ViewName,
     }));
-    return [...toolHits, ...topicHits, ...questionHits, ...nameHits];
+    const guideHits: SearchHit[] = STUDY_GUIDES.filter((guide) =>
+      [
+        guide.title,
+        guide.subtitle,
+        ...guide.terms.map((term) => term.transliteration),
+        ...guide.terms.map((term) => term.meaning),
+        ...guide.sections.map((section) => section.heading),
+      ].some((field) => field.toLowerCase().includes(q)),
+    ).map((guide) => ({
+      key: `guide-${guide.id}`,
+      title: guide.title,
+      detail: guide.subtitle,
+      route: 'topics-guides' as ViewName,
+    }));
+    return [...toolHits, ...topicHits, ...guideHits, ...questionHits, ...nameHits];
   }, [query]);
 
   if (!open) return null;

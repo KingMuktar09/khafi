@@ -42,7 +42,7 @@ export const AmalsView: React.FC = () => {
             <span>Amals from the Books of Ahmad al-Buni</span>
           </h1>
           <p className="text-sm text-[var(--text-muted)] mt-2 leading-relaxed">
-            25 simple practices from the Inloes translation, plus 6 more from the John Friend
+            25 simple practices from the Inloes translation, plus 25 more from the John Friend
             translation. Tap a title to see the full detail.
           </p>
         </div>
@@ -75,11 +75,10 @@ export const AmalsView: React.FC = () => {
           contact with spirits.
         </p>
         <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-          Below them is a second set of 6 amals, from a different English translation of the same
+          Below them is a second set of 25 amals, from a different English translation of the same
           book: Shams al-Ma&apos;arif al-Kubra, translated by John Friend (John Friend Publishing,
-          2026). That edition is not in this library. These 6 come from Chapter Two: The Divine
-          Names, and they are the only ones copied out so far. Amals 1 to 19 of that set are not in
-          hand yet, so they are not here.
+          2026). That edition is not in this library. All 25 are now copied out here, from
+          Chapter Two, printed pp. 37-50.
         </p>
       </div>
 

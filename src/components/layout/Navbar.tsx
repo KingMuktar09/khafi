@@ -92,7 +92,7 @@ export const Navbar: React.FC = () => {
   );
 
   const moreActive =
-    ['journeys', 'timeline', 'shelf', 'finder', 'wafq', 'amals', 'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topics-questions', 'favorites', 'info', 'admin'].includes(currentView);
+    ['journeys', 'timeline', 'shelf', 'finder', 'wafq', 'amals', 'topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides', 'favorites', 'info', 'admin'].includes(currentView);
 
   return (
     <header className="nav-enter sticky top-0 z-50 w-full bg-[var(--bg-header)] border-b border-[var(--border-main)] transition-colors duration-150 shadow-xs">
@@ -198,7 +198,7 @@ export const Navbar: React.FC = () => {
                     {moreLink('finder', 'Find a Book', <Compass className="w-4 h-4 text-[var(--gold)]" />, currentView === 'finder')}
                     {moreLink('wafq', 'Magic Square', <Grid3X3 className="w-4 h-4 text-[var(--gold)]" />, currentView === 'wafq')}
                     {moreLink('amals', 'Amals', <MoonStar className="w-4 h-4 text-[var(--gold)]" />, currentView === 'amals')}
-                    {moreLink('topics', 'Topics', <BookOpen className="w-4 h-4 text-[var(--gold)]" />, ['topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topics-questions'].includes(currentView))}
+                    {moreLink('topics', 'Topics', <BookOpen className="w-4 h-4 text-[var(--gold)]" />, ['topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides'].includes(currentView))}
                     {moreLink('favorites', 'Favorites', <Star className="w-4 h-4 fill-amber-400 text-amber-400" />, currentView === 'favorites', favoritesCount)}
                     {moreLink('info', 'Info', <Info className="w-4 h-4 text-blue-400" />, currentView === 'info')}
                     <a
@@ -370,7 +370,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('topics')}
             className={`w-full text-left px-3 py-2 rounded ${
-              ['topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topics-questions'].includes(currentView) ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              ['topics', 'topic-retreat', 'topic-malakut', 'topic-ruh', 'topic-alif', 'topic-seal', 'topic-dreams', 'topic-saba', 'topic-khidr', 'topic-rijal', 'topic-uwaisi', 'topic-renewal', 'topic-drinks', 'topics-questions', 'topics-guides'].includes(currentView) ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
             }`}
           >
             Topics

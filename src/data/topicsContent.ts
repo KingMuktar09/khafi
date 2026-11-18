@@ -9,8 +9,8 @@
  * Arabic terms are shown with Arabic script, transliteration and a
  * plain-English meaning. Nothing here is invented.
  *
- * The Alam al-Malakut discussion is the opening only. The rest is
- * still in the notebook chat (tab t1). That is marked on the page.
+ * Twelve topics, in upload order. The daily rotation runs through
+ * them in this order, from the fixed start date 2026-11-18.
  */
 
 import type { ViewName } from '../types';
@@ -139,8 +139,6 @@ export const TOPICS: TopicContent[] = [
     sources: [
       'The Journey to the Lord of Power by Muhammad ibn-Arabi: minerals, pp. 36-37; vegetal world, p. 37; animal world, pp. 37-38; the swaying lamp, Commentary Notes, p. 87 (also p. 45); the two ranks, pp. 28-29, pp. 29, 44, 51, Glossary p. 116.',
     ],
-    continuesNote:
-      'More to come: the notebook offered a follow-up on the Quranic drinks and the meeting with al-Khidr (pp. 50-51, 68). I have not gathered that part yet. It will come here when I do.',
   },
   {
     id: 'alam-al-malakut',
@@ -150,7 +148,7 @@ export const TOPICS: TopicContent[] = [
     subtitle: 'The luminous world behind this world, and the three worlds that hold all things.',
     addedDate: '2026-11-18',
     intro:
-      'There is a world behind this world. You cannot touch it. But it holds this world up, the way a root holds a tree. The old books call it Alam al-Malakut, the World of Sovereignty. This is the opening of that discussion. The rest is still being gathered, and I will add it here when it comes.',
+      'There is a world behind this world. You cannot touch it. But it holds this world up, the way a root holds a tree. The old books call it Alam al-Malakut, the World of Sovereignty. Here is the full discussion, gathered from the books.',
     sections: [
       {
         heading: 'Three worlds, one behind the other',
@@ -190,6 +188,53 @@ export const TOPICS: TopicContent[] = [
           source: 'As quoted in Mudih al-Tariq',
         },
       },
+      {
+        heading: 'The Genesis of the Malakut',
+        paragraphs: [
+          'The books trace the three worlds back to one word: KUN, Be. The creative command is written with three letters, and each letter is a world. Kaf is Mulk, the physical world. Lam is Jabarut, the world of power. Mim is Malakut, the world of sovereignty.',
+          'So Malakut is born from the letter Mim. The letter is not just a sound. In these books, the letter is the seed of the world it names.',
+        ],
+      },
+      {
+        heading: 'The Eight Pillars of the Highest Malakut',
+        paragraphs: [
+          'Above the Malakut stand eight pillars. They are the Throne, the Footstool, the Pen, the Tablet, the Highest Assembly, the Level, the Tablets, and the Highest Pens. The books name them as the pillars that hold the highest Malakut up.',
+          'Each pillar is a station, not a thing. The Pen writes. The Tablet holds the writing. The Throne sits above all. To know the pillars is to know the shape of the world above this one.',
+        ],
+      },
+      {
+        heading: 'Angelic hierarchies',
+        paragraphs: [
+          'The Malakut is full of angels, and the books give them ranks. Highest are the Cherubim, those brought near, and among them the enraptured ones who are lost in gazing at God.',
+          'Below them are the spiritual entities, the upper and lower kingdoms. And the books name Mitatrun, the angel the old books call Metatron, who stands at the head of the scribes.',
+        ],
+      },
+      {
+        heading: 'The human microcosm',
+        paragraphs: [
+          'Man is a small copy of the three worlds. The body is Mulk. The soul is the Malakut of the body. The heart is the Mulk of the spirit and the Malakut of the body, both at once.',
+          'Above the heart stands the spirit, which is Jabarut. Above the spirit stands the intellect, which is the supreme Malakut of the spirit. And above the intellect stands the secret, the sirr, which is the Malakut of the intellect. Each part of man belongs to one of the worlds.',
+        ],
+      },
+      {
+        heading: 'The subjugation of worlds',
+        paragraphs: [
+          'The lofty Command dominates the spirit. That is the rule the books give: the higher world rules the lower one. Mulk does not rule Malakut. Malakut rules Mulk. And the Command rules them all.',
+        ],
+      },
+      {
+        heading: 'The Veil of Food and the Threefold Unveiling',
+        paragraphs: [
+          'The books speak of a veil, and they call it the Veil of Food. Behind it stand three unveilings, one after the other. The first is Presence: you stand before God. The second is Unveiling: the cover lifts. The third is Direct Contemplation: you see.',
+          'Ibrahim walked this road. He gazed beyond the stars, then beyond the Moon, then beyond the Sun, until nothing was left to gaze at but God. Each light he passed was a veil. Each veil lifted was a step nearer.',
+        ],
+      },
+      {
+        heading: 'Four worlds, four letters',
+        paragraphs: [
+          'The books sum it up in a small table. Kaf is Mulk, the physical world. Lam is Jabarut, the world of power. Mim is Malakut, the world of sovereignty. And between them stands Mithal, the world of likeness, where meanings take visible shape.',
+        ],
+      },
     ],
     terms: [
       { arabic: 'عالم الملك', transliteration: '\u2019Alam al-Mulk', meaning: 'the world of the kingdom, the physical world' },
@@ -199,15 +244,30 @@ export const TOPICS: TopicContent[] = [
       { arabic: 'عالم الاختراع', transliteration: '\u2019alam al-ikhtira\u2019', meaning: 'the Realm of Invention' },
       { arabic: 'الغيب', transliteration: 'al-ghayb', meaning: 'the Unseen' },
       { arabic: 'عالم الرتق', transliteration: '\u2019alam al-ratq', meaning: 'the World of Joining' },
+      { arabic: 'عالم المثال', transliteration: '\u2019Alam al-Mithal', meaning: 'the world of likeness, where meanings take visible shape' },
+      { arabic: 'ميم', transliteration: 'Mim', meaning: 'the letter Mim, from which Malakut is born' },
+      { arabic: 'كن', transliteration: 'KUN', meaning: 'Be, the creative command' },
+      { arabic: 'القلم', transliteration: 'al-Qalam', meaning: 'the Pen' },
+      { arabic: 'اللوح', transliteration: 'al-Lawh', meaning: 'the Tablet' },
+      { arabic: 'الكروبيون', transliteration: 'al-Karubiyyun', meaning: 'the Cherubim, those brought near' },
+      { arabic: 'سر', transliteration: 'sirr', meaning: 'the secret, the innermost part of man' },
+      { arabic: 'محاضرة', transliteration: 'muhadara', meaning: 'Presence, the first unveiling' },
+      { arabic: 'مكاشفة', transliteration: 'mukashafa', meaning: 'Unveiling, the second unveiling' },
+      { arabic: 'مشاهدة', transliteration: 'mushahada', meaning: 'Direct Contemplation, the third unveiling' },
     ],
     closing:
-      'I am still gathering this discussion. What I have so far is the shape of the three worlds and the Quranic ground under them. The rest will come here when I have it.',
+      'That is the Malakut as the books give it: a world born from the letter Mim, held up by eight pillars, full of angels, copied small inside every man, and veiled by three unveilings that open one after the other. The physical world is the lowest floor. The Malakut is the floor above it. And the Command is above them both.',
     sources: [
       'Mudih al-Tariq (for the Quranic foundation: Qur\u2019an 7:54 and "Knower of the unseen and the witnessed").',
-      'Triple architecture, page numbers as captured from the Al Asrar notebook: Mulk [52, 75, 121-122]; Malakut [28-29, 52, 172]; Jabarut [60-61, 75, 126]. The book name for these page numbers is still to be confirmed. Source needed.',
+      'Mudih al-Tariq, p. 24; pp. 52, 60-61; pp. 63-64; pp. 74-75; p. 69; pp. 30, 45-46, 57; pp. 58-60',
+      'Majmu\u2019at Thalath Rasa\u2019il, pp. 26, 186',
+      'Mystical Dimensions of Islam, p. 270',
+      'al-Asrar al-Rabbaniyyah, "The Letter Mim", pp. 86-87',
+      'Islamic Spirituality: Foundations, Ch. 17, "The Angels", pp. 332-334',
+      'Kitab al-Ajnas, pp. 18, 65, 83',
+      'The Journey to the Lord of Power, pp. 28-29',
+      'Shams al-Ma\u2019arif al-Kubra (John Friend), p. 86',
     ],
-    continuesNote:
-      'This discussion continues. The rest of the long-form answer is still in the Al Asrar notebook chat, and I will add it here when I gather it.',
   },
   {
     id: 'ruh-and-soul',
@@ -461,7 +521,7 @@ export const TOPICS: TopicContent[] = [
     subtitle: 'The guide who walks the earth unseen, and the meeting the books promise.',
     addedDate: '2026-11-18',
     intro:
-      'Al-Khidr is the hidden teacher of Sufism. He has no school and no address. He appears, he teaches, and he goes. This discussion is only beginning. I will share what I have so far, and I will add the rest when I gather it.',
+      'Al-Khidr is the hidden teacher of Sufism. He has no school and no address. He appears, he teaches, and he goes. Ibn Arabi met him three times, and he wrote each meeting down. Here are the three meetings, from his own book.',
     sections: [
       {
         heading: 'The hidden teacher',
@@ -470,23 +530,257 @@ export const TOPICS: TopicContent[] = [
         ],
       },
       {
-        heading: 'The meeting in The Journey',
+        heading: 'First meeting: Seville',
         paragraphs: [
-          'The Journey to the Lord of Power speaks of a meeting with al-Khidr, on pages 50 to 51 and page 68, beside the Quranic drinks. I have not gathered that part yet. The pages are named here so you know where it waits.',
+          'The first meeting came in Seville, in the days of Ibn Arabi\u2019s youth. He was in a dispute with his master, Shaykh Abu al-Hasan al-\u2019Uryani, over an utterance of al-Shibli. The master had prayed to God for al-Khidr to confirm him. Then a stranger came to Ibn Arabi and told him his master was right.',
+          'From that day, Ibn Arabi vowed never to dispute his guides again. The meeting was not a lesson in words. It was a lesson in trust.',
+        ],
+      },
+      {
+        heading: 'Second meeting: the Port of Tunis',
+        paragraphs: [
+          'The second meeting came at night, at the Port of Tunis, under a full moon. A tall white-bearded man came toward Ibn Arabi, walking dry-shod on the waves of the sea. He placed his right foot on his left in salutation, and he gave him counsel.',
+          'Then he turned and walked toward the Manara, covering a mile with each step, reciting dhikr as he went. The next day, a local shaykh asked Ibn Arabi how the meeting with al-Khidr had been. The shaykh had known, though Ibn Arabi had told no one.',
+        ],
+      },
+      {
+        heading: 'Third meeting: the Atlantic coast of Spain',
+        paragraphs: [
+          'The third meeting came in a small seaside mosque on the Atlantic coast of Spain. A man inside was denying the miracles of saints. Al-Khidr entered, picked up a straw prayer mat, and rose fourteen cubits into the air, praying suspended between the floor and the roof.',
+          'He did it for one reason only: to remove doubt from the heart of the skeptic. The miracle was not a show. It was a cure for a heart that could not believe.',
+        ],
+      },
+      {
+        heading: 'What the meetings teach',
+        paragraphs: [
+          'Three meetings, three lessons. In Seville he came to confirm. In Tunis he came to counsel. On the Atlantic coast he came to remove doubt. He appears where he is needed, not where he is sought.',
+          'That is the way of the hidden teacher. He does not come to be found. He comes to find the one who needs him.',
         ],
       },
     ],
     terms: [
       { arabic: 'الخضر', transliteration: 'al-Khidr', meaning: 'the Green One, the hidden teacher' },
+      { arabic: 'ذكر', transliteration: 'dhikr', meaning: 'remembrance of God' },
+      { arabic: 'كرامة', transliteration: 'karamah', meaning: 'a miracle of a saint' },
     ],
     closing:
-      'This is all I have on al-Khidr for now. The meeting in The Journey is the next part to gather. It will come here when I have it.',
+      'Three meetings, and one teacher who never stays. Al-Khidr comes to confirm, to counsel, and to remove doubt. Then he goes, and the seeker is left with the lesson. That is the whole of it.',
     sources: [
-      'The Journey to the Lord of Power, pp. 50-51, 68 (meeting with al-Khidr; not yet gathered).',
+      'The Journey to the Lord of Power, Introduction, pp. 18-19 (the three meetings with al-Khidr).',
+      'Necklaces of Gems (Qala\u2019id), pp. 41, 53-54 (al-Khidr as the Guide).',
       '\u2019Al Khidr, the mysterious hidden teacher of Sufism\u2019 (YouTube video, Al Asrar notebook sources).',
     ],
-    continuesNote:
-      'This discussion is only beginning. The meeting with al-Khidr in The Journey (pp. 50-51, 68) is still being gathered. It will come here when I have it.',
+  },
+  {
+    id: 'rijal-al-ghayb',
+    slug: 'rijal-al-ghayb',
+    title: 'Rijal al-Ghayb and the Qutb',
+    eyebrow: 'Topics',
+    subtitle: 'The hidden men of the unseen, and the pole they turn around.',
+    addedDate: '2026-11-18',
+    intro:
+      'There are men you will never meet, and the world turns on them. The books call them the Rijal al-Ghayb, the Men of the Unseen. They are not hidden because they hide. They are hidden because the world does not see them. Here is their order, as the books give it.',
+    sections: [
+      {
+        heading: 'The Qutb, the pole',
+        paragraphs: [
+          'At the top stands the Qutb, the Pole. He is also called the Ghawth, the Helper. The books say the Qutb is in Mecca, and the world turns around him the way a wheel turns around its axle.',
+        ],
+      },
+      {
+        heading: 'The Two Imams',
+        paragraphs: [
+          'Below the Qutb stand the Two Imams. The Imam of the Right is the Mulk, the physical world. The Imam of the Left is the Malakut, the world of sovereignty. Two imams, two worlds, one pole above them both.',
+        ],
+      },
+      {
+        heading: 'The Four Pillars',
+        paragraphs: [
+          'Below the imams stand the Four Pillars, the Awtad. Four men, holding the four corners of the earth. When one of them dies, another rises to take his place.',
+        ],
+      },
+      {
+        heading: 'The Seven Substitutes',
+        paragraphs: [
+          'Below the pillars stand the Seven Substitutes, the Abdal. They are called substitutes because they stand in for one another. When one leaves, another takes his place, and the number stays seven.',
+        ],
+      },
+      {
+        heading: 'The Nobles and the Chiefs',
+        paragraphs: [
+          'Below the substitutes stand the Nobles and the Chiefs, the Nujaba and the Nuqaba. The books give their numbers as seventy and three hundred. They are the wider circle of the hidden men.',
+        ],
+      },
+      {
+        heading: 'The Gate of Solomon',
+        paragraphs: [
+          'The Gate of Solomon passes down a saying from al-Mundhiri. Al-Khidr and Ilyas stand at its head. Then come three hundred friends, forty Abdal, seventy Nujaba, seven Urafa, four Awtad, and one Ghawth. The numbers are given in the books, and I give them as I found them.',
+          'The order is the point. Each rank answers to the one above it. Each man holds his place until God calls him, and then another rises in his stead. The world never lacks its hidden men.',
+        ],
+      },
+    ],
+    terms: [
+      { arabic: 'رجال الغيب', transliteration: 'Rijal al-Ghayb', meaning: 'the Men of the Unseen' },
+      { arabic: 'قطب', transliteration: 'Qutb', meaning: 'the Pole, the axis the world turns on' },
+      { arabic: 'غوث', transliteration: 'Ghawth', meaning: 'the Helper, another name for the Qutb' },
+      { arabic: 'أوتاد', transliteration: 'Awtad', meaning: 'the Pillars, the four supports' },
+      { arabic: 'أبدال', transliteration: 'Abdal', meaning: 'the Substitutes, the seven' },
+      { arabic: 'نجباء', transliteration: 'Nujaba\u2019', meaning: 'the Nobles, the seventy' },
+    ],
+    closing:
+      'That is the order of the hidden men: one pole, two imams, four pillars, seven substitutes, and the wider circles below them. You will not meet them. But the books say the world turns because they stand where they stand.',
+    sources: [
+      'Mudih al-Tariq, pp. 83-85 (the hierarchy of the Rijal al-Ghayb).',
+      'The Radiant Jewels for Summoning, p. 81 (the hidden hierarchy).',
+      'Mystical Dimensions of Islam, pp. 200-201 (the Qutb and the hidden men).',
+      'The Gate of Solomon, as transmitted from al-Mundhiri (the numbers of the ranks).',
+    ],
+  },
+  {
+    id: 'uwaisi-transmission',
+    slug: 'uwaisi-transmission',
+    title: 'Uwaisi Transmission',
+    eyebrow: 'Topics',
+    subtitle: 'Initiation without a living teacher in the flesh.',
+    addedDate: '2026-11-18',
+    intro:
+      'Every Sufi path has a teacher. But some seekers never meet their teacher in the flesh. They are taught across time, across death, across the veil. The books call this the Uwaisi way. Here is what it means.',
+    sections: [
+      {
+        heading: 'Initiation without a living teacher',
+        paragraphs: [
+          'The Uwaisi way is initiation without a living teacher in the flesh. The teacher may be dead. The teacher may be far away. The link still holds, because the link is not of the flesh. It is of the spirit.',
+          'The name comes from Uwais al-Qarani, the man who loved the Prophet and never met him. He was taught without meeting. The books hold him up as the first of the line.',
+        ],
+      },
+      {
+        heading: 'Three examples',
+        paragraphs: [
+          'Abu al-Hasan al-Kharaqani was initiated by Bayazid al-Bistami, though Bayazid had died before they could meet. Attar was initiated by al-Hallaj, though Hallaj had been killed long before. And Abd al-Qadir is said to have sat in an assembly in Baghdad, taught by those who were not there in the flesh.',
+          'Three men, three teachers, and in each case the teacher was gone from this world. The teaching crossed the grave the way light crosses a window.',
+        ],
+      },
+      {
+        heading: 'How it works',
+        paragraphs: [
+          'The books do not explain the how. They only record the fact. A seeker turns his heart to a master of the past, and the master answers. The link is made in the world of the spirit, where death is not a wall.',
+          'That is the whole of it. The Uwaisi way is not a trick and not a shortcut. It is a link that does not need a body to hold it.',
+        ],
+      },
+    ],
+    terms: [
+      { arabic: 'أويسي', transliteration: 'Uwaisi', meaning: 'the way of Uwais, initiation without a living teacher' },
+    ],
+    closing:
+      'The teacher does not have to be alive to teach. The books give the examples, and the examples are enough. The link is of the spirit, and the spirit does not die.',
+    sources: [
+      'Mystical Dimensions of Islam, pp. 105-106 (Uwaisi transmission).',
+      'Necklaces of Gems (Qala\u2019id), pp. 103, 107-108 (Kharaqani, Attar, Abd al-Qadir).',
+    ],
+  },
+  {
+    id: 'renewal-of-creation',
+    slug: 'renewal-of-creation',
+    title: 'The Renewal of Creation',
+    eyebrow: 'Topics',
+    subtitle: 'Each moment, the world is made again.',
+    addedDate: '2026-11-18',
+    intro:
+      'The world looks solid. The stone sits where it sat yesterday. The tree stands where it stood. But the books say the world is not solid at all. It is made again, in every instant, fresh from nothing. Here is the teaching of the renewal of creation.',
+    sections: [
+      {
+        heading: 'Instantaneous creation',
+        paragraphs: [
+          'The teaching is called tajaddud al-khalq, the renewal of creation. It says the world is created anew in every instant. Nothing lasts from one moment to the next. Each moment is a new making.',
+          'The stone you see is not the stone of a moment ago. It is a new stone, made in the image of the old one, so fast and so perfect that your eye cannot tell the difference. The world is a river, not a rock.',
+        ],
+      },
+      {
+        heading: 'The Quranic ground',
+        paragraphs: [
+          'The Quran asks the question in Surah Qaf: were We worn out by the first creation? No, it says. They are in confused doubt about a new creation. The verse is the ground under the teaching. God did not tire of the first making, and He does not tire of making it again.',
+        ],
+        quote: {
+          arabic: 'أَفَعَيِينَا بِٱلْخَلْقِ ٱلْأَوَّلِ بَلْ هُمْ فِى لَبْسٍ مِّنْ خَلْقٍ جَدِيدٍ',
+          transliteration: 'Afa\u2019ayyina bil-khalq al-awwal, bal hum fi labsin min khalqin jadid',
+          text: 'Were We then worn out by the first creation? Nay, they are in confused doubt about a new creation.',
+          source: 'Qur\u2019an 50:15',
+        },
+      },
+      {
+        heading: 'What it means for the seeker',
+        paragraphs: [
+          'If the world is made again in every instant, then nothing is fixed. The past does not own you. The next moment is a new creation, and in it you can be made new too.',
+          'That is why the teaching matters. It is not a theory about the sky. It is a door. Each moment is a fresh start, made by the same hand that made the first one.',
+        ],
+      },
+    ],
+    terms: [
+      { arabic: 'تجدد الخلق', transliteration: 'tajaddud al-khalq', meaning: 'the renewal of creation' },
+    ],
+    closing:
+      'The world is made again, in every instant, fresh from nothing. The stone, the tree, and you. That is the teaching. And it means the next moment is always a new beginning.',
+    sources: [
+      'The Journey to the Lord of Power, Glossary, p. 110 (tajaddud al-khalq).',
+      'The Sufi Path of Knowledge, pp. 127-128, 130 (renewal of creation).',
+      'Qur\u2019an 50:15.',
+    ],
+  },
+  {
+    id: 'quranic-drinks',
+    slug: 'quranic-drinks',
+    title: 'The Drinks in Ibn Arabi\u2019s Journey',
+    eyebrow: 'Topics',
+    subtitle: 'Water, milk, honey and wine: what the drinks mean.',
+    addedDate: '2026-11-18',
+    intro:
+      'In the middle of the Journey, Ibn Arabi is offered drinks. Water, milk, honey, wine. They are not just drinks. Each one is a kind of knowledge, and the book decodes them one by one. Here is the decoding, from the book itself.',
+    sections: [
+      {
+        heading: 'Water: Absolute Knowledge',
+        paragraphs: [
+          'Water is Absolute Knowledge. The book gives a rule: if you are offered something to drink, choose water. Water is the first choice, because Absolute Knowledge is the first knowledge.',
+          'Water has no colour and no taste of its own. It takes the shape of its cup. Absolute Knowledge is like that. It is the ground under every other knowledge.',
+        ],
+      },
+      {
+        heading: 'Milk: the Knowledge of the Sacred Ways',
+        paragraphs: [
+          'Milk is the Knowledge of the Sacred Ways, and it is the fitrah, the natural disposition. It is the Prophet\u2019s choice. The book gives the rule: if there is no water, choose milk.',
+          'Milk feeds the young. The Sacred Ways feed the seeker. Both are natural, both are given, and both are the first food of the one who is growing.',
+        ],
+      },
+      {
+        heading: 'Water and milk blended',
+        paragraphs: [
+          'The book also speaks of water and milk blended together. The blend is the exact relationship between the secondary branches of knowledge and the primary sacred legal knowledge. The branches are the water. The sacred law is the milk. Together they are one drink.',
+        ],
+      },
+      {
+        heading: 'Honey: permissible wisdom',
+        paragraphs: [
+          'Honey is permissible philosophical and traditional wisdom. The book says, "This also applies to honey: Drink it." Honey is sweet and lawful, and the wisdom it stands for is sweet and lawful too.',
+        ],
+      },
+      {
+        heading: 'Wine: the Knowledge of Ecstatic States',
+        paragraphs: [
+          'Wine is the Knowledge of Ecstatic States. The book is careful here. It says, "Be careful of drinking it... Refrain from drinking it otherwise." Unmixed wine is drunkenness, and drunkenness is not the path.',
+          'But wine mixed with rainwater is guided and sober. Rainwater is the knowledge that comes down from above. River and spring water is intellectual knowledge, and it muddles the states. The difference is in what the wine is mixed with.',
+        ],
+      },
+    ],
+    terms: [
+      { arabic: 'العلم المطلق', transliteration: 'al-\u2019Ilm al-Mutlaq', meaning: 'Absolute Knowledge' },
+      { arabic: 'فطرة', transliteration: 'fitrah', meaning: 'the natural disposition' },
+      { arabic: 'علوم الشرائع', transliteration: '\u2019Ulum al-Shara\u2019i\u2019', meaning: 'the Knowledge of the Sacred Ways' },
+    ],
+    closing:
+      'Water first, milk second, honey when it is offered, and wine only when it is mixed with rainwater. The drinks are a map of knowledge. Choose as the book says to choose, and the map leads you straight.',
+    sources: [
+      'The Journey to the Lord of Power, p. 36; pp. 36-37.',
+      'The Journey to the Lord of Power, Commentary Note 11, pp. 82-83.',
+    ],
   },
 ];
 
@@ -544,6 +838,10 @@ export const TOPIC_ROUTES: Record<string, ViewName> = {
   'three-kinds-of-dreams': 'topic-dreams',
   'surah-saba-34-14': 'topic-saba',
   'al-khidr': 'topic-khidr',
+  'rijal-al-ghayb': 'topic-rijal',
+  'uwaisi-transmission': 'topic-uwaisi',
+  'renewal-of-creation': 'topic-renewal',
+  'quranic-drinks': 'topic-drinks',
 };
 
 /** The route for a topic id, or the Topics hub when the id is unknown. */
