@@ -399,7 +399,7 @@ export const api = {
 
   async uploadFile(
     file: File,
-    onProgress?: (progress: { loadedBytes: number; totalBytes: number; percentage: number }) => void,
+    onProgress?: (progress: { loadedBytes: number; totalBytes: number; percentage: number; speedBytesPerSec?: number }) => void,
     signal?: AbortSignal,
     folderId?: string
   ): Promise<UploadResult> {

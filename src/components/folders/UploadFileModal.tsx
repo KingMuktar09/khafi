@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { appState } from '../../state/appState';
+import { cleanFolderName, groupForFolder, TOPIC_GROUPS, topicGroupCounts } from '../../data/topicGroups';
 import {
   extractTitleFromFilename,
   detectFileType,
@@ -27,7 +28,7 @@ import {
 } from '../../utils/fileUtils';
 import { extractPdfCover } from '../../services/pdf';
 import { PaidBookControl } from '../admin/PaidBookControl';
-import { ItemType, Book } from '../../types';
+import { ItemType, Book, Folder } from '../../types';
 
 interface UploadFileModalProps {
   isOpen: boolean;
@@ -56,6 +57,8 @@ export interface UploadQueueItem {
   status: 'ready' | 'uploading' | 'success' | 'error' | 'skipped';
   progress: number;
   loadedBytes: number;
+  /** Smoothed upload speed, bytes per second — shown while uploading. */
+  speedBytesPerSec?: number;
   errorMsg?: string;
   duplicateDetected: boolean;
   existingBookId?: string;
@@ -95,16 +98,27 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cancelledRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  // One controller per uploading file, so cancelling one file never
+  // stops the others. Cancel Remaining aborts everything in this map.
+  const itemControllersRef = useRef(new Map<string, AbortController>());
 
   const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500 MB per file limit
 
-  // Determine target folder structure
+  // Destination picker: 6 big topics first, then a folder inside it.
+  // Null = keep the folder this modal was opened in (old behaviour).
+  const [destTopicId, setDestTopicId] = useState<string | null>(null);
+  const [destFolderId, setDestFolderId] = useState<string | null>(null);
+  const [destSearch, setDestSearch] = useState('');
+
+  // Determine target folder structure — the picker's choice wins over
+  // the folder this modal was opened in.
   const getTargetFolders = () => {
-    let targetFolderId = folderId || 'general';
+    const effectiveFolderId = destFolderId || folderId;
+    let targetFolderId = effectiveFolderId || 'general';
     let targetSubfolderId = subfolderId || undefined;
 
-    if (folderId) {
-      const folderObj = appState.getFolderById(folderId);
+    if (effectiveFolderId) {
+      const folderObj = appState.getFolderById(effectiveFolderId);
       if (folderObj && folderObj.parentId) {
         targetFolderId = folderObj.parentId;
         targetSubfolderId = folderObj.id;
@@ -113,19 +127,43 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
     return { targetFolderId, targetSubfolderId };
   };
 
+  // Folders inside one topic, most books first, with a type-to-search box.
+  const getFoldersForTopic = (topicId: string): Array<{ folder: Folder; count: number }> => {
+    const books = appState.catalog.books || [];
+    const q = destSearch.trim().toLowerCase();
+    return (appState.catalog.folders || [])
+      .filter((f) => f.visible !== false)
+      .filter((f) => groupForFolder(f, books)?.id === topicId)
+      .map((folder) => ({
+        folder,
+        count: books.filter((b) => b.folderId === folder.id || b.subfolderId === folder.id).length,
+      }))
+      .filter(({ folder }) => !q || cleanFolderName(folder.name).toLowerCase().includes(q))
+      .sort((a, b) => b.count - a.count || cleanFolderName(a.folder.name).localeCompare(cleanFolderName(b.folder.name)));
+  };
+
+  // Where the files will go, in plain words: clean folder name plus the
+  // big topic it belongs to, so the admin can see at a glance.
   const getDestinationPath = (): string => {
-    if (destinationFolderName) return destinationFolderName;
+    if (destinationFolderName) return cleanFolderName(destinationFolderName);
     const { targetFolderId, targetSubfolderId } = getTargetFolders();
+    const books = appState.catalog.books || [];
+    const withTopic = (folder: Folder | undefined): string | null => {
+      if (!folder) return null;
+      const group = groupForFolder(folder, books);
+      const name = cleanFolderName(folder.name);
+      return group ? `${name} (${group.title})` : name;
+    };
 
     if (targetSubfolderId) {
       const sub = appState.getFolderById(targetSubfolderId);
       const parent = appState.getFolderById(targetFolderId);
-      if (parent && sub) return `Library / ${parent.name} / ${sub.name}`;
-      if (sub) return `Library / ${sub.name}`;
+      if (parent && sub) return `Library / ${withTopic(parent)} / ${withTopic(sub)}`;
+      if (sub) return `Library / ${withTopic(sub)}`;
     }
     if (targetFolderId && targetFolderId !== 'general') {
       const f = appState.getFolderById(targetFolderId);
-      if (f) return `Library / ${f.name}`;
+      if (f) return `Library / ${withTopic(f)}`;
     }
     return 'Library Root';
   };
@@ -153,7 +191,12 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
       setShowBatchMetadata(false);
       setBatchPaid({ isPaid: false });
       setDriveLinksText('');
+      setDestTopicId(null);
+      setDestFolderId(null);
+      setDestSearch('');
       cancelledRef.current = false;
+      for (const c of itemControllersRef.current.values()) c.abort();
+      itemControllersRef.current.clear();
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
@@ -443,7 +486,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
       )
     );
 
-    const onProgress = (p: { loadedBytes: number; totalBytes: number; percentage: number }) => {
+    const onProgress = (p: { loadedBytes: number; totalBytes: number; percentage: number; speedBytesPerSec?: number }) => {
       setQueue((prev) =>
         prev.map((q) =>
           q.id === item.id
@@ -451,6 +494,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
                 ...q,
                 progress: p.percentage,
                 loadedBytes: p.loadedBytes,
+                speedBytesPerSec: p.speedBytesPerSec,
               }
             : q
         )
@@ -550,10 +594,12 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
   };
 
   // Controlled Concurrent Batch Queue Worker
-  // 2 simultaneous files by default (each file already uploads 3 chunks
-  // in parallel, so 2 files = 6 requests in flight). 4 files x 3 parts =
-  // 12 concurrent uploads starved a phone uplink and made every file
-  // slow; scale up to 3 only when the network proves fast and error-free.
+  // 2 files at once (each file already uploads 5 chunks in parallel, so
+  // 2 files = up to 10 requests — the browser runs ~6 per host and
+  // queues the rest, which keeps the pipe full without drowning a phone
+  // uplink). Scales to 3 files only when the network proves fast and
+  // error-free. Each file gets its own AbortController, so cancelling
+  // one file never stops the others.
   const startUpload = async () => {
     if (queue.length === 0) return;
     if (batchPaid.isPaid && !(typeof batchPaid.price === 'number' && batchPaid.price > 0)) {
@@ -563,8 +609,6 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
     setIsUploading(true);
     setGeneralError('');
     cancelledRef.current = false;
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
 
     const pendingItems = queue.filter(
       (q) => q.status === 'ready' || q.status === 'error'
@@ -577,12 +621,14 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
 
     const worker = async () => {
       while (nextIndex < pendingItems.length) {
-        if (cancelledRef.current || signal.aborted) break;
+        if (cancelledRef.current) break;
         const currentItem = pendingItems[nextIndex];
         nextIndex++;
 
+        const controller = new AbortController();
+        itemControllersRef.current.set(currentItem.id, controller);
         try {
-          await uploadSingleItem(currentItem, signal);
+          await uploadSingleItem(currentItem, controller.signal);
           successCount++;
           // Scale concurrency to 3 if network is fast and error-free
           if (successCount >= 2 && failureCount === 0 && currentConcurrency < 3) {
@@ -593,7 +639,9 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
           if (currentConcurrency > 2) {
             currentConcurrency = Math.max(2, currentConcurrency - 1);
           }
-          if (!signal.aborted) {
+          // Cancel Remaining leaves rows alone (the modal is finishing);
+          // a single cancelled file is a normal retryable error.
+          if (!cancelledRef.current) {
             setQueue((prev) =>
               prev.map((q) =>
                 q.id === currentItem.id
@@ -602,6 +650,8 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
               )
             );
           }
+        } finally {
+          itemControllersRef.current.delete(currentItem.id);
         }
       }
     };
@@ -618,21 +668,25 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
     await appState.loadCatalog();
   };
 
+  // Cancel one file only — the others keep uploading.
+  const cancelItem = (id: string) => {
+    const controller = itemControllersRef.current.get(id);
+    if (controller) controller.abort();
+  };
+
   const handleRetryItem = async (id: string) => {
     const item = queue.find((q) => q.id === id);
     if (!item) return;
 
-    if (!abortControllerRef.current || abortControllerRef.current.signal.aborted) {
-      abortControllerRef.current = new AbortController();
-    }
-    const signal = abortControllerRef.current.signal;
+    const controller = new AbortController();
+    itemControllersRef.current.set(id, controller);
 
     setQueue((prev) =>
       prev.map((q) => (q.id === id ? { ...q, status: 'ready', progress: 0, loadedBytes: 0, errorMsg: undefined } : q))
     );
 
     try {
-      await uploadSingleItem(item, signal);
+      await uploadSingleItem(item, controller.signal);
     } catch (err: any) {
       setQueue((prev) =>
         prev.map((q) =>
@@ -641,16 +695,29 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
             : q
         )
       );
+    } finally {
+      itemControllersRef.current.delete(id);
     }
     await appState.loadCatalog();
   };
 
   const cancelRemaining = () => {
     cancelledRef.current = true;
+    for (const c of itemControllersRef.current.values()) c.abort();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     setIsUploading(false);
+  };
+
+  // "2.1 MB/s • ~12s left" — speed and time left for one uploading file.
+  const formatSpeedAndEta = (item: UploadQueueItem): string | null => {
+    const speed = item.speedBytesPerSec;
+    if (!speed || speed <= 0 || item.sizeBytes <= 0) return null;
+    const remaining = Math.max(0, item.sizeBytes - item.loadedBytes);
+    const secs = Math.round(remaining / speed);
+    const eta = secs < 60 ? `~${secs}s left` : `~${Math.floor(secs / 60)}m ${secs % 60}s left`;
+    return `${formatFileSize(speed)}/s • ${eta}`;
   };
 
   const handleDone = async () => {
@@ -779,6 +846,142 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
             </div>
           )}
 
+          {/* Fastest way for a big book: put it in Drive first, paste the
+              link below — nothing uploads from this phone at all. */}
+          <div className="p-3 bg-[var(--gold-faint)] border border-[var(--gold)]/50 rounded-lg text-xs leading-relaxed flex items-start gap-2">
+            <Upload className="w-4 h-4 shrink-0 mt-0.5 text-[var(--gold)]" />
+            <span>
+              <span className="font-bold text-[var(--gold)]">Big book? Skip the upload.</span>{' '}
+              Put it in Google Drive, then paste its link below — instant, no waiting, and the book keeps working.
+            </span>
+          </div>
+
+          {/* Where should these books go? Pick 1 of 6 topics, then a
+              folder inside it — instead of a 36-folder wall. */}
+          <div className="border border-[var(--border-main)] rounded-lg p-3 bg-[var(--bg-main)] space-y-2 text-xs">
+            <div className="font-semibold text-[var(--text-main)] flex items-center gap-1.5">
+              <FolderIcon className="w-3.5 h-3.5 text-[var(--gold)]" />
+              <span>Where should these books go?</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {(() => {
+                const books = appState.catalog.books || [];
+                const counts = topicGroupCounts(books);
+                return TOPIC_GROUPS.map((group) => {
+                  const count = counts.find((c) => c.group.id === group.id)?.count || 0;
+                  const active = destTopicId === group.id;
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      disabled={isUploading}
+                      onClick={() => {
+                        setDestTopicId(active ? null : group.id);
+                        setDestFolderId(null);
+                        setDestSearch('');
+                      }}
+                      className={`px-3 py-1.5 rounded-full border font-semibold cursor-pointer transition-colors disabled:opacity-50 ${
+                        active
+                          ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                          : 'bg-[var(--bg-surface)] text-[var(--text-main)] border-[var(--border-main)] hover:border-[var(--gold)]/50'
+                      }`}
+                      title={group.blurb}
+                    >
+                      {group.title} ({count})
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+            {destTopicId && (
+              <div className="space-y-2 pt-1">
+                <input
+                  type="search"
+                  value={destSearch}
+                  disabled={isUploading}
+                  onChange={(e) => setDestSearch(e.target.value)}
+                  placeholder="Type to find a folder…"
+                  aria-label="Search folders in this topic"
+                  className="w-full px-2.5 py-1.5 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded text-xs focus:outline-none focus:border-[var(--gold)]"
+                />
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+                  {getFoldersForTopic(destTopicId).map(({ folder, count }) => {
+                    const active = destFolderId === folder.id;
+                    return (
+                      <button
+                        key={folder.id}
+                        type="button"
+                        disabled={isUploading}
+                        onClick={() => setDestFolderId(active ? null : folder.id)}
+                        className={`px-2.5 py-1 rounded-md border font-medium cursor-pointer transition-colors disabled:opacity-50 ${
+                          active
+                            ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                            : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-main)] hover:text-[var(--text-main)]'
+                        }`}
+                      >
+                        {cleanFolderName(folder.name)} ({count})
+                      </button>
+                    );
+                  })}
+                  {getFoldersForTopic(destTopicId).length === 0 && (
+                    <span className="text-[var(--text-muted)]">No folder matches that search.</span>
+                  )}
+                </div>
+                {(() => {
+                  if (!destFolderId) return null;
+                  const children = appState.getChildFolders(destFolderId);
+                  if (children.length === 0) return null;
+                  const books = appState.catalog.books || [];
+                  return (
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] text-[var(--text-muted)]">Inside it (optional):</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {children.map((child) => {
+                          const count = books.filter((b) => b.folderId === child.id || b.subfolderId === child.id).length;
+                          const active = destFolderId === child.id;
+                          return (
+                            <button
+                              key={child.id}
+                              type="button"
+                              disabled={isUploading}
+                              onClick={() => setDestFolderId(child.id)}
+                              className={`px-2.5 py-1 rounded-md border font-medium cursor-pointer transition-colors disabled:opacity-50 ${
+                                active
+                                  ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                                  : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-main)] hover:text-[var(--text-main)]'
+                              }`}
+                            >
+                              {cleanFolderName(child.name)} ({count})
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-[var(--text-muted)]">
+                Going to: <span className="font-semibold text-[var(--gold)]">{getDestinationPath()}</span>
+              </span>
+              {destFolderId && (
+                <button
+                  type="button"
+                  disabled={isUploading}
+                  onClick={() => {
+                    setDestTopicId(null);
+                    setDestFolderId(null);
+                    setDestSearch('');
+                  }}
+                  className="text-[11px] text-[var(--text-muted)] hover:text-rose-400 cursor-pointer disabled:opacity-50"
+                >
+                  Use the opened folder instead
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Drag & Drop Dropzone */}
           <div
             onDragOver={handleDragOver}
@@ -805,10 +1008,10 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
                 Drag & drop files here or click to select
               </p>
               <p className="text-[11px] text-[var(--text-muted)]">
-                Supports batch uploading multiple PDFs, Documents, Images, Media & Archives
+                Select several files at once — PDFs, Documents, Images, Media &amp; Archives
               </p>
               <p className="text-[10px] font-semibold text-[var(--gold)]">
-                High-speed parallel uploads • Resumable multipart for large files (4MB+)
+                Fast parallel uploads • 2 files at once • Big files split into 4 MB parts
               </p>
             </div>
           </div>
@@ -874,7 +1077,7 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
           {/* Paste Drive links — no file upload at all for these */}
           <div className="border border-[var(--border-main)] rounded-lg p-3 bg-[var(--bg-main)] space-y-2 text-xs">
             <label className="block font-semibold text-[var(--text-main)]">
-              Or paste Google Drive links — one per line, no upload needed
+              Fastest for big books — paste Google Drive links, one per line
             </label>
             <textarea
               rows={2}
@@ -1121,10 +1324,26 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
                               style={{ width: `${item.progress}%` }}
                             />
                           </div>
-                          <div className="flex items-center justify-between text-[10px] font-mono text-[var(--gold)]">
+                          <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-[var(--gold)]">
                             <span>Uploading {item.progress}%</span>
                             <span>{formatFileSize(item.loadedBytes)} / {item.fileSize}</span>
+                            {formatSpeedAndEta(item) && (
+                              <span className="hidden sm:inline">{formatSpeedAndEta(item)}</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => cancelItem(item.id)}
+                              className="px-1.5 py-0.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold rounded cursor-pointer shrink-0"
+                              title="Cancel this file only — the others keep uploading"
+                            >
+                              Cancel
+                            </button>
                           </div>
+                          {formatSpeedAndEta(item) && (
+                            <div className="text-[10px] font-mono text-[var(--text-muted)] sm:hidden">
+                              {formatSpeedAndEta(item)}
+                            </div>
+                          )}
                         </div>
                       )}
 

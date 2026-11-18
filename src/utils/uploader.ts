@@ -20,11 +20,46 @@ function getAuthHeaders(): Record<string, string> {
   return headers;
 }
 
+export interface UploadProgress {
+  loadedBytes: number;
+  totalBytes: number;
+  percentage: number;
+  /** Smoothed upload speed in bytes per second, when it can be measured. */
+  speedBytesPerSec?: number;
+}
+
 export interface UploadOptions {
   file: File;
   folderId?: string;
-  onProgress?: (progress: { loadedBytes: number; totalBytes: number; percentage: number }) => void;
+  onProgress?: (progress: UploadProgress) => void;
   signal?: AbortSignal;
+}
+
+/**
+ * Smoothed upload-speed tracker: call with the total bytes sent so far
+ * and get back bytes/second (exponential moving average, so the number
+ * shown in the UI is steady instead of jumping every progress event).
+ */
+function createSpeedTracker() {
+  let lastAt = 0;
+  let lastLoaded = 0;
+  let speed = 0;
+  return (loadedBytes: number): number | undefined => {
+    const now = performance.now();
+    if (lastAt === 0) {
+      lastAt = now;
+      lastLoaded = loadedBytes;
+      return undefined;
+    }
+    const dt = (now - lastAt) / 1000;
+    if (dt <= 0) return speed > 0 ? speed : undefined;
+    const instant = (loadedBytes - lastLoaded) / dt;
+    lastAt = now;
+    lastLoaded = loadedBytes;
+    if (instant < 0) return speed > 0 ? speed : undefined;
+    speed = speed === 0 ? instant : speed * 0.7 + instant * 0.3;
+    return speed;
+  };
 }
 
 export interface UploadResult {
@@ -87,12 +122,14 @@ async function retryWithBackoff<T>(
 }
 
 /**
- * Uploads a single file using standard XHR POST (for files < 100 MB).
+ * Uploads a single file using standard XHR POST (for files under 4 MB —
+ * anything bigger goes the chunked way, because Vercel caps a request
+ * body at 4.5 MB).
  */
 function uploadSingleXhr(
   file: File,
   folderId?: string,
-  onProgress?: (progress: { loadedBytes: number; totalBytes: number; percentage: number }) => void,
+  onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<UploadResult> {
   return new Promise((resolve, reject) => {
@@ -109,10 +146,11 @@ function uploadSingleXhr(
       });
     }
 
+    const trackSpeed = createSpeedTracker();
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
         const percentage = Math.min(99, Math.round((e.loaded / e.total) * 100));
-        onProgress({ loadedBytes: e.loaded, totalBytes: e.total, percentage });
+        onProgress({ loadedBytes: e.loaded, totalBytes: e.total, percentage, speedBytesPerSec: trackSpeed(e.loaded) });
       }
     };
 
@@ -153,14 +191,17 @@ function uploadSingleXhr(
 
 /**
  * Uploads a chunk/part via XHR.
+ *
+ * Progress is reported per part (bytes sent for THIS part only) through
+ * onPartProgress. The caller adds the parts together — the old code
+ * passed a "completed bytes" base captured when the part started, so
+ * parallel parts double-counted and the bar jumped backwards.
  */
 function uploadPartXhr(
   uploadId: string,
   partNumber: number,
   chunkBlob: Blob,
-  fileSize: number,
-  completedChunkBytes: number,
-  onProgress?: (progress: { loadedBytes: number; totalBytes: number; percentage: number }) => void,
+  onPartProgress?: (loadedBytes: number) => void,
   signal?: AbortSignal
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -178,10 +219,8 @@ function uploadPartXhr(
     }
 
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        const currentLoaded = completedChunkBytes + e.loaded;
-        const percentage = Math.min(99, Math.round((currentLoaded / fileSize) * 100));
-        onProgress({ loadedBytes: Math.min(currentLoaded, fileSize), totalBytes: fileSize, percentage });
+      if (e.lengthComputable && onPartProgress) {
+        onPartProgress(e.loaded);
       }
     };
 
@@ -219,12 +258,23 @@ function uploadPartXhr(
 }
 
 /**
- * Performs a resumable multipart chunked upload for files >= 100 MB.
+ * Performs a resumable multipart chunked upload for files >= 4 MB.
+ *
+ * Speed notes (measured on the live site, India → Mumbai/bom1):
+ * - Browsers allow ~6 connections per host. With 3 parallel parts a
+ *   single large book used only half of them, so half the pipe sat idle.
+ *   5 parallel parts fills the pipe for one big file without drowning
+ *   a phone uplink; the modal still caps whole files at 2 at once.
+ * - No extra round trip before the first part: the old code fetched
+ *   /api/admin/upload/status for a session that was just created, so
+ *   its completed-parts list was always empty.
+ * - Progress is summed from each part's own bytes (see uploadPartXhr),
+ *   so the bar and the MB counter never jump backwards.
  */
 async function uploadMultipart(
   file: File,
   folderId?: string,
-  onProgress?: (progress: { loadedBytes: number; totalBytes: number; percentage: number }) => void,
+  onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<UploadResult> {
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -252,87 +302,66 @@ async function uploadMultipart(
   const uploadId: string = initRes.uploadId;
 
   try {
-    // 2. Check for existing completed parts (for session resumption if retrying)
-    let completedPartsSet = new Set<number>();
-    try {
-      const statusRes = await fetch(`/api/admin/upload/status?uploadId=${encodeURIComponent(uploadId)}`, {
-        headers: getAuthHeaders(),
-        signal,
-      });
-      if (statusRes.ok) {
-        const statusData = await statusRes.json();
-        if (Array.isArray(statusData.completedParts)) {
-          completedPartsSet = new Set(statusData.completedParts);
-        }
-      }
-    } catch {
-      // ignore
-    }
+    // 2. Upload chunks in parallel with retries. Small (4 MB) parts mean
+    // a slow connection still finishes each part quickly, and a failed
+    // part is retried on its own instead of restarting the file.
+    const PARALLEL_PARTS = 5;
+    const trackSpeed = createSpeedTracker();
 
-    // Calculate initial byte progress from already completed parts
+    // Bytes sent per part still in flight; finished parts move into
+    // completedBytes. Total loaded = completed + sum of in-flight parts.
+    const partLoaded = new Map<number, number>();
     let completedBytes = 0;
-    for (let p = 0; p < totalChunks; p++) {
-      if (completedPartsSet.has(p)) {
-        const start = p * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, file.size);
-        completedBytes += end - start;
-      }
-    }
-
-    onProgress?.({
-      loadedBytes: completedBytes,
-      totalBytes: file.size,
-      percentage: Math.min(99, Math.round((completedBytes / file.size) * 100)),
-    });
-
-    // 3. Upload missing chunks in parallel with retries. Small (4 MB)
-    // parts mean a slow connection still finishes each part quickly, and a
-    // failed part is retried on its own instead of restarting the file.
-    const PARALLEL_PARTS = 3;
-    const missingPartIndices: number[] = [];
-    for (let p = 0; p < totalChunks; p++) {
-      if (!completedPartsSet.has(p)) {
-        missingPartIndices.push(p);
-      }
-    }
+    const reportProgress = () => {
+      let inFlight = 0;
+      for (const n of partLoaded.values()) inFlight += n;
+      const loaded = Math.min(completedBytes + inFlight, file.size);
+      onProgress?.({
+        loadedBytes: loaded,
+        totalBytes: file.size,
+        percentage: Math.min(99, Math.round((loaded / file.size) * 100)),
+        speedBytesPerSec: trackSpeed(loaded),
+      });
+    };
 
     let nextPartIdx = 0;
-    let bytesUploadedSoFar = completedBytes;
 
     const partWorker = async () => {
-      while (nextPartIdx < missingPartIndices.length) {
+      while (nextPartIdx < totalChunks) {
         if (signal?.aborted) throw new Error('Upload cancelled by user.');
 
-        const partNumber = missingPartIndices[nextPartIdx];
+        const partNumber = nextPartIdx;
         nextPartIdx++;
 
         const start = partNumber * CHUNK_SIZE;
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const chunkBlob = file.slice(start, end);
+        partLoaded.set(partNumber, 0);
 
         await retryWithBackoff(
-          () => uploadPartXhr(uploadId, partNumber, chunkBlob, file.size, bytesUploadedSoFar, onProgress, signal),
+          () =>
+            uploadPartXhr(uploadId, partNumber, chunkBlob, (loaded) => {
+              partLoaded.set(partNumber, loaded);
+              reportProgress();
+            }, signal),
           MAX_RETRIES,
           signal
         );
 
-        bytesUploadedSoFar += (end - start);
-        onProgress?.({
-          loadedBytes: Math.min(bytesUploadedSoFar, file.size),
-          totalBytes: file.size,
-          percentage: Math.min(99, Math.round((bytesUploadedSoFar / file.size) * 100)),
-        });
+        partLoaded.delete(partNumber);
+        completedBytes += end - start;
+        reportProgress();
       }
     };
 
     const workers: Promise<void>[] = [];
-    for (let i = 0; i < Math.min(PARALLEL_PARTS, missingPartIndices.length); i++) {
+    for (let i = 0; i < Math.min(PARALLEL_PARTS, totalChunks); i++) {
       workers.push(partWorker());
     }
 
     await Promise.all(workers);
 
-    // 4. Complete upload session
+    // 3. Complete upload session
     const completeRes = await retryWithBackoff(async () => {
       const res = await fetch('/api/admin/upload/complete', {
         method: 'POST',
@@ -374,7 +403,8 @@ async function uploadMultipart(
 
 /**
  * Optimized file uploader entry point.
- * Chooses standard single XHR for files < 100 MB or Resumable Multipart for files >= 100 MB.
+ * Chooses standard single XHR for files under 4 MB, or resumable
+ * multipart (4 MB chunks, 5 in parallel) for anything bigger.
  */
 export async function uploadFileOptimized(options: UploadOptions): Promise<UploadResult> {
   const { file, folderId, onProgress, signal } = options;
