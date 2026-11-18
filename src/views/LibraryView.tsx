@@ -2,7 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { appState } from '../state/appState';
 import { BookGrid } from '../components/books/BookGrid';
 import { CompactAdvisoryBanner } from '../components/ui/CompactAdvisoryBanner';
-import { RefreshCw, AlertTriangle, LayoutGrid, FileText, BookOpen, ShieldCheck, Search } from 'lucide-react';
+import { RefreshCw, AlertTriangle, LayoutGrid, FileText, BookOpen, ShieldCheck, Search, Upload } from 'lucide-react';
+import { UploadFileModal } from '../components/folders/UploadFileModal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { api } from '../services/api';
 import { Book } from '../types';
 import { cleanLabel } from '../utils/bookOrder';
 import type { ShelfStatus } from '../data/tools';
@@ -36,6 +39,62 @@ export const LibraryView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('arranged');
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
+  // Admin "Upload a book here" modal, opened from a category header.
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadFolderId, setUploadFolderId] = useState<string | null>(null);
+  // Admin delete from the Library: the book waiting for confirmation.
+  const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Delete the book's catalog entry only — the Drive file is never
+  // deleted. Same endpoint and same durable-save behaviour as the admin
+  // panel (GitHub commit when GITHUB_SYNC_TOKEN is set).
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const res = await api.deleteBook(deleteTarget.id);
+      if (res.success) {
+        const suffix =
+          res.durable === true
+            ? 'Saved permanently.'
+            : 'Saved for now only — set GITHUB_SYNC_TOKEN in Vercel to keep it.';
+        appState.showToast(
+          `Removed "${deleteTarget.title}" from the library catalog. The Drive file was not deleted. ${suffix}`,
+          res.durable === true ? 'success' : 'info'
+        );
+        await appState.loadCatalog();
+        setDeleteTarget(null);
+      } else {
+        appState.showToast(res.error || 'Unable to delete this book.', 'error');
+      }
+    } catch {
+      appState.showToast('Unable to delete this book.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // The Drive folder that holds most books of one category — where an
+  // upload from that category should land. Admin only.
+  const folderForCategory = (category: string): string | null => {
+    const counts = new Map<string, number>();
+    for (const b of appState.getVisibleBooks()) {
+      if (cleanLabel(b.category) !== cleanLabel(category)) continue;
+      const fid = b.subfolderId || b.folderId;
+      if (!fid) continue;
+      counts.set(fid, (counts.get(fid) || 0) + 1);
+    }
+    let best: string | null = null;
+    let bestN = 0;
+    for (const [fid, n] of counts) {
+      if (n > bestN) {
+        best = fid;
+        bestN = n;
+      }
+    }
+    return best;
+  };
 
   // A category card on Home links here with ?category=... — honour it.
   useEffect(() => {
@@ -397,6 +456,19 @@ export const LibraryView: React.FC = () => {
               <span className="text-xs text-[var(--text-muted)]">
                 {group.topics.reduce((n, t) => n + t.books.length, 0)} books
               </span>
+              {appState.isAdmin() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadFolderId(folderForCategory(group.category));
+                    setUploadModalOpen(true);
+                  }}
+                  className="ml-auto self-center px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--gold)]/50 bg-[var(--gold-faint)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-black transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload a book here</span>
+                </button>
+              )}
             </div>
             {group.topics.map((topicGroup) => (
               <div key={topicGroup.topic} className="space-y-3">
@@ -408,7 +480,11 @@ export const LibraryView: React.FC = () => {
                     {topicGroup.books.length} {topicGroup.books.length === 1 ? 'book' : 'books'}
                   </span>
                 </div>
-                <BookGrid books={topicGroup.books} emptyMessage="No books in this topic." />
+                <BookGrid
+                  books={topicGroup.books}
+                  emptyMessage="No books in this topic."
+                  onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
+                />
               </div>
             ))}
           </section>
@@ -417,8 +493,35 @@ export const LibraryView: React.FC = () => {
         <BookGrid
           books={displayedBooks}
           emptyMessage={q ? `No books found for "${q}".` : 'No books match these filters.'}
+          onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
         />
       )}
+
+      <UploadFileModal
+        isOpen={uploadModalOpen}
+        folderId={uploadFolderId}
+        onClose={() => setUploadModalOpen(false)}
+        onUploaded={() => appState.loadCatalog()}
+      />
+
+      {/* Admin delete confirmation — title shown, catalog entry only. */}
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title={deleteTarget ? `Delete "${deleteTarget.title}"?` : 'Delete this book?'}
+        message={
+          deleteTarget
+            ? `This removes "${deleteTarget.title}" from the library catalog only. The file on Drive is NOT deleted. This cannot be undone.`
+            : ''
+        }
+        confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
+        cancelLabel="Cancel"
+        isDangerous={true}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
+      />
 
       <CompactAdvisoryBanner />
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, FileText, CheckCircle2 } from 'lucide-react';
+import { Star, FileText, CheckCircle2, Trash2 } from 'lucide-react';
 import { Book } from '../../types';
 import { CoverImage } from './CoverImage';
 import { appState } from '../../state/appState';
@@ -11,9 +11,12 @@ interface BookCardProps {
   onSelect?: (book: Book) => void;
   /** 0-based position in its grid, for the staggered entrance (capped at 11). */
   index?: number;
+  /** Admin-only delete: when set (and the viewer is admin), a small trash
+   *  button shows on the card. The parent must confirm before deleting. */
+  onDelete?: (book: Book) => void;
 }
 
-export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0 }) => {
+export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0, onDelete }) => {
   const isFav = appState.isFavorite(book.id);
   const progress = appState.getReadingProgress(book.id);
   const percentage = progress?.percentage || 0;
@@ -128,6 +131,23 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0 })
             <Star className="w-4 h-4 text-[var(--text-muted)] group-hover:text-amber-400" />
           )}
         </button>
+
+        {/* Admin delete — small trash button under the star. Admin only,
+            and only when the parent passed onDelete (Library view). */}
+        {onDelete && appState.isAdmin() && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(book);
+            }}
+            className="absolute top-12 right-2.5 z-10 p-1.5 rounded-full border backdrop-blur-sm transition-all cursor-pointer shadow-xs bg-[var(--bg-surface)]/80 border-[var(--border-main)] text-[var(--text-muted)] hover:text-rose-400 hover:border-rose-400/50 hover:scale-110"
+            title={`Delete "${book.title}" from the library`}
+            aria-label={`Delete ${book.title} from the library`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Progress Bar Line */}

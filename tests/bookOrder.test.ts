@@ -5,6 +5,9 @@ import {
   getCategories,
   getTopics,
   sortBooksByTopicCategory,
+  applyDailyRotation,
+  dayOfYear,
+  isNewBook,
   moveBookInList,
   moveNameInOrder,
   formatVersionDate,
@@ -111,5 +114,70 @@ describe('move helpers', () => {
   it('moves a category/topic name in its order list', () => {
     expect(moveNameInOrder(['A', 'B', 'C'], 'B', 'down')).toEqual(['A', 'C', 'B']);
     expect(moveNameInOrder(['A', 'B', 'C'], 'A', 'up')).toEqual(['A', 'B', 'C']);
+  });
+});
+
+describe('daily rotation (shelf rearranges itself every day)', () => {
+  const old = '2025-01-01T00:00:00.000Z';
+  const group = [
+    book({ id: 'a', title: 'A', category: 'History', topic: 'Tareekh', addedDate: old }),
+    book({ id: 'b', title: 'B', category: 'History', topic: 'Tareekh', addedDate: old }),
+    book({ id: 'c', title: 'C', category: 'History', topic: 'Tareekh', addedDate: old }),
+  ];
+
+  it('same date gives the same order all day', () => {
+    const d = new Date('2026-11-18T09:00:00');
+    const first = applyDailyRotation(group, d).map((b) => b.id);
+    const second = applyDailyRotation(group, new Date('2026-11-18T22:30:00')).map((b) => b.id);
+    expect(first).toEqual(second);
+  });
+
+  it('a different date gives a different order', () => {
+    // 2026-11-18 is day 322 of the year: 322 % 3 = 1 -> [b, c, a].
+    // 2026-11-19 is day 323: 323 % 3 = 2 -> [c, a, b].
+    expect(applyDailyRotation(group, new Date('2026-11-18')).map((b) => b.id)).toEqual(['b', 'c', 'a']);
+    expect(applyDailyRotation(group, new Date('2026-11-19')).map((b) => b.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('new books (added in the last 7 days) stay pinned first', () => {
+    const date = new Date('2026-11-18T12:00:00');
+    const list = [
+      ...group,
+      book({ id: 'new', title: 'New', category: 'History', topic: 'Tareekh', addedDate: '2026-11-16T00:00:00.000Z' }),
+    ];
+    const out = applyDailyRotation(list, date).map((b) => b.id);
+    expect(out[0]).toBe('new');
+    expect(out.slice(1)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('books never move across groups, and group order is kept', () => {
+    const date = new Date('2026-11-18T12:00:00');
+    const mixed = [
+      book({ id: 'h1', title: 'H1', category: 'History', topic: 'T1', addedDate: old }),
+      book({ id: 'h2', title: 'H2', category: 'History', topic: 'T1', addedDate: old }),
+      book({ id: 's1', title: 'S1', category: 'Sufism', topic: 'T2', addedDate: old }),
+      book({ id: 's2', title: 'S2', category: 'Sufism', topic: 'T2', addedDate: old }),
+    ];
+    const out = applyDailyRotation(mixed, date).map((b) => b.id);
+    // Day 322: shift 322 % 2 = 0, so each group keeps its order, groups stay in place.
+    expect(out).toEqual(['h1', 'h2', 's1', 's2']);
+    const otherDay = applyDailyRotation(mixed, new Date('2026-11-19T12:00:00')).map((b) => b.id);
+    // Day 323: shift 323 % 2 = 1, each group rotates but books never cross groups.
+    expect(otherDay).toEqual(['h2', 'h1', 's2', 's1']);
+  });
+
+  it('does not mutate the input list', () => {
+    const before = group.map((b) => b.id);
+    applyDailyRotation(group, new Date('2026-11-18'));
+    expect(group.map((b) => b.id)).toEqual(before);
+  });
+
+  it('dayOfYear and isNewBook agree on the 7-day window', () => {
+    expect(dayOfYear(new Date('2026-01-01T12:00:00'))).toBe(1);
+    expect(dayOfYear(new Date('2026-12-31T12:00:00'))).toBe(365);
+    const date = new Date('2026-11-18T12:00:00');
+    expect(isNewBook(book({ addedDate: '2026-11-12T00:00:00.000Z' }), date)).toBe(true);
+    expect(isNewBook(book({ addedDate: '2026-11-11T00:00:00.000Z' }), date)).toBe(false);
+    expect(isNewBook(book({ addedDate: '2026-11-20T00:00:00.000Z' }), date)).toBe(false);
   });
 });

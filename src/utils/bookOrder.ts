@@ -164,6 +164,54 @@ export function sortBooksByTopicCategory(
   });
 }
 
+/**
+ * Daily rotation — the shelf rearranges itself every day, on the site
+ * itself, with no deploy. Display only: it never changes the stored
+ * sortOrder or the admin's order.
+ *
+ * Inside each (category, topic) group, books added in the last 7 days
+ * stay pinned first, then the rest rotate by the day-of-year. The same
+ * date gives the same order all day; the next day gives a different one.
+ */
+export function dayOfYear(date: Date): number {
+  const start = new Date(date.getFullYear(), 0, 0);
+  return Math.floor((date.getTime() - start.getTime()) / 86400000);
+}
+
+/** Added within the last 7 days before `date` (a "new" book). */
+export function isNewBook(book: Book, date: Date): boolean {
+  if (!book.addedDate) return false;
+  const added = new Date(book.addedDate);
+  if (Number.isNaN(added.getTime())) return false;
+  const diffMs = date.getTime() - added.getTime();
+  return diffMs >= 0 && diffMs < 7 * 86400000;
+}
+
+/** Rotate an already-ordered list by day-of-year, group by group. */
+export function applyDailyRotation(books: Book[], date: Date = new Date()): Book[] {
+  const shiftBase = dayOfYear(date);
+  // Group by (category, topic), keeping first-seen group order.
+  const groups = new Map<string, Book[]>();
+  for (const book of books) {
+    const key = `${cleanLabel(book.category) || 'General'}\n${cleanLabel(book.topic) || 'General'}`;
+    const list = groups.get(key) || [];
+    list.push(book);
+    groups.set(key, list);
+  }
+  const out: Book[] = [];
+  for (const list of groups.values()) {
+    const fresh = list.filter((b) => isNewBook(b, date));
+    const rest = list.filter((b) => !isNewBook(b, date));
+    if (rest.length > 1) {
+      const shift = shiftBase % rest.length;
+      out.push(...fresh, ...rest.slice(shift), ...rest.slice(0, shift));
+    } else {
+      out.push(...fresh, ...rest);
+    }
+  }
+  return out;
+}
+
 /** Move one book one step up/down inside an already-ordered list.
  *  Returns the new list, or the same list when the move is impossible. */
 export function moveBookInList<T extends { id: string }>(

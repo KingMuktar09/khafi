@@ -12,6 +12,7 @@ import {
   getTopics,
   getTopicsForCategory,
   sortBooksByTopicCategory,
+  applyDailyRotation,
   type BookVersion,
 } from '../utils/bookOrder';
 
@@ -438,12 +439,16 @@ class AppState {
   }
 
   // --- Topic / category arranging (the library's organising system) ---
-  /** All books in topic/category display order. */
+  /** All books in topic/category display order, with the daily rotation
+   *  applied (see applyDailyRotation). The stored sortOrder and the
+   *  admin's order are never changed — this is display only. */
   public getOrderedBooks(): Book[] {
-    return sortBooksByTopicCategory(
-      this.getVisibleBooks(),
-      this.catalog.categoryOrder,
-      this.catalog.topicOrder
+    return applyDailyRotation(
+      sortBooksByTopicCategory(
+        this.getVisibleBooks(),
+        this.catalog.categoryOrder,
+        this.catalog.topicOrder
+      )
     );
   }
 

@@ -179,6 +179,22 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
     }
   }, [isOpen, driveConfigured]);
 
+  // Pre-select the destination picker from the folder this modal was
+  // opened in (e.g. "Upload a book here" from a Library category), so the
+  // topic and folder already show as picked. The admin can still change
+  // it, or tap "Use the opened folder instead" to clear the pick.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (folderId) {
+      setDestFolderId(folderId);
+      const folderObj = appState.getFolderById(folderId);
+      if (folderObj) {
+        const group = groupForFolder(folderObj, appState.catalog.books || []);
+        if (group) setDestTopicId(group.id);
+      }
+    }
+  }, [isOpen]);
+
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
