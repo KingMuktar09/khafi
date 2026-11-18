@@ -18,6 +18,7 @@ import {
 // catalog-links mode as the Vercel deploy.
 import bundledCatalog from "../data/catalog.json" with { type: "json" };
 import bundledPaymentSettings from "../data/payment-settings.json" with { type: "json" };
+import bundledGateSettings from "../data/gate-settings.json" with { type: "json" };
 import type { Book, Folder } from "../src/types";
 
 // In-memory catalog state for edge worker runtime
@@ -28,6 +29,31 @@ const activeTokens = new Set<string>();
 // bundled data/payment-settings.json in the repo; admin edits here do not
 // survive a redeploy or a different isolate, same as Vercel /tmp writes.
 let runtimePaymentSettings: any = null;
+
+// Gate key settings in memory (per isolate). The durable copy is the
+// bundled data/gate-settings.json in the repo; admin edits here do not
+// survive a redeploy or a different isolate, same as payment settings
+// above. The key is never returned by any route.
+const DEFAULT_BROADCAST_CHANNEL_URL = "https://www.instagram.com/channel/ZKdxHLW9r2VpKow7/";
+let runtimeGateSettings: any = null;
+
+function getGateSettings(): { gateKey: string; channelUrl: string } {
+  if (!runtimeGateSettings) {
+    const src: any = bundledGateSettings || {};
+    runtimeGateSettings = {
+      gateKey: typeof src.gateKey === "string" ? src.gateKey.trim().slice(0, 200) : "",
+      channelUrl:
+        typeof src.channelUrl === "string" && src.channelUrl.trim()
+          ? src.channelUrl.trim().slice(0, 500)
+          : DEFAULT_BROADCAST_CHANNEL_URL,
+    };
+  }
+  return {
+    gateKey: runtimeGateSettings.gateKey,
+    // An empty stored link falls back to the default broadcast channel.
+    channelUrl: runtimeGateSettings.channelUrl || DEFAULT_BROADCAST_CHANNEL_URL,
+  };
+}
 
 // Upload session state for chunked uploads
 const chunkSessions = new Map<string, { chunks: Map<number, Uint8Array>; metadata: any }>();
@@ -631,6 +657,37 @@ function sanitizeCatalog(catalog: any) {
     return jsonResponse({ ...runtimePaymentSettings });
   }
 
+  // 7c2. Public gate status: only whether a key is set, plus the broadcast
+  // channel link. The key itself is never returned here. Mirrors the
+  // Express twin in server/app.ts.
+  if (path === "/api/gate/status" && method === "GET") {
+    const settings = getGateSettings();
+    return jsonResponse({ keySet: settings.gateKey.length > 0, channelUrl: settings.channelUrl });
+  }
+
+  // 7c3. Public gate unlock: checks the key server-side, constant-time.
+  // The key is never logged and never returned. Mirrors server/app.ts:
+  // no key set -> 404, wrong key -> 401 after a ~600ms delay, right key
+  // -> { ok: true }.
+  if (path === "/api/gate/unlock" && method === "POST") {
+    const settings = getGateSettings();
+    if (!settings.gateKey) {
+      return jsonResponse({ error: "Gate key is not set." }, 404);
+    }
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+    const guess = typeof body?.key === "string" ? body.key : "";
+    if (!(await safeEqualSecretCf(guess, settings.gateKey))) {
+      await new Promise((r) => setTimeout(r, 600));
+      return jsonResponse({ error: "Wrong key. Check the key in the broadcast channel and try again." }, 401);
+    }
+    return jsonResponse({ ok: true });
+  }
+
   // 7d. Daily auto-sync for Cron Triggers (wrangler.jsonc triggers.crons,
   // 02:00 UTC). Requires CRON_SECRET as a secret; an unprotected trigger
   // would let anyone rebuild the catalog.
@@ -1022,6 +1079,45 @@ function sanitizeCatalog(catalog: any) {
       return jsonResponse({ success: true, settings: { ...runtimePaymentSettings } });
     } catch (err: any) {
       return jsonResponse({ success: false, error: err.message || "Failed to save payment settings." }, 500);
+    }
+  }
+
+  // 11b2. Admin gate settings: GET /api/admin/gate-settings (keySet only,
+  // never the key) and POST to save. Workers have no durable disk, so a
+  // save lives only in this isolate's memory — the durable copy is
+  // data/gate-settings.json in the repo, same as payment settings above.
+  // Mirrors server/app.ts; removeKey clears the key, a non-empty gateKey
+  // sets a new one, an absent/empty gateKey keeps the existing key.
+  if (path === "/api/admin/gate-settings" && method === "GET") {
+    const settings = getGateSettings();
+    return jsonResponse({ keySet: settings.gateKey.length > 0, channelUrl: settings.channelUrl });
+  }
+
+  if (path === "/api/admin/gate-settings" && method === "POST") {
+    try {
+      const body: any = await request.json();
+      const current = getGateSettings();
+      const next = { gateKey: current.gateKey, channelUrl: current.channelUrl };
+      if (body?.removeKey === true) {
+        next.gateKey = "";
+      } else if (typeof body?.gateKey === "string" && body.gateKey.trim() !== "") {
+        next.gateKey = body.gateKey.trim().slice(0, 200);
+      }
+      if (typeof body?.channelUrl === "string") {
+        next.channelUrl = body.channelUrl.trim().slice(0, 500);
+      }
+      runtimeGateSettings = next;
+      const stored = getGateSettings();
+      return jsonResponse({
+        success: true,
+        keySet: stored.gateKey.length > 0,
+        channelUrl: stored.channelUrl,
+        durable: false,
+        durableWarning:
+          "Saved for now only — Cloudflare Workers have no disk, so this key will not survive a redeploy. The durable copy is data/gate-settings.json in the repo.",
+      });
+    } catch (err: any) {
+      return jsonResponse({ success: false, error: err.message || "Failed to save gate settings." }, 500);
     }
   }
 
