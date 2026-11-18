@@ -4,7 +4,7 @@
  */
 import type { ViewName } from '../types';
 
-export type ToolId = 'huruf' | 'asma' | 'bast' | 'journal' | 'wird' | 'grimoire' | 'method' | 'today' | 'hours' | 'moon' | 'mansions' | 'falak' | 'majlis' | 'forge' | 'qawaid' | 'kitab' | 'talasim' | 'ashkal' | 'figure-forge' | 'talism-studio' | 'haqaiq' | 'shart' | 'sirr-al-jalil' | 'durus' | 'index' | 'library' | 'atlas' | 'qalam' | 'khatam' | 'plate' | 'works' | 'bakhur-adad' | 'shurut' | 'glossary';
+export type ToolId = 'huruf' | 'asma' | 'bast' | 'fawatih' | 'sawaqit' | 'shields' | 'journal' | 'wird' | 'grimoire' | 'method' | 'about' | 'today' | 'hours' | 'moon' | 'mansions' | 'falak' | 'majlis' | 'forge' | 'qawaid' | 'kitab' | 'talasim' | 'ashkal' | 'figure-forge' | 'talism-studio' | 'haqaiq' | 'shart' | 'sirr-al-jalil' | 'durus' | 'index' | 'library' | 'atlas' | 'qalam' | 'khatam' | 'plate' | 'works' | 'bakhur-adad' | 'shurut' | 'glossary';
 
 export interface ToolEntry {
   id: ToolId;
@@ -35,6 +35,27 @@ export const TOOLS_INDEX: ToolEntry[] = [
     blurb: 'Type any text and unfold it letter by letter, with each letter’s value and the running total.',
     route: 'tools-bast',
     keywords: ['bast', 'unfold', 'text', 'letters', 'total', 'calculate', 'value'],
+  },
+  {
+    id: 'fawatih',
+    title: 'Fawatih (The Opening Letters)',
+    blurb: 'The 14 disjointed-letter forms that open 29 surahs, found by a rule run over the opening verse of every surah, with their values.',
+    route: 'tools-fawatih',
+    keywords: ['fawatih', 'muqattaat', 'disjointed letters', 'opening letters', 'surah openings', 'quran', 'letters'],
+  },
+  {
+    id: 'sawaqit',
+    title: 'Sawaqit (The Seven Absent Letters)',
+    blurb: 'The seven letters that do not appear anywhere in al-Fatiha, found by counting which letters the surah uses.',
+    route: 'tools-sawaqit',
+    keywords: ['sawaqit', 'absent letters', 'fatiha', 'seven letters', 'quran', 'letters'],
+  },
+  {
+    id: 'shields',
+    title: 'Shields (Running Letter Sums)',
+    blurb: 'Word-by-word running letter sums for al-Fatiha, al-Ikhlas, al-Falaq, al-Nas and Ayat al-Kursi, so you can follow the arithmetic.',
+    route: 'tools-shields',
+    keywords: ['shields', 'running total', 'fatiha', 'ikhlas', 'falaq', 'nas', 'kursi', 'ayat al-kursi', 'quran', 'sums'],
   },
   {
     id: 'journal',
@@ -252,5 +273,12 @@ export const TOOLS_INDEX: ToolEntry[] = [
     blurb: 'Where the numbers come from, how letters are counted, what was tested, and what these tools cannot do.',
     route: 'tools-method',
     keywords: ['method', 'how', 'source', 'sources', 'about', 'rules', 'limits', 'tested'],
+  },
+  {
+    id: 'about',
+    title: 'About (The Study Tools)',
+    blurb: 'What this section is, where its numbers come from, what was tested, and what it cannot do.',
+    route: 'tools-about',
+    keywords: ['about', 'sources', 'conventions', 'limits', 'tested', 'who made this', 'ghayb'],
   },
 ];

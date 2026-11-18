@@ -25,10 +25,14 @@ import { ToolsHubView } from './views/tools/ToolsHubView';
 import { HurufView } from './views/tools/HurufView';
 import { AsmaView } from './views/tools/AsmaView';
 import { BastView } from './views/tools/BastView';
+import { FawatihView } from './views/tools/FawatihView';
+import { SawaqitView } from './views/tools/SawaqitView';
+import { ShieldsView } from './views/tools/ShieldsView';
 import { JournalView } from './views/tools/JournalView';
 import { WirdView } from './views/tools/WirdView';
 import { GrimoireView } from './views/tools/GrimoireView';
 import { MethodView } from './views/tools/MethodView';
+import { AboutView } from './views/tools/AboutView';
 
 // Study tools (Phase 2): time and sky facts, behind the gate.
 import { TodayView } from './views/tools/TodayView';
@@ -162,6 +166,12 @@ export default function App() {
         return <AsmaView />;
       case 'tools-bast':
         return <BastView />;
+      case 'tools-fawatih':
+        return <FawatihView />;
+      case 'tools-sawaqit':
+        return <SawaqitView />;
+      case 'tools-shields':
+        return <ShieldsView />;
       case 'tools-journal':
         return <JournalView />;
       case 'tools-wird':
@@ -170,6 +180,8 @@ export default function App() {
         return <GrimoireView />;
       case 'tools-method':
         return <MethodView />;
+      case 'tools-about':
+        return <AboutView />;
       case 'tools-today':
         return <TodayView />;
       case 'tools-hours':

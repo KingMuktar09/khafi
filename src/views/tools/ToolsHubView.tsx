@@ -32,7 +32,6 @@ export const ToolsHubView: React.FC = () => {
 
       <p className="ms-body text-center pt-2">
         The shells below are empty for now — they hold only content supplied with its source and page.
-        Four more tools (Fawatih, Sawaqit, Shields, About) are still to be built.
       </p>
     </ToolsLayout>
   );

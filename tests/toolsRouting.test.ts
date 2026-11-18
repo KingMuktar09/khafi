@@ -50,6 +50,14 @@ const SHELL_TOOLS = [
 
 const ALL_WIRED_TOOLS = [...NEW_TOOLS, ...SHELL_TOOLS];
 
+/** The four remaining Tier A tools: Fawatih, Sawaqit, Shields, About. */
+const FOUR_TOOLS = [
+  { id: 'fawatih', route: 'tools-fawatih', url: '/tools/fawatih', view: 'FawatihView' },
+  { id: 'sawaqit', route: 'tools-sawaqit', url: '/tools/sawaqit', view: 'SawaqitView' },
+  { id: 'shields', route: 'tools-shields', url: '/tools/shields', view: 'ShieldsView' },
+  { id: 'about', route: 'tools-about', url: '/tools/about', view: 'AboutView' },
+] as const;
+
 function readSource(relPath: string): string {
   return readFileSync(join(process.cwd(), relPath), 'utf8');
 }
@@ -104,5 +112,50 @@ describe('Phase 2 + 3 tools are in the router and App', () => {
   it('the hub lists every wired tool once (no orphan routes)', () => {
     const entries = TOOLS_INDEX.filter((t) => ALL_WIRED_TOOLS.some((w) => w.id === t.id));
     expect(entries.length).toBe(ALL_WIRED_TOOLS.length);
+  });
+});
+
+describe('The four Tier A tools (Fawatih, Sawaqit, Shields, About) are wired', () => {
+  it('has one entry per tool in the index, with title, blurb, route and keywords', () => {
+    for (const tool of FOUR_TOOLS) {
+      const entry = TOOLS_INDEX.find((t) => t.id === tool.id);
+      expect(entry, `missing TOOLS_INDEX entry for ${tool.id}`).toBeDefined();
+      expect(entry!.title.length).toBeGreaterThan(0);
+      expect(entry!.blurb.length).toBeGreaterThan(0);
+      expect(entry!.route).toBe(tool.route);
+      expect(entry!.keywords.length).toBeGreaterThan(0);
+    }
+    expect(TOOLS_INDEX).toHaveLength(38);
+  });
+
+  it('types.ts lists every new ViewName', () => {
+    const types = readSource('src/types.ts');
+    for (const tool of FOUR_TOOLS) {
+      expect(types).toContain(`'${tool.route}'`);
+    }
+  });
+
+  it('router.ts has a buildUrl case and a parseUrl case for every new route', () => {
+    const router = readSource('src/router/router.ts');
+    for (const tool of FOUR_TOOLS) {
+      expect(router).toContain(`case '${tool.route}':`);
+      expect(router).toContain(`return '${tool.url}';`);
+      expect(router).toContain(`pathname === '${tool.url}'`);
+      expect(router).toContain(`view: '${tool.route}'`);
+    }
+  });
+
+  it('App.tsx imports and renders every new view', () => {
+    const app = readSource('src/App.tsx');
+    for (const tool of FOUR_TOOLS) {
+      expect(app).toContain(`import { ${tool.view} }`);
+      expect(app).toContain(`case '${tool.route}':`);
+      expect(app).toContain(`<${tool.view} />`);
+    }
+  });
+
+  it('the hub no longer says the four tools are still to be built', () => {
+    const hub = readSource('src/views/tools/ToolsHubView.tsx');
+    expect(hub).not.toContain('still to be built');
   });
 });

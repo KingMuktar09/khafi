@@ -191,8 +191,9 @@ export const MethodView: React.FC = () => {
             export/import of valid JSON, and bad files being rejected without wiping existing data.
           </li>
           <li>
-            The Abjad arithmetic itself (letter values, Kabir/Saghir, text totals) is tested by the
-            team that owns the Abjad table, not here.
+            The Abjad arithmetic itself is tested here: letter values in both schools and both
+            systems, normalisation (hamza forms, shadda, tatweel, decomposed letters), and text
+            totals — including the plain checks “Allah 66” and “bism Allah 168”.
           </li>
           <li>
             Time and squares are tested by their own suites: planetary hours (including midnight

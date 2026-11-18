@@ -120,6 +120,12 @@ class Router {
         return '/tools/asma';
       case 'tools-bast':
         return '/tools/bast';
+      case 'tools-fawatih':
+        return '/tools/fawatih';
+      case 'tools-sawaqit':
+        return '/tools/sawaqit';
+      case 'tools-shields':
+        return '/tools/shields';
       case 'tools-journal':
         return '/tools/journal';
       case 'tools-wird':
@@ -128,6 +134,8 @@ class Router {
         return '/tools/grimoire';
       case 'tools-method':
         return '/tools/method';
+      case 'tools-about':
+        return '/tools/about';
       case 'tools-today':
         return '/tools/today';
       case 'tools-hours':
@@ -262,6 +270,18 @@ class Router {
       return { view: 'tools-bast' };
     }
 
+    if (pathname === '/tools/fawatih') {
+      return { view: 'tools-fawatih' };
+    }
+
+    if (pathname === '/tools/sawaqit') {
+      return { view: 'tools-sawaqit' };
+    }
+
+    if (pathname === '/tools/shields') {
+      return { view: 'tools-shields' };
+    }
+
     if (pathname === '/tools/journal') {
       return { view: 'tools-journal' };
     }
@@ -276,6 +296,10 @@ class Router {
 
     if (pathname === '/tools/method') {
       return { view: 'tools-method' };
+    }
+
+    if (pathname === '/tools/about') {
+      return { view: 'tools-about' };
     }
 
     if (pathname === '/tools/today') {
