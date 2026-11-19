@@ -13,8 +13,9 @@ import {
 } from '../src/data/i18n';
 import { I18N_HOME } from '../src/data/i18n-home';
 import { I18N_LIBRARY } from '../src/data/i18n-library';
-import { I18N_TOOLS, ASMA_MEANINGS } from '../src/data/i18n-tools';
+import { I18N_TOOLS, ASMA_MEANINGS, tTools, localizeTool } from '../src/data/i18n-tools';
 import { I18N_TOPICS } from '../src/data/i18n-topics';
+import { TOOLS_INDEX } from '../src/data/toolsIndex';
 import {
   localizeTopic,
   localizeQuestion,
@@ -241,6 +242,27 @@ describe('every key exists in all four languages', () => {
         expect(chunk.ur[key].trim().length, `${name} ur ${key} empty`).toBeGreaterThan(0);
       }
     }
+  });
+
+  it('tTools actually returns the Urdu strings, not English fallback', () => {
+    // Regression: tTools once only accepted hi/bn, so the whole Tools
+    // section rendered in English when Urdu was active, even though
+    // every Urdu string existed in the dict.
+    expect(tTools('tools.hub.title', 'ur')).toBe('مطالعے کے ٹولز');
+    expect(tTools('tools.hub.subtitle', 'ur')).toContain('حروف');
+    expect(tTools('tools.moon.footer', 'ur')).toContain('چاند');
+    expect(tTools('tools.hub.title', 'ur')).not.toBe(I18N_TOOLS.en['tools.hub.title']);
+    for (const tool of TOOLS_INDEX) {
+      const localized = localizeTool(tool, 'ur');
+      expect(localized.title, `${tool.id} ur title`).not.toBe(tool.title);
+      expect(localized.blurb, `${tool.id} ur blurb`).not.toBe(tool.blurb);
+      expect(localized.title.trim().length, `${tool.id} ur title`).toBeGreaterThan(0);
+      expect(localized.blurb.trim().length, `${tool.id} ur blurb`).toBeGreaterThan(0);
+    }
+    // The other languages still resolve through the same lookup.
+    expect(tTools('tools.hub.title', 'hi')).toBe('Padhai ke Tools');
+    expect(tTools('tools.hub.title', 'bn')).toBe('পড়াশোনার টুলস');
+    expect(tTools('tools.hub.title', 'en')).toBe('Study Tools');
   });
 
   it('no user-facing string carries an em dash pile-up in translation', () => {

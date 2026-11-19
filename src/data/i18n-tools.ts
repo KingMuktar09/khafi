@@ -4336,7 +4336,7 @@ export const I18N_TOOLS: Record<SiteLanguage, Record<string, string>> = {
 
 /** Translate a tools key. Falls back to English, then to the key itself. */
 export function tTools(key: string, lang: SiteLanguage = 'en'): string {
-  const l = lang === 'hi' || lang === 'bn' ? lang : 'en';
+  const l = lang === 'hi' || lang === 'bn' || lang === 'ur' ? lang : 'en';
   return I18N_TOOLS[l][key] ?? I18N_TOOLS.en[key] ?? key;
 }
 
