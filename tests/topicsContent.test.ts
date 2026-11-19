@@ -222,16 +222,20 @@ describe('Topic requests use the public Supabase fallback', () => {
     const realFetch = globalThis.fetch;
     globalThis.fetch = (async (url: unknown) => {
       calls.push(String(url));
-      return { ok: true, json: async () => rows } as Response;
+      // topic_replies returns nothing for these rows; the list call
+      // returns the approved comments.
+      const body = String(url).includes('/topic_replies') ? [] : rows;
+      return { ok: true, json: async () => body } as Response;
     }) as typeof fetch;
     try {
       const listed = await fetchVisibleTopicRequests('ruh-and-soul');
-      expect(listed).toEqual(rows);
-      expect(calls).toHaveLength(1);
+      expect(listed).toEqual(rows.map((row) => ({ ...row, reply: null })));
+      expect(calls).toHaveLength(2);
       expect(calls[0]).toContain('topic=eq.ruh-and-soul');
       expect(calls[0]).toContain('kind=eq.comment');
       expect(calls[0]).toContain('status=eq.approved');
       expect(calls[0]).toContain('order=created_at.desc');
+      expect(calls[1]).toContain('/topic_replies');
     } finally {
       globalThis.fetch = realFetch;
     }

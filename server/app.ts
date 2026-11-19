@@ -57,6 +57,15 @@ import {
   type BookKeyStore,
 } from "./bookKeys.js";
 import {
+  getSupabaseAdminConfig,
+  listTopicRequestsWithReplies,
+  approveTopicRequest,
+  insertTopicReply,
+  countUnread,
+  SERVICE_KEY_MISSING_MESSAGE,
+  SupabaseAdminError,
+} from "./topicInbox.js";
+import {
   probeRemoteUrl,
   downloadRemoteFileStream,
   sanitizeFilename,
@@ -1275,6 +1284,89 @@ app.delete(["/api/admin/book-keys/:id", "/admin/book-keys/:id"], requireAdmin, a
   }
   const save = await saveBookKeyStoreDurably();
   res.json({ success: true, durable: save.durable, durableWarning: save.durableWarning });
+});
+
+// Admin inbox: topic requests (comments, requests, questions) from
+// Supabase, with the bell count and replies. Reads and writes use the
+// SERVICE_ROLE key (server-side only, SUPABASE_SERVICE_ROLE_KEY in
+// Vercel). Without it every route answers 503 with a plain message —
+// the inbox never pretends to work. The key value is never logged.
+function supabaseAdminConfigOr503(res: express.Response) {
+  const config = getSupabaseAdminConfig();
+  if (!config) {
+    res.status(503).json({ error: SERVICE_KEY_MISSING_MESSAGE });
+    return null;
+  }
+  return config;
+}
+
+function topicInboxError(res: express.Response, err: unknown) {
+  // A Supabase failure is a bad-gateway problem on our side, never a
+  // visitor error — and the key value is never part of the message.
+  if (err instanceof SupabaseAdminError) {
+    res.status(502).json({ error: err.message });
+    return;
+  }
+  res.status(500).json({ error: 'Something went wrong loading messages.' });
+}
+
+// Admin: list every message, newest first, each with its latest reply.
+app.get(["/api/admin/topic-requests", "/admin/topic-requests"], requireAdmin, async (req, res) => {
+  const config = supabaseAdminConfigOr503(res);
+  if (!config) return;
+  try {
+    const items = await listTopicRequestsWithReplies(fetch, config);
+    res.json({ items });
+  } catch (err) {
+    topicInboxError(res, err);
+  }
+});
+
+// Admin: how many messages are still new — the bell badge count.
+app.get(["/api/admin/topic-requests/unread", "/admin/topic-requests/unread"], requireAdmin, async (req, res) => {
+  const config = supabaseAdminConfigOr503(res);
+  if (!config) return;
+  try {
+    const items = await listTopicRequestsWithReplies(fetch, config);
+    res.json({ unread: countUnread(items) });
+  } catch (err) {
+    topicInboxError(res, err);
+  }
+});
+
+// Admin: approve one message. Approved comments show on the public
+// Topics pages (with the admin reply under them, when there is one).
+app.post(["/api/admin/topic-requests/:id/approve", "/admin/topic-requests/:id/approve"], requireAdmin, async (req, res) => {
+  const config = supabaseAdminConfigOr503(res);
+  if (!config) return;
+  try {
+    const result = await approveTopicRequest(fetch, config, req.params.id);
+    if (!result.found) {
+      res.status(404).json({ error: 'Message not found.' });
+      return;
+    }
+    res.json({ success: true });
+  } catch (err) {
+    topicInboxError(res, err);
+  }
+});
+
+// Admin: reply to one message. The reply shows under the comment on the
+// public Topics pages once the comment is approved.
+app.post(["/api/admin/topic-requests/:id/reply", "/admin/topic-requests/:id/reply"], requireAdmin, async (req, res) => {
+  const config = supabaseAdminConfigOr503(res);
+  if (!config) return;
+  try {
+    const body = req.body || {};
+    const result = await insertTopicReply(fetch, config, req.params.id, typeof body.reply === 'string' ? body.reply : '');
+    if (!result.ok) {
+      res.status(result.error === 'Message not found.' ? 404 : 400).json({ error: result.error });
+      return;
+    }
+    res.json({ success: true, reply: result.reply });
+  } catch (err) {
+    topicInboxError(res, err);
+  }
 });
 
 // 1.1 Diagnostics endpoint

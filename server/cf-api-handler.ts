@@ -12,6 +12,15 @@ import {
   uploadBinaryToDriveCf,
   invalidateDriveCacheCf,
 } from "./cf-drive";
+import {
+  getSupabaseAdminConfig,
+  listTopicRequestsWithReplies,
+  approveTopicRequest,
+  insertTopicReply,
+  countUnread,
+  SERVICE_KEY_MISSING_MESSAGE,
+  SupabaseAdminError,
+} from "./topicInbox";
 // Bundled saved catalog (36 folders, 173 books: All Islamic History Books
 // incl. Hidden Wisdoms + the Book of Wonders notes). The worker has no disk,
 // so this is the catalog served when Drive is not configured — the same
@@ -1513,6 +1522,76 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     }
     runtimeBookKeys = remaining;
     return jsonResponse({ success: true });
+  }
+
+  // 11b3. Admin inbox: topic requests (comments, requests, questions)
+  // from Supabase, with the bell count and replies. Same shape as the
+  // Express twin in server/app.ts. Reads and writes use the SERVICE_ROLE
+  // key (SUPABASE_SERVICE_ROLE_KEY). Cloudflare Pages has no env vars
+  // set for this project, so these routes answer 503 here until the key
+  // is added — the Vercel host is the canonical admin path. The key
+  // value is never logged.
+  if (path === "/api/admin/topic-requests" && method === "GET") {
+    const config = getSupabaseAdminConfig(env);
+    if (!config) return jsonResponse({ error: SERVICE_KEY_MISSING_MESSAGE }, 503);
+    try {
+      const items = await listTopicRequestsWithReplies(fetch, config);
+      return jsonResponse({ items });
+    } catch (err: any) {
+      return jsonResponse(
+        { error: err instanceof SupabaseAdminError ? err.message : "Something went wrong loading messages." },
+        502
+      );
+    }
+  }
+
+  if (path === "/api/admin/topic-requests/unread" && method === "GET") {
+    const config = getSupabaseAdminConfig(env);
+    if (!config) return jsonResponse({ error: SERVICE_KEY_MISSING_MESSAGE }, 503);
+    try {
+      const items = await listTopicRequestsWithReplies(fetch, config);
+      return jsonResponse({ unread: countUnread(items) });
+    } catch (err: any) {
+      return jsonResponse(
+        { error: err instanceof SupabaseAdminError ? err.message : "Something went wrong loading messages." },
+        502
+      );
+    }
+  }
+
+  if (path.startsWith("/api/admin/topic-requests/") && path.endsWith("/approve") && method === "POST") {
+    const config = getSupabaseAdminConfig(env);
+    if (!config) return jsonResponse({ error: SERVICE_KEY_MISSING_MESSAGE }, 503);
+    const requestId = path.replace("/api/admin/topic-requests/", "").replace(/\/approve$/, "");
+    try {
+      const result = await approveTopicRequest(fetch, config, requestId);
+      if (!result.found) return jsonResponse({ error: "Message not found." }, 404);
+      return jsonResponse({ success: true });
+    } catch (err: any) {
+      return jsonResponse(
+        { error: err instanceof SupabaseAdminError ? err.message : "Something went wrong loading messages." },
+        502
+      );
+    }
+  }
+
+  if (path.startsWith("/api/admin/topic-requests/") && path.endsWith("/reply") && method === "POST") {
+    const config = getSupabaseAdminConfig(env);
+    if (!config) return jsonResponse({ error: SERVICE_KEY_MISSING_MESSAGE }, 503);
+    const requestId = path.replace("/api/admin/topic-requests/", "").replace(/\/reply$/, "");
+    try {
+      const body: any = await request.json();
+      const result = await insertTopicReply(fetch, config, requestId, typeof body?.reply === "string" ? body.reply : "");
+      if (!result.ok) {
+        return jsonResponse({ error: result.error }, result.error === "Message not found." ? 404 : 400);
+      }
+      return jsonResponse({ success: true, reply: result.reply });
+    } catch (err: any) {
+      return jsonResponse(
+        { error: err instanceof SupabaseAdminError ? err.message : "Something went wrong loading messages." },
+        502
+      );
+    }
   }
 
   // 11c. Admin "Sync now": POST /api/admin/sync. Rebuilds the saved

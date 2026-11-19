@@ -1,6 +1,7 @@
 import { Book, CatalogData, Folder, ItemType } from '../types';
 import { uploadFileOptimized, UploadOptions, UploadResult } from '../utils/uploader';
 import { storage } from './storage';
+import type { TopicRequestWithReply } from './topicRequests';
 
 const ADMIN_TOKEN_KEY = 'khafi_admin_token';
 
@@ -458,6 +459,65 @@ export const api = {
       return { ok: false, error: parsed.error || parsed.data?.error || 'Wrong key. Try again.' };
     } catch (err: any) {
       return { ok: false, error: err.message || 'Failed to check the key.' };
+    }
+  },
+
+  /** Admin inbox: every visitor message (comment / request / question),
+   *  newest first, each with its latest admin reply. When the service key
+   *  is not set up yet the server answers 503 — `notConfigured` is true
+   *  and the inbox shows the plain setup message instead of failing. */
+  async getTopicRequests(): Promise<{ items: TopicRequestWithReply[]; error?: string; notConfigured?: boolean }> {
+    try {
+      const res = await fetch('/api/admin/topic-requests', { headers: getAuthHeaders() });
+      const parsed = await safeParseJson<{ items?: TopicRequestWithReply[]; error?: string }>(res);
+      if (parsed.status === 503) return { items: [], error: parsed.error || 'Replies are not set up yet.', notConfigured: true };
+      if (parsed.ok && parsed.data) return { items: parsed.data.items || [] };
+      return { items: [], error: parsed.error || 'Could not load messages.' };
+    } catch (err: any) {
+      return { items: [], error: err.message || 'Could not load messages.' };
+    }
+  },
+
+  /** Admin inbox: how many messages are still new — the bell badge count. */
+  async getTopicRequestsUnread(): Promise<{ unread: number }> {
+    try {
+      const res = await fetch('/api/admin/topic-requests/unread', { headers: getAuthHeaders() });
+      const parsed = await safeParseJson<{ unread?: number }>(res);
+      if (parsed.ok && parsed.data) return { unread: Number(parsed.data.unread) || 0 };
+    } catch (err) {
+      console.error('Failed to load unread count:', err);
+    }
+    return { unread: 0 };
+  },
+
+  /** Admin inbox: approve one message so it shows on the public site. */
+  async approveTopicRequest(id: number | string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`/api/admin/topic-requests/${id}/approve`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      const parsed = await safeParseJson<{ success?: boolean; error?: string }>(res);
+      if (!parsed.ok) return { success: false, error: parsed.error || 'Could not approve this message.' };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Could not approve this message.' };
+    }
+  },
+
+  /** Admin inbox: send a reply to one message. */
+  async replyToTopicRequest(id: number | string, reply: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`/api/admin/topic-requests/${id}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ reply }),
+      });
+      const parsed = await safeParseJson<{ success?: boolean; error?: string }>(res);
+      if (!parsed.ok) return { success: false, error: parsed.error || 'Could not send the reply.' };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Could not send the reply.' };
     }
   },
 

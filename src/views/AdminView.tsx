@@ -30,6 +30,7 @@ import {
   Wallet,
   IndianRupee,
   Key,
+  Bell,
 } from 'lucide-react';
 import { appState } from '../state/appState';
 import { api } from '../services/api';
@@ -46,6 +47,7 @@ import { ArrangeByTopic } from '../components/admin/ArrangeByTopic';
 import { PaidBookControl } from '../components/admin/PaidBookControl';
 import { BookKeysPanel } from '../components/admin/BookKeysPanel';
 import { MaintenancePanel } from '../components/admin/MaintenancePanel';
+import { TopicInbox } from '../components/admin/TopicInbox';
 import { QuickRenameModal } from '../components/admin/QuickRenameModal';
 import { QuickDescriptionModal } from '../components/admin/QuickDescriptionModal';
 import { AdminContextMenu } from '../components/admin/AdminContextMenu';
@@ -134,6 +136,10 @@ export const AdminView: React.FC = () => {
   const [gateShowKey, setGateShowKey] = useState(false);
   const [gateSaving, setGateSaving] = useState(false);
   const [gateLoaded, setGateLoaded] = useState(false);
+
+  // Visitor messages inbox: how many are still new. The bell in the
+  // header shows this count; the inbox section reports it up.
+  const [inboxUnread, setInboxUnread] = useState(0);
 
   // Poll AI pending proposals count on mount
   useEffect(() => {
@@ -1116,18 +1122,35 @@ export const AdminView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-300 bg-rose-950/20 border border-rose-500/20 hover:bg-rose-900/30 rounded transition-colors cursor-pointer"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Sign Out</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="#admin-inbox"
+            title="Messages from visitors"
+            className="relative flex items-center gap-1.5 px-3 py-1.5 text-xs text-[var(--text-main)] bg-[var(--bg-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/60 rounded transition-colors"
+          >
+            <Bell className="w-3.5 h-3.5 text-[var(--gold)]" />
+            <span>Messages</span>
+            {inboxUnread > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-[var(--gold)] text-black text-[10px] font-bold inline-flex items-center justify-center">
+                {inboxUnread > 99 ? '99+' : inboxUnread}
+              </span>
+            )}
+          </a>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-300 bg-rose-950/20 border border-rose-500/20 hover:bg-rose-900/30 rounded transition-colors cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {/* Simple section menu — jump to what you need, no headache. */}
       <nav className="flex gap-2 flex-wrap items-center text-xs font-semibold" aria-label="Admin sections">
         <span className="text-[var(--text-muted)]">Jump to:</span>
+        <a href="#admin-inbox" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Messages</a>
         <a href="#admin-book-keys" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Book Keys</a>
         <a href="#admin-maintenance" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Maintenance</a>
         <a href="#admin-arrange" className="px-3 py-1.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-main)] hover:border-[var(--gold)] transition-colors">Arrange Books</a>
@@ -1607,6 +1630,11 @@ export const AdminView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Messages from visitors — comments, requests and questions.
+          The bell in the header shows the new count; this section lists
+          each message on its own, with Approve and Reply. */}
+      <TopicInbox onUnreadChange={setInboxUnread} />
 
       {/* Book Keys — paid books only. Generate a key, share it with the
           follower who needs the book; they enter it to unlock that one book. */}

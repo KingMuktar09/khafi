@@ -32,6 +32,21 @@ export interface TopicRequestRow {
   message: string;
   created_at: string;
   status: string;
+  /** The admin reply, when one has been sent. Null when there is none. */
+  reply?: TopicReply | null;
+}
+
+/** One admin reply to a topic request, from table `topic_replies`. */
+export interface TopicReply {
+  id: number | string;
+  request_id: number | string;
+  reply: string;
+  created_at: string;
+}
+
+/** A topic request with its latest admin reply attached (admin inbox). */
+export interface TopicRequestWithReply extends TopicRequestRow {
+  reply: TopicReply | null;
 }
 
 function supabaseHeaders(): Record<string, string> {
@@ -62,7 +77,29 @@ export async function submitTopicRequest(input: TopicRequestInput): Promise<{ st
   }
 }
 
-/** Approved comments for one topic, newest first. Empty when not configured. */
+/** Admin replies for a list of request ids, newest first. Empty when not configured. */
+export async function fetchTopicReplies(requestIds: (number | string)[]): Promise<TopicReply[]> {
+  if (!isSupabaseConfigured() || requestIds.length === 0) return [];
+  try {
+    const params = new URLSearchParams({
+      select: 'id,request_id,reply,created_at',
+      request_id: `in.(${requestIds.map((id) => String(id)).join(',')})`,
+      order: 'created_at.desc',
+      limit: '200',
+    });
+    const res = await fetch(`${SUPABASE_URL as string}/rest/v1/topic_replies?${params.toString()}`, {
+      headers: supabaseHeaders(),
+    });
+    if (!res.ok) return [];
+    const rows: unknown = await res.json();
+    return Array.isArray(rows) ? (rows as TopicReply[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Approved comments for one topic, newest first, with the admin reply
+ *  under each one when there is one. Empty when not configured. */
 export async function fetchVisibleTopicRequests(topic: string): Promise<TopicRequestRow[]> {
   if (!isSupabaseConfigured()) return [];
   try {
@@ -79,8 +116,35 @@ export async function fetchVisibleTopicRequests(topic: string): Promise<TopicReq
     });
     if (!res.ok) return [];
     const rows: unknown = await res.json();
-    return Array.isArray(rows) ? (rows as TopicRequestRow[]) : [];
+    const comments = Array.isArray(rows) ? (rows as TopicRequestRow[]) : [];
+    if (comments.length === 0) return [];
+    // Latest reply per comment wins (replies come back newest first).
+    const replies = await fetchTopicReplies(comments.map((c) => c.id));
+    const latestByRequest = new Map<string, TopicReply>();
+    for (const reply of replies) {
+      const key = String(reply.request_id);
+      if (!latestByRequest.has(key)) latestByRequest.set(key, reply);
+    }
+    return comments.map((comment) => ({
+      ...comment,
+      reply: latestByRequest.get(String(comment.id)) || null,
+    }));
   } catch {
     return [];
   }
+}
+
+/** A visitor name that can be messaged on Instagram. "Anonymous" and
+ *  "Guest" are not real handles, and anything outside Instagram's own
+ *  handle shape is never turned into a link. Pure helper. */
+export function instagramDmUrl(name: string): string | null {
+  const handle = name.trim().replace(/^@/, '');
+  if (!handle || handle.toLowerCase() === 'anonymous' || handle.toLowerCase() === 'guest') return null;
+  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
+  return `https://www.instagram.com/${handle}`;
+}
+
+/** How many inbox items are still new (unapproved). Pure helper. */
+export function countUnreadTopicRequests(items: { status: string }[]): number {
+  return items.filter((item) => item.status === 'new').length;
 }
