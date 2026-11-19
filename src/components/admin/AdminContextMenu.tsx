@@ -36,7 +36,7 @@ interface AdminContextMenuProps {
   onMove: () => void;
   onToggleVisibility: () => void;
   /** Book only: one-click paid/free toggle (no price needed — paid books
-   * are free for followers). */
+   * need their own key). */
   onTogglePaid?: () => void;
   onDelete: () => void;
 }

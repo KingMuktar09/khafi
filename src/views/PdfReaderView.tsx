@@ -15,10 +15,12 @@ import {
   Music as AudioIcon,
   RotateCcw,
   Bookmark,
+  Lock,
 } from 'lucide-react';
 import { appState } from '../state/appState';
 import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
+import { readerAccess } from '../utils/gateDecision';
 import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, getDrivePreviewUrl, downloadBookFile } from '../utils/fileUtils';
 import { FilePreviewer, FitMode } from '../components/viewers/FilePreviewer';
@@ -122,12 +124,19 @@ export const PdfReaderView: React.FC = () => {
   }
 
   // Paid gate (closes the direct /read/<id> bypass): a paid book never
-  // opens its reader, download or Drive link for a locked visitor. Admins
-  // read paid books directly, and so do gate-unlocked followers — paid
-  // books are FREE for followers, no payment at all — and a visitor
-  // holding that book's own unlock key.
+  // opens its reader, download or Drive link without its own key. Admins
+  // read paid books directly, and so do visitors holding that book's own
+  // unlock key — following alone does not open a paid book. A free book
+  // opened by a locked visitor (deep link past the gate) shows a follow
+  // prompt instead of the file.
   const isAdmin = appState.adminAuthenticated;
-  if (book.isPaid && !isAdmin && !storage.hasFollowUnlocked() && !storage.hasBookKey(book.id)) {
+  const access = readerAccess({
+    isPaid: book.isPaid,
+    isAdmin,
+    followUnlocked: storage.hasFollowUnlocked(),
+    hasKeyUnlock: storage.hasBookKey(book.id),
+  });
+  if (access === 'paid-lock') {
     return (
       <div className="animate-fade-in py-2 max-w-2xl mx-auto font-sans">
         <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-5 sm:p-6">
@@ -137,6 +146,29 @@ export const PdfReaderView: React.FC = () => {
             backLabel={t('reader.backToDetails', lang)}
             onUnlocked={() => router.navigate('book', { bookId: book.id })}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (access === 'follow-prompt') {
+    return (
+      <div className="animate-fade-in py-2 max-w-2xl mx-auto font-sans">
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-lg p-5 sm:p-6 space-y-3 text-center">
+          <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] bg-[var(--gold-faint)] border border-[var(--gold)]/40 rounded-full px-3 py-1 w-fit">
+            <Lock className="w-3.5 h-3.5" />
+            <span>{t('reader.followToReadTitle', lang)}</span>
+          </p>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+            {t('reader.followToReadText', lang)}
+          </p>
+          <button
+            type="button"
+            onClick={() => router.navigate('library')}
+            className="tap-target px-4 py-2.5 rounded-xl font-bold bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black transition-all cursor-pointer text-sm"
+          >
+            {t('reader.goToLibrary', lang)}
+          </button>
         </div>
       </div>
     );

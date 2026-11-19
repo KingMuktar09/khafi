@@ -13,6 +13,7 @@ import { ReadingProgressTracker } from '../components/books/ReadingProgressTrack
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import { ReaderAdvisoryModal } from '../components/ui/ReaderAdvisoryModal';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getItemUrl, getFileExtension, downloadBookFile } from '../utils/fileUtils';
+import { isPaidBookLockedForVisitor } from '../utils/gateDecision';
 import { AUTHENTIC_MEANING, formatVersionDate } from '../utils/bookOrder';
 
 // Admin-only: mark THIS already-added book paid or free again, right from
@@ -125,18 +126,18 @@ export const BookDetailsView: React.FC = () => {
 
   const isFav = appState.isFavorite(book.id);
   const isAdmin = appState.adminAuthenticated;
-  // Paid books are FREE for followers: a gate-unlocked visitor (follow tap
-  // or gate key) reads them like any free book. A visitor holding the
-  // book's own unlock key reads it too, even without the gate. Only a
-  // locked visitor sees the lock screen.
-  const isFollowUnlocked = storage.hasFollowUnlocked();
+  // Paid books need their own key, even for followers: a gate-unlocked
+  // visitor (follow tap or gate key) still sees the lock screen. A
+  // visitor holding the book's own unlock key reads it too, and so does
+  // the admin. Only a key holder or the admin sees the reader links.
   const hasKeyUnlock = storage.hasBookKey(book.id);
-  const isPaidForVisitor = Boolean(book.isPaid) && !isAdmin && !isFollowUnlocked && !hasKeyUnlock;
+  const isPaidForVisitor = isPaidBookLockedForVisitor({ isPaid: book.isPaid, isAdmin, hasKeyUnlock });
   // Honest static-fallback case: when the live catalog did not load, the
   // client falls back to public/catalog.json, whose paid-book links are
-  // always stripped. An unlocked follower then sees the book with no links
-  // — not a lock, just a missing link, with a retry to reload the live
-  // catalog. (Free books are unaffected.)
+  // always stripped. A key holder then sees the book with no links —
+  // not a lock, just a missing link, with a retry to reload the live
+  // catalog. (Free books are unaffected. A locked visitor sees the key
+  // lock screen instead, not this note.)
   const paidLinksMissing =
     Boolean(book.isPaid) &&
     !book.driveFileId &&
@@ -341,8 +342,8 @@ const typeLabelText = (label: string): string =>
             {book.isPaid ? (
               <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] bg-[var(--gold-faint)] border border-[var(--gold)]/40 rounded-full px-3 py-1 w-fit">
                 <span>
-                  {isFollowUnlocked || isAdmin
-                    ? t('book.paidFreeFollowers', lang)
+                  {isAdmin
+                    ? t('paid.badge', lang)
                     : hasKeyUnlock
                       ? t('book.paidUnlockedKey', lang)
                       : t('book.paidFollowersOnly', lang)}
@@ -408,12 +409,7 @@ const typeLabelText = (label: string): string =>
                     </button>
                   </div>
                 )}
-                {!isAdmin && book.isPaid && !paidLinksMissing && isFollowUnlocked && (
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
-                    {t('book.freeFollowersNote', lang)}
-                  </p>
-                )}
-                {!isAdmin && book.isPaid && !paidLinksMissing && !isFollowUnlocked && hasKeyUnlock && (
+                {!isAdmin && book.isPaid && !paidLinksMissing && hasKeyUnlock && (
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-[var(--gold-faint)] border border-[var(--gold)]/30 rounded-lg px-3 py-2">
                     {t('book.unlockedKeyNote', lang)}
                   </p>

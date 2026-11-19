@@ -1,3 +1,28 @@
 {
-  "keys": []
+  "keys": [
+    {
+      "id": "k_0fdcbfd166f9b8b0",
+      "bookId": "b-manba-usul-al-hikma",
+      "label": "Muktar key Nov 19 - shared with followers",
+      "salt": "88144aca59865c0303e1a2dc8789ae3d",
+      "keyHash": "58a2122fffbc5000a889508bf76ec43db366ae7fd1f3b31c314aaa634b07d95c",
+      "maxUses": 100,
+      "uses": 0,
+      "createdAt": "2026-11-19T05:44:25.439Z",
+      "lastUsedAt": null,
+      "revoked": false
+    },
+    {
+      "id": "k_874b5a9dbb8a35d1",
+      "bookId": "b-1gKygGbTJSNtkvcRKSURJ3vGnNVNgmDI5",
+      "label": "Muktar key Nov 19 - shared with followers",
+      "salt": "119b529b527f6884ade1660fe1c05734",
+      "keyHash": "37af6d756cd3c729a9e34c1875bd0c585682c5657b361e478800c65e74db35a5",
+      "maxUses": 100,
+      "uses": 0,
+      "createdAt": "2026-11-19T05:44:25.439Z",
+      "lastUsedAt": null,
+      "revoked": false
+    }
+  ]
 }

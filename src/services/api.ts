@@ -136,15 +136,16 @@ export function isGateKeySet(status: GateStatus | null | undefined): boolean {
   return Boolean(status?.keySet);
 }
 
-// Follow-unlock header: paid books are FREE for followers. A visitor who
-// unlocked the library gate (follow tap or gate key) sends this header with
-// catalog and file requests so the server exposes paid-book links and
-// serves paid files. TRUST-BASED, exactly like the gate itself — the header
-// carries only the boolean unlock flag, never the gate key or any secret.
-// One helper, used by every catalog/file call (catalog fetch here, file
-// downloads in utils/fileUtils, and the in-app viewers). A visitor holding
-// a book's own unlock key sends that too (see BOOK_KEYS_HEADER below) —
-// either way in opens the book, and there is no payment step anywhere.
+// Follow-unlock header: the library gate flag. A visitor who unlocked
+// the library gate (follow tap or gate key) sends this header with
+// catalog and file requests. TRUST-BASED, exactly like the gate itself —
+// the header carries only the boolean unlock flag, never the gate key or
+// any secret. One helper, used by every catalog/file call (catalog fetch
+// here, file downloads in utils/fileUtils, and the in-app viewers). The
+// flag opens the library and free books. A paid book needs its own key:
+// a visitor holding a book's own unlock key sends that too (see
+// BOOK_KEYS_HEADER below) — only that opens the book, and there is no
+// payment step anywhere.
 export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
 
 export function getFollowUnlockHeaders(): Record<string, string> {

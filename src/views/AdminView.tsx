@@ -685,7 +685,7 @@ export const AdminView: React.FC = () => {
 
   // One-click paid toggle from the book list. Paid -> free right away.
   // Free -> paid right away too: a paid book needs no price anymore
-  // (paid books are free for followers), so no price is ever invented.
+  // (paid books need their own key), so no price is ever invented.
   const handleTogglePaid = async (book: Book) => {
     if (book.isPaid) {
       const res = await api.updateBook(book.id, {
@@ -705,7 +705,7 @@ export const AdminView: React.FC = () => {
 
     const res = await api.updateBook(book.id, { isPaid: true });
     if (res.success) {
-      appState.showToast(`"${book.title}" is now paid — free for followers. ${durableSuffix(res)}`, durableToastType(res));
+      appState.showToast(`"${book.title}" is now paid — it needs its own key. ${durableSuffix(res)}`, durableToastType(res));
       await appState.loadCatalog();
     } else {
       appState.showToast(res.error || 'Failed to mark this book as paid.', 'error');
@@ -980,7 +980,7 @@ export const AdminView: React.FC = () => {
   // once for the whole batch. No price is ever invented — the admin types
   // it in the small dialog first. Folders in the selection are ignored.
   const handleBulkMarkPaid = async () => {
-    // No price needed: paid books are free for followers, the price (if
+    // No price needed: paid books need their own key, the price (if
     // the admin set one) is kept for reference only.
     const bookIds = [...selectedKeys]
       .filter((k) => k.startsWith('book:'))
@@ -1012,8 +1012,8 @@ export const AdminView: React.FC = () => {
       : 'Saved permanently.';
     appState.showToast(
       failed > 0
-        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — free for followers. ${failed} could not be updated. ${saveLine}`
-        : `${ok} book${ok === 1 ? '' : 's'} marked paid — free for followers. ${saveLine}`,
+        ? `${ok} book${ok === 1 ? '' : 's'} marked paid — needs its own key. ${failed} could not be updated. ${saveLine}`
+        : `${ok} book${ok === 1 ? '' : 's'} marked paid — needs its own key. ${saveLine}`,
       failed > 0 ? 'error' : anyTemporary ? 'info' : 'success'
     );
   };
@@ -1605,7 +1605,7 @@ export const AdminView: React.FC = () => {
             <p className="text-[var(--text-muted)]">
               {[...selectedKeys].filter((k) => k.startsWith('book:')).length} book
               {[...selectedKeys].filter((k) => k.startsWith('book:')).length === 1 ? '' : 's'} selected.
-              One price below applies to all of them. Paid books are free for followers — locked visitors see the followers-only lock, or unlock with a key.
+              One price below applies to all of them. Paid books need their own key — locked visitors see the key lock, or unlock with a key.
             </p>
             <PaidBookControl
               book={bulkPaidState}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Instagram, Lock, KeyRound, Check } from 'lucide-react';
 import { Book } from '../../types';
-import { api } from '../../services/api';
+import { api, DEFAULT_BROADCAST_CHANNEL_URL } from '../../services/api';
 import { storage } from '../../services/storage';
 import { t } from '../../data/i18n';
 
@@ -19,13 +19,11 @@ interface PaidLockScreenProps {
  * Locked screen for a paid book, shown to locked visitors instead of any
  * reader, download or "Open in Drive" link.
  *
- * How a paid book unlocks — free, no money anywhere:
- *   1. Follow @ghayb.chronicles and tap unlock on the gate. Paid books
- *      are FREE for followers, so a gate-unlocked follower opens this
- *      book like any free book.
- *   2. Or enter this book's own key, shared by the admin. The server
- *      checks it (hash only, never the plain key) and, if it matches
- *      and still has uses left, the book unlocks on this device only.
+ * How a paid book unlocks — with its own key, even for followers:
+ *   1. Followers get the key from the broadcast channel (link below).
+ *   2. Or enter this book's own key here. The server checks it (hash
+ *      only, never the plain key) and, if it matches and still has uses
+ *      left, the book unlocks on this device only.
  * One key unlocks ONE paid book only — it never opens a different paid
  * book, and it stops working after its use limit (default 100 uses).
  * Free books need no key at all.
@@ -142,7 +140,7 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
       </div>
 
       <a
-        href="https://instagram.com/ghayb.chronicles"
+        href={DEFAULT_BROADCAST_CHANNEL_URL}
         target="_blank"
         rel="noreferrer"
         className="tap-target w-full py-3 px-4 rounded-xl font-bold bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-main)] transition-colors flex items-center justify-center gap-2 cursor-pointer text-sm"

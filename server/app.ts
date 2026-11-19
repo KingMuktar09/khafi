@@ -184,15 +184,16 @@ export function verifyAdminRequest(req: express.Request): boolean {
   return verifySessionToken(token);
 }
 
-// Paid books are FREE for followers, and they can also be opened with
-// their own per-book key. A visitor who unlocked the library gate (follow
-// tap or gate key) sends `x-follow-unlocked: 1` with catalog and file
-// requests, and the server believes it — TRUST-BASED, exactly like the
-// gate itself. That flag opens the library, all FREE books, and paid
-// books too — no money anywhere. A paid book ALSO opens for a visitor
-// who entered that book's own key (see server/bookKeys.ts and the
-// `x-book-keys` header), even if they never unlocked the gate. The admin
-// always opens paid books. No payment step exists anywhere in this flow.
+// Paid books need their own key, even for followers. A visitor who
+// unlocked the library gate (follow tap or gate key) sends
+// `x-follow-unlocked: 1` with catalog and file requests, and the server
+// believes it — TRUST-BASED, exactly like the gate itself. That flag
+// opens the library and all FREE books, but it no longer opens a paid
+// book. A paid book opens only for the admin, or for a visitor who
+// entered that book's own key (see server/bookKeys.ts and the
+// `x-book-keys` header), even if they never unlocked the gate. No
+// payment step exists anywhere in this flow (the UPI step is Phase 2,
+// not built yet).
 export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
 
 export function hasFollowUnlocked(req: express.Request): boolean {
@@ -201,14 +202,13 @@ export function hasFollowUnlocked(req: express.Request): boolean {
 
 // One predicate for the paid-book rule, used by sanitizeBook and by the
 // stream/download guards: a paid book is locked for everyone except the
-// admin, a gate-unlocked follower (free for followers), and a visitor
-// holding that book's own unlock key.
+// admin and a visitor holding that book's own unlock key. Following does
+// NOT open a paid book — the follow flag is the library gate, not a
+// paid-book pass.
 // `hasKeyUnlock` is per-book: true only when the request carried a valid,
 // usable key for THIS book (see getKeyUnlockedBookIds).
-// `isFollowUnlocked` is the gate flag: true when the request carried
-// `x-follow-unlocked: 1` (follow tap or gate key).
-export function isPaidBookLocked(book: any, isAdmin: boolean, hasKeyUnlock: boolean, isFollowUnlocked = false): boolean {
-  return Boolean(book?.isPaid) && !isAdmin && !isFollowUnlocked && !hasKeyUnlock;
+export function isPaidBookLocked(book: any, isAdmin: boolean, hasKeyUnlock: boolean): boolean {
+  return Boolean(book?.isPaid) && !isAdmin && !hasKeyUnlock;
 }
 
 // Book-key store (data/book-keys.json — hashes only, never plain keys).
@@ -1471,12 +1471,12 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
 
   // Paid gate: a paid catalog book is never streamed to a locked visitor.
   // Admins (and the admin previewing a just-uploaded file, which has no
-  // catalog book yet) are unaffected, and so is a gate-unlocked follower
-  // (paid books are free for followers) and a visitor holding that book's
-  // own unlock key (x-book-keys header).
-  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id), hasFollowUnlocked(req))) {
+  // catalog book yet) are unaffected, and so is a visitor holding that
+  // book's own unlock key (x-book-keys header). Following alone does not
+  // open a paid book.
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id))) {
     res.status(402).json({
-      error: 'This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin.',
+      error: 'This is a paid book. It needs its own key — followers get the key from the broadcast channel, or enter the book key shared by the admin.',
     });
     return;
   }
@@ -1715,12 +1715,12 @@ app.get(pdfDownloadRoutes, async (req, res) => {
   );
 
   // Paid gate: a paid catalog book is never downloadable by a locked
-  // visitor. Admins download it directly, and so does a gate-unlocked
-  // follower (paid books are free for followers) and a visitor holding
-  // that book's own unlock key (x-book-keys header).
-  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id), hasFollowUnlocked(req))) {
+  // visitor. Admins download it directly, and so does a visitor holding
+  // that book's own unlock key (x-book-keys header). Following alone
+  // does not open a paid book.
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id))) {
     res.status(402).json({
-      error: 'This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin.',
+      error: 'This is a paid book. It needs its own key — followers get the key from the broadcast channel, or enter the book key shared by the admin.',
     });
     return;
   }
@@ -1847,9 +1847,9 @@ app.get(["/api/download", "/download"], async (req, res) => {
   // Paid gate (same rule as the stream/download routes above): a paid
   // catalog book is never downloadable by a locked visitor. Without this
   // check, /api/download?id=<paid book> would serve the file directly.
-  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id), hasFollowUnlocked(req))) {
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id))) {
     res.status(402).json({
-      error: 'This is a paid book. It is free for followers — follow @ghayb.chronicles to open it, or enter the book key shared by the admin.',
+      error: 'This is a paid book. It needs its own key — followers get the key from the broadcast channel, or enter the book key shared by the admin.',
     });
     return;
   }
@@ -1939,7 +1939,7 @@ app.get(["/api/download", "/download"], async (req, res) => {
   res.sendFile(filePath);
 });
 
-export function sanitizeBook(book: any, isAdmin = true, hasKeyUnlock = false, isFollowUnlocked = false) {
+export function sanitizeBook(book: any, isAdmin = true, hasKeyUnlock = false) {
   if (!book) return book;
   const {
     driveUrl,
@@ -1957,10 +1957,10 @@ export function sanitizeBook(book: any, isAdmin = true, hasKeyUnlock = false, is
 
   // Paid books: a locked visitor must never be handed a working open or
   // download link. Admins keep the links (they read paid books directly),
-  // and so does a gate-unlocked follower (paid books are free for
-  // followers) and a visitor holding that book's own unlock key. The lock
-  // screen is the only thing a locked visitor sees for a paid book.
-  if (isPaidBookLocked(rest, isAdmin, hasKeyUnlock, isFollowUnlocked)) {
+  // and so does a visitor holding that book's own unlock key. Following
+  // alone does not open a paid book. The lock screen is the only thing a
+  // locked visitor sees for a paid book.
+  if (isPaidBookLocked(rest, isAdmin, hasKeyUnlock)) {
     const { driveFileId, externalUrl, fileUrl, pdfUrl, ...paidRest } = rest;
     return { ...paidRest, fileUrl: '', pdfUrl: '' };
   }
@@ -2016,17 +2016,16 @@ export function sanitizeFolder(folder: any) {
 export function sanitizeCatalog(
   catalog: any,
   isAdmin = true,
-  keyUnlocked: Set<string> | boolean = false,
-  isFollowUnlocked = false
+  keyUnlocked: Set<string> | boolean = false
 ) {
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
   // A key unlocks ONE book only, so the check is per book: a Set of
   // unlocked book ids (from the request's x-book-keys header), or a plain
-  // boolean for callers/tests that unlock one book at a time. A
-  // gate-unlocked follower (isFollowUnlocked) opens all paid books free.
+  // boolean for callers/tests that unlock one book at a time. Following
+  // alone opens no paid book.
   const safeBooks = (catalog.books || []).map((b: any) =>
-    sanitizeBook(b, isAdmin, keyUnlocked instanceof Set ? keyUnlocked.has(b?.id) : keyUnlocked, isFollowUnlocked)
+    sanitizeBook(b, isAdmin, keyUnlocked instanceof Set ? keyUnlocked.has(b?.id) : keyUnlocked)
   );
   // Admin-chosen topic/category order survives the sanitiser — without
   // these, the public site would lose the arrange order on every load.
@@ -2064,10 +2063,9 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
   // Non-admin catalogs have locked paid-book links stripped (see
   // sanitizeBook) and oversized inline covers dropped, so the public
   // payload stays small and a paid book can never be opened from it —
-  // unless the visitor is a gate-unlocked follower (paid books are free
-  // for followers) or entered that book's own unlock key (x-book-keys
+  // unless the visitor entered that book's own unlock key (x-book-keys
   // header), in which case only that book's links stay.
-  const safeCatalog = sanitizeCatalog(catalog, isAdmin, getKeyUnlockedBookIds(req), hasFollowUnlocked(req));
+  const safeCatalog = sanitizeCatalog(catalog, isAdmin, getKeyUnlockedBookIds(req));
 
   if (isAdmin) {
     // Admin edits must never be served stale.

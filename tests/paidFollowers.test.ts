@@ -22,13 +22,13 @@ import {
   api,
 } from '../src/services/api';
 
-// Paid books are FREE for followers, and they can also be opened with
-// their own unlock key. These tests pin the rule on both servers
-// (Express/Vercel in server/app.ts, Cloudflare/pages.dev in
-// server/cf-api-handler.ts, which must stay in sync):
+// Paid books need their own key, even for followers. These tests pin the
+// rule on both servers (Express/Vercel in server/app.ts,
+// Cloudflare/pages.dev in server/cf-api-handler.ts, which must stay in
+// sync):
 //   locked visitor        -> paid links stripped, file endpoints 402
+//   gate-unlocked follower (x-follow-unlocked: 1, no key) -> still locked
 //   admin                 -> links kept, files served
-//   gate-unlocked follower (x-follow-unlocked: 1) -> paid books open free
 //   visitor with the key  -> only THAT book's links kept, files served
 // A key unlocks ONE paid book only — never a different paid book. No
 // money anywhere: no price, no UPI, no payment step.
@@ -56,12 +56,10 @@ const FREE_BOOK = {
 };
 
 describe('isPaidBookLocked (server/app.ts)', () => {
-  it('is true only for a paid book with neither admin, gate unlock, nor its own key', () => {
+  it('is true for a paid book with neither admin nor its own key — following alone does not unlock it', () => {
     expect(isPaidBookLocked(PAID_BOOK, false, false)).toBe(true);
-    expect(isPaidBookLocked(PAID_BOOK, false, false, false)).toBe(true);
     expect(isPaidBookLocked(PAID_BOOK, true, false)).toBe(false);
     expect(isPaidBookLocked(PAID_BOOK, false, true)).toBe(false);
-    expect(isPaidBookLocked(PAID_BOOK, false, false, true)).toBe(false);
     expect(isPaidBookLocked(PAID_BOOK, true, true)).toBe(false);
     expect(isPaidBookLocked(FREE_BOOK, false, false)).toBe(false);
     expect(isPaidBookLocked(FREE_BOOK, false, true)).toBe(false);
@@ -73,10 +71,8 @@ describe('isPaidBookLocked (server/app.ts)', () => {
 describe('isPaidBookLocked (server/cf-api-handler.ts)', () => {
   it('matches the Express rule exactly', () => {
     expect(isPaidBookLockedCf(PAID_BOOK, false, false)).toBe(true);
-    expect(isPaidBookLockedCf(PAID_BOOK, false, false, false)).toBe(true);
     expect(isPaidBookLockedCf(PAID_BOOK, true, false)).toBe(false);
     expect(isPaidBookLockedCf(PAID_BOOK, false, true)).toBe(false);
-    expect(isPaidBookLockedCf(PAID_BOOK, false, false, true)).toBe(false);
     expect(isPaidBookLockedCf(FREE_BOOK, false, false)).toBe(false);
   });
 });
@@ -99,12 +95,15 @@ describe('sanitizeBook (server/app.ts)', () => {
     expect(out.pdfUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
   });
 
-  it('keeps paid links for a gate-unlocked follower (free for followers)', () => {
-    const out = sanitizeBook(PAID_BOOK, false, false, true);
-    expect(out.driveFileId).toBe(PAID_BOOK.driveFileId);
-    expect(out.externalUrl).toBe(PAID_BOOK.externalUrl);
-    expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
-    expect(out.pdfUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
+  it('strips paid links for a gate-unlocked follower without the key', () => {
+    // The follow flag used to open paid books; since Phase 1 it opens
+    // only free books. sanitizeBook takes no follow flag anymore.
+    const out = sanitizeBook(PAID_BOOK, false, false);
+    expect(out.isPaid).toBe(true);
+    expect(out.driveFileId).toBeUndefined();
+    expect(out.externalUrl).toBeUndefined();
+    expect(out.fileUrl).toBe('');
+    expect(out.pdfUrl).toBe('');
   });
 
   it('keeps paid links for the admin', () => {
@@ -147,16 +146,17 @@ describe('sanitizeCatalog (server/app.ts)', () => {
     expect(out.books[2].driveFileId).toBe(FREE_BOOK.driveFileId);
   });
 
-  it('keeps all paid links for a gate-unlocked follower', () => {
+  it('strips all paid links for a gate-unlocked follower without keys', () => {
     const otherPaid = { ...PAID_BOOK, id: 'b-other', title: 'Other Paid Book' };
     const out = sanitizeCatalog(
       { folders: [], books: [PAID_BOOK, otherPaid, FREE_BOOK] },
       false,
-      new Set(),
-      true
+      new Set()
     );
-    expect(out.books[0].driveFileId).toBe(PAID_BOOK.driveFileId);
-    expect(out.books[1].driveFileId).toBe(otherPaid.driveFileId);
+    expect(out.books[0].driveFileId).toBeUndefined();
+    expect(out.books[0].fileUrl).toBe('');
+    expect(out.books[1].driveFileId).toBeUndefined();
+    expect(out.books[1].fileUrl).toBe('');
     expect(out.books[2].driveFileId).toBe(FREE_BOOK.driveFileId);
   });
 });
@@ -187,11 +187,15 @@ describe('sanitizeBook (server/cf-api-handler.ts)', () => {
     expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
   });
 
-  it('keeps paid links for a gate-unlocked follower (free for followers)', () => {
-    const out = sanitizeBookCf(PAID_BOOK, false, false, true);
-    expect(out.driveFileId).toBe(PAID_BOOK.driveFileId);
-    expect(out.externalUrl).toBe(PAID_BOOK.externalUrl);
-    expect(out.fileUrl).toBe(`/api/files/${PAID_BOOK.driveFileId}/preview`);
+  it('strips paid links for a gate-unlocked follower without the key', () => {
+    // The follow flag used to open paid books; since Phase 1 it opens
+    // only free books. sanitizeBook takes no follow flag anymore.
+    const out = sanitizeBookCf(PAID_BOOK, false, false);
+    expect(out.isPaid).toBe(true);
+    expect(out.driveFileId).toBeUndefined();
+    expect(out.externalUrl).toBeUndefined();
+    expect(out.fileUrl).toBe('');
+    expect(out.pdfUrl).toBe('');
   });
 
   it('keeps paid links for the admin', () => {
@@ -222,13 +226,16 @@ describe('Cloudflare catalog endpoint', () => {
 });
 
 describe('PaidLockScreen (locked visitor screen)', () => {
-  it('says free for followers and offers the key entry — never a price or UPI', () => {
+  it('says the book needs a key and offers the key entry — never free-for-followers, a price or UPI', () => {
     const html = renderToStaticMarkup(
       React.createElement(PaidLockScreen, { book: PAID_BOOK as any })
     );
-    expect(html).toContain('free for followers');
+    expect(html).toContain('needs a key');
+    expect(html).toContain('broadcast channel');
     expect(html).toContain('Enter your key');
     expect(html).toContain('Unlock');
+    expect(html).not.toContain('free for followers');
+    expect(html).not.toContain('Free for followers');
     expect(html).not.toContain('Rs 99');
     expect(html).not.toContain('Rs ');
     expect(html).not.toContain('UPI');
@@ -239,8 +246,9 @@ describe('PaidLockScreen (locked visitor screen)', () => {
 describe('Cloudflare stream route (/api/books/:id/stream)', () => {
   // Regression: the stream matcher used to miss "/stream" on /api/books/
   // paths, so a locked visitor got 401 "Admin session required" instead
-  // of the paid-book 402, and a follower got 401 too. The Manba book id
-  // below is the real bundled catalog entry (data/catalog.json).
+  // of the paid-book 402. The Manba book id below is the real bundled
+  // catalog entry (data/catalog.json). Since Phase 1 a follower without
+  // the key gets the same 402.
   it('returns 402 for a locked visitor (no gate unlock, no key)', async () => {
     const res = await handleCloudflareApiRequest(
       new Request('https://example.com/api/books/b-manba-usul-al-hikma/stream'),
@@ -248,18 +256,20 @@ describe('Cloudflare stream route (/api/books/:id/stream)', () => {
     );
     expect(res.status).toBe(402);
     const body = (await res.json()) as any;
-    expect(body.error).toMatch(/free for followers/i);
+    expect(body.error).toMatch(/needs its own key/i);
     expect(body.error).not.toMatch(/Rs 99|UPI/);
   });
 
-  it('does not 402 for a gate-unlocked follower', async () => {
+  it('still 402s for a gate-unlocked follower without the key', async () => {
     const res = await handleCloudflareApiRequest(
       new Request('https://example.com/api/books/b-manba-usul-al-hikma/stream', {
         headers: { 'x-follow-unlocked': '1' },
       }),
       {}
     );
-    expect(res.status).not.toBe(402);
+    expect(res.status).toBe(402);
+    const body = (await res.json()) as any;
+    expect(body.error).toMatch(/needs its own key/i);
   });
 });
 

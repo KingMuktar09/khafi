@@ -26,8 +26,9 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ fileUrl, title, onDownlo
     setLoading(true);
     setError(null);
     try {
-      // Paid books are free for followers: send the unlock flag so the
-      // server serves a paid file instead of 402 (see services/api).
+      // Paid books need their own key: send the gate flag plus any held
+      // book keys so the server serves a paid file instead of 402
+      // (see services/api).
       const response = await fetch(fileUrl, { headers: getPaidBookHeaders() });
       if (!response.ok) {
         throw new Error(`Failed to fetch document: ${response.statusText}`);

@@ -3,7 +3,7 @@ import catalog from '../data/catalog.json';
 import publicCatalog from '../public/catalog.json';
 import { siteConfig } from '../src/config/siteConfig';
 
-// Manba Usul al-Hikma, paid (free for followers, no price), in its own
+// Manba Usul al-Hikma, paid (needs its own key, no price), in its own
 // separate collection: "Ahmad al-Buni Collection" — a category, not a
 // folder. The two al-Buni books already in the catalog moved there too,
 // still free.
@@ -12,14 +12,14 @@ import { siteConfig } from '../src/config/siteConfig';
 // (the 173-book figure in older notes was stale). Adding Manba makes
 // 138 books. Kitab Al Bulhan stays paid as before (no price set in the
 // working catalog); Manba is the only NEW paid book, also with no price —
-// paid books are free for followers, and they open from Drive like the
-// other books.
+// paid books need their own key, and they open from Drive like the
+// other books once unlocked.
 
 const books = (catalog as any).books as any[];
 const folders = (catalog as any).folders as any[];
 const categoryOrder = (catalog as any).categoryOrder as string[];
 
-describe('Manba Usul al-Hikma (paid, free for followers)', () => {
+describe('Manba Usul al-Hikma (paid, needs its own key)', () => {
   const manba = books.find((b) => b.id === 'b-manba-usul-al-hikma');
 
   it('exists as the 138th book', () => {

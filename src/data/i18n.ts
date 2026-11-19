@@ -128,7 +128,7 @@ const en: Dict = {
   'gate.tagline':
     "Books on the Quran, the Prophet's life, Sufi wisdom and Islamic history. Every entry names its source. Everyone is welcome, no account needed.",
   'gate.followToEnter': 'Follow us to enter the library',
-  'gate.oneFollow': 'One follow unlocks every book on this device.',
+  'gate.oneFollow': 'One follow unlocks the library and every free book on this device.',
   'gate.collections': 'Collections',
   'gate.books': 'Books',
   'gate.free': 'Free',
@@ -143,7 +143,7 @@ const en: Dict = {
   'gate.wrongKey': 'Wrong key. Try again.',
   'gate.joinChannel': 'Join the broadcast channel to get the key',
   'gate.trustNote':
-    'This is a free library, so unlocking works on trust. It does not check your Instagram account. Follow first, then tap unlock.',
+    'This is a free library, so unlocking works on trust. It does not check your Instagram account. Follow first, then tap unlock. The key here opens the library and free books. Paid books need their own book key.',
   'gate.footnote': 'Islamic history and wisdom • Sufism and hidden knowledge, through art',
   'gate.adminSignIn': 'Library admin? Sign in here',
   'home.languageTitle': 'Choose your language',
@@ -229,7 +229,7 @@ const hi: Dict = {
   'gate.tagline':
     "Quran, Nabi ki zindagi, Sufi hikmat aur Islami tareekh par kitabein. Har entry mein uska source likha hai. Sab ka swagat hai, koi account nahi chahiye.",
   'gate.followToEnter': 'Library mein jaane ke liye follow karein',
-  'gate.oneFollow': 'Ek follow se is device par har kitab khul jayegi.',
+  'gate.oneFollow': 'Ek follow se is device par library aur har free kitab khul jayegi.',
   'gate.collections': 'Collections',
   'gate.books': 'Kitabein',
   'gate.free': 'Free',
@@ -244,7 +244,7 @@ const hi: Dict = {
   'gate.wrongKey': 'Galat key hai. Dobara try karein.',
   'gate.joinChannel': 'Key paane ke liye broadcast channel join karein',
   'gate.trustNote':
-    'Yeh free library hai, isliye unlock bharose par hota hai. Yeh aapka Instagram account check nahi karti. Pehle follow karein, phir unlock dabayein.',
+    'Yeh free library hai, isliye unlock bharose par hota hai. Yeh aapka Instagram account check nahi karti. Pehle follow karein, phir unlock dabayein. Yahan wali key se library aur free kitabein khulti hain. Paid kitab ko apni key chahiye.',
   'gate.footnote': 'Islami tareekh aur hikmat • Sufism aur chhupa hua ilm, art ke saath',
   'gate.adminSignIn': 'Library admin? Yahan sign in karein',
   'home.languageTitle': 'Apni bhasha chunein',
@@ -330,7 +330,7 @@ const bn: Dict = {
   'gate.tagline':
     'কুরআন, নবীর জীবন, সুফি জ্ঞান ও ইসলামি ইতিহাসের বই। প্রতিটি লেখায় তার উৎস দেওয়া আছে। সবাইকে স্বাগতম, কোনো অ্যাকাউন্ট লাগবে না।',
   'gate.followToEnter': 'লাইব্রেরিতে ঢুকতে ফলো করুন',
-  'gate.oneFollow': 'একবার ফলো করলেই এই ডিভাইসে সব বই খুলে যাবে।',
+  'gate.oneFollow': 'একবার ফলো করলেই এই ডিভাইসে লাইব্রেরি আর সব ফ্রি বই খুলে যাবে।',
   'gate.collections': 'কালেকশন',
   'gate.books': 'বই',
   'gate.free': 'ফ্রি',
@@ -345,7 +345,7 @@ const bn: Dict = {
   'gate.wrongKey': 'ভুল চাবি। আবার চেষ্টা করুন।',
   'gate.joinChannel': 'চাবি পেতে ব্রডকাস্ট চ্যানেলে যোগ দিন',
   'gate.trustNote':
-    'এটি ফ্রি লাইব্রেরি, তাই আনলক হয় বিশ্বাসের উপর। এটা আপনার ইনস্টাগ্রাম অ্যাকাউন্ট দেখে না। প্রথমে ফলো করুন, তারপর আনলক চাপুন।',
+    'এটি ফ্রি লাইব্রেরি, তাই আনলক হয় বিশ্বাসের উপর। এটা আপনার ইনস্টাগ্রাম অ্যাকাউন্ট দেখে না। প্রথমে ফলো করুন, তারপর আনলক চাপুন। এখানকার চাবিতে লাইব্রেরি আর ফ্রি বই খোলে। পেইড বইয়ের নিজের চাবি লাগে।',
   'gate.footnote': 'ইসলামি ইতিহাস ও জ্ঞান • সুফিবাদ ও লুকানো জ্ঞান, শিল্পের মাধ্যমে',
   'gate.adminSignIn': 'লাইব্রেরির অ্যাডমিন? এখানে সাইন ইন করুন',
   'home.languageTitle': 'আপনার ভাষা বেছে নিন',
@@ -431,7 +431,7 @@ const ur: Dict = {
   'gate.tagline':
     'قرآن، نبی کی زندگی، صوفی حکمت اور اسلامی تاریخ پر کتابیں۔ ہر کتاب کے ساتھ اس کا ماخذ لکھا ہے۔ سب کا خیر مقدم ہے، کوئی اکاؤنٹ نہیں چاہیے۔',
   'gate.followToEnter': 'لائبریری میں جانے کے لیے فالو کریں',
-  'gate.oneFollow': 'ایک فالو سے اس ڈیوائس پر ہر کتاب کھل جائے گی۔',
+  'gate.oneFollow': 'ایک فالو سے اس ڈیوائس پر لائبریری اور ہر مفت کتاب کھل جائے گی۔',
   'gate.collections': 'مجموعے',
   'gate.books': 'کتابیں',
   'gate.free': 'مفت',
@@ -446,7 +446,7 @@ const ur: Dict = {
   'gate.wrongKey': 'غلط چابی۔ دوبارہ کوشش کریں۔',
   'gate.joinChannel': 'چابی پانے کے لیے براڈکاسٹ چینل جوائن کریں',
   'gate.trustNote':
-    'یہ مفت لائبریری ہے، اس لیے کھولنا بھروسے پر ہوتا ہے۔ یہ آپ کا Instagram اکاؤنٹ نہیں جانچتی۔ پہلے فالو کریں، پھر انلاک دبائیں۔',
+    'یہ مفت لائبریری ہے، اس لیے کھولنا بھروسے پر ہوتا ہے۔ یہ آپ کا Instagram اکاؤنٹ نہیں جانچتی۔ پہلے فالو کریں، پھر انلاک دبائیں۔ یہاں والی چابی سے لائبریری اور مفت کتابیں کھلتی ہیں۔ پیڈ کتاب کو اپنی چابی چاہیے۔',
   'gate.footnote': 'اسلامی تاریخ اور حکمت • تصوف اور چھپا ہوا علم، فن کے ذریعے',
   'gate.adminSignIn': 'لائبریری ایڈمن؟ یہاں سائن ان کریں',
   'home.languageTitle': 'اپنی زبان چنیں',

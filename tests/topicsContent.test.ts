@@ -350,9 +350,12 @@ describe('Topics is open: isTopicsView covers every Topics page', () => {
     }
   });
 
-  it('App.tsx skips the gate for Topics views only', () => {
+  it('App.tsx skips the gate for Topics views', () => {
     const app = readSource('src/App.tsx');
-    expect(app).toContain('!isTopicsView(appState.route.view)');
+    // The gate decision lives in utils/gateDecision now (shouldShowGate,
+    // tested in tests/paidGate.test.ts); App still feeds it the Topics
+    // check, so Topics pages never show the gate.
+    expect(app).toContain('isTopicsView(appState.route.view)');
     expect(app).toContain('Topics stays open without the gate');
   });
 

@@ -386,8 +386,9 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
       try {
         activeTask = pdfjsLib.getDocument({
           url: pdfUrl,
-          // Paid books are free for followers: send the unlock flag so
-          // the server streams a paid file instead of 402.
+          // Paid books need their own key: send the gate flag plus any
+          // held book keys so the server streams a paid file instead
+          // of 402 (following alone does not open a paid book).
           httpHeaders: getPaidBookHeaders(),
           cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version || '4.0.379'}/cmaps/`,
           cMapPacked: true,

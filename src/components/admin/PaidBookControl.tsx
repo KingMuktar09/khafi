@@ -77,15 +77,15 @@ export const PaidBookControl: React.FC<PaidBookControlProps> = ({ book, onChange
               value={book.paymentNote || ''}
               onChange={(e) => onChange({ paymentNote: e.target.value })}
               className="w-full px-3 py-2 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded focus:outline-none focus:border-[var(--gold)] text-xs font-medium"
-              placeholder="e.g. Free for followers — follow @ghayb.chronicles to unlock"
+              placeholder="e.g. Key is in the broadcast channel"
             />
           </div>
         </div>
       )}
 
       <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">
-        Paid books are free for followers — locked visitors see a
-        followers-only lock screen, never a payment screen.
+        Paid books need their own key — locked visitors see a
+        key lock screen, never a payment screen.
       </p>
     </div>
   );

@@ -8,6 +8,7 @@ import { FollowGate } from './components/ui/FollowGate';
 import { MaintenancePage } from './components/ui/MaintenancePage';
 import { api } from './services/api';
 import { siteConfig } from './config/siteConfig';
+import { shouldShowGate } from './utils/gateDecision';
 
 // Import Views
 import { HomeView } from './views/HomeView';
@@ -146,6 +147,11 @@ export default function App() {
   // admin sign-in page bypass it; everyone else unlocks by following
   // @ghayb.chronicles and tapping unlock (remembered on this device).
   // Topics stays open without the gate, so anyone can read the topics.
+  // Paid-book pages and the reader also bypass the gate: a paid book
+  // needs its own key even for followers, so a locked visitor must reach
+  // the key lock screen on the book page (or the reader's lock screen),
+  // or the key could never be entered at all. Free books and the library
+  // stay behind the gate as before.
   const isAdmin = appState.adminAuthenticated;
   // First-visit language chooser: before anything else, even the
   // follow gate. One pick, saved on the device, never shown again.
@@ -167,8 +173,13 @@ export default function App() {
       </ErrorBoundary>
     );
   }
-  const showGate =
-    !followUnlocked && !isAdmin && appState.route.view !== 'admin' && !isTopicsView(appState.route.view);
+  const showGate = shouldShowGate({
+    followUnlocked,
+    isAdmin,
+    route: appState.route,
+    books: appState.catalog.books,
+    isTopics: isTopicsView(appState.route.view),
+  });
 
   if (showGate) {
     // Gate counts: total folders (27, incl. sub-collections) and total
