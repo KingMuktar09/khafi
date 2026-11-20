@@ -342,6 +342,18 @@ body {
   animation: motion-drop-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
+/* One active-tab style for the whole nav. Every active item — the desktop
+   row, the "More" menu rows, the "More" button, and the mobile drawer —
+   uses this same filled pill (theme surface fill, gold text, border), so
+   the open page always looks the same in dark and light mode. */
+.nav-tab-active {
+  background-color: var(--bg-accent);
+  color: var(--gold);
+  font-weight: 600;
+  border: 1px solid var(--border-main);
+  box-shadow: 0 1px rgb(0 0 0 / 0.05);
+}
+
 /* Smooth scrolling (disabled under reduced motion below). */
 html {
   scroll-behavior: smooth;

@@ -57,13 +57,14 @@ export const Navbar: React.FC = () => {
     appState.setTheme(nextTheme);
   };
 
-  // One desktop link: gold when it is the open page, muted otherwise.
+  // One desktop link: the shared .nav-tab-active filled pill when it is
+  // the open page, muted otherwise.
   const desktopLink = (view: ViewName, label: string, icon: React.ReactNode, active: boolean, badge?: number) => (
     <button
       onClick={() => handleNav(view)}
       className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
         active
-          ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+          ? 'nav-tab-active'
           : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
       }`}
     >
@@ -83,7 +84,7 @@ export const Navbar: React.FC = () => {
       onClick={() => handleNav(view)}
       className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition-colors cursor-pointer ${
         active
-          ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold'
+          ? 'nav-tab-active'
           : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
       }`}
     >
@@ -188,7 +189,7 @@ export const Navbar: React.FC = () => {
                 aria-haspopup="true"
                 className={`px-3 py-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
                   moreOpen || moreActive
-                    ? 'bg-[var(--bg-accent)] text-[var(--gold)] font-semibold shadow-2xs border border-[var(--border-main)]'
+                    ? 'nav-tab-active'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
                 }`}
               >
@@ -302,7 +303,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('home')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'home' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'home' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.home', lang)}
@@ -312,7 +313,7 @@ export const Navbar: React.FC = () => {
             onClick={() => handleNav('library')}
             className={`w-full text-left px-3 py-2 rounded ${
               currentView === 'library' || currentView === 'book' || currentView === 'read'
-                ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]'
+                ? 'nav-tab-active'
                 : 'text-[var(--text-muted)]'
             }`}
           >
@@ -322,7 +323,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('topics')}
             className={`w-full text-left px-3 py-2 rounded ${
-              isTopicsView(currentView) ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              isTopicsView(currentView) ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.topics', lang)}
@@ -331,7 +332,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('journeys')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'journeys' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'journeys' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.readingPaths', lang)}
@@ -340,7 +341,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('timeline')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'timeline' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'timeline' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.timeline', lang)}
@@ -349,7 +350,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('shelf')}
             className={`w-full text-left px-3 py-2 rounded flex items-center justify-between ${
-              currentView === 'shelf' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'shelf' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             <span>{t('nav.myShelf', lang)}</span>
@@ -363,7 +364,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('finder')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'finder' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'finder' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.findBook', lang)}
@@ -372,7 +373,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('wafq')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'wafq' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'wafq' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.magicSquareMaker', lang)}
@@ -381,7 +382,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('amals')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'amals' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'amals' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.amals', lang)}
@@ -390,7 +391,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('tools')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'tools' || currentView.startsWith('tools-') ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'tools' || currentView.startsWith('tools-') ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.studyTools', lang)}
@@ -399,7 +400,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('favorites')}
             className={`w-full text-left px-3 py-2 rounded flex items-center justify-between ${
-              currentView === 'favorites' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'favorites' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             <span>{t('nav.favorites', lang)}</span>
@@ -413,7 +414,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => handleNav('info')}
             className={`w-full text-left px-3 py-2 rounded ${
-              currentView === 'info' ? 'bg-[var(--bg-accent)] font-medium text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+              currentView === 'info' ? 'nav-tab-active' : 'text-[var(--text-muted)]'
             }`}
           >
             {t('nav.info', lang)}
@@ -423,7 +424,7 @@ export const Navbar: React.FC = () => {
             onClick={() => handleNav('admin')}
             className={`w-full text-left px-3 py-2 rounded flex items-center justify-between ${
               currentView === 'admin'
-                ? 'bg-[var(--gold)] text-black font-semibold'
+                ? 'nav-tab-active'
                 : 'text-[var(--text-muted)]'
             }`}
           >
