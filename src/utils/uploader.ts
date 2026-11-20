@@ -70,6 +70,64 @@ export interface UploadResult {
 const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MiB per chunk — safely under 4.5 MB
 const MULTIPART_THRESHOLD = 4 * 1024 * 1024; // files above 4 MB go chunked
 const MAX_RETRIES = 3;
+// One chunk PUT to Google at a time (Drive resumable sessions take
+// ranges in order — parallel PUTs to one session corrupt it), 8 MiB each
+// (a multiple of Drive's 256 KiB resumable unit). No request ever goes
+// through this site's server, so Vercel's 4.5 MB cap does not apply.
+const DRIVE_CHUNK_SIZE = 8 * 1024 * 1024;
+// A hung part must fail instead of spinning forever: 2 minutes per
+// request, then a clear timeout error the admin can act on.
+const REQUEST_TIMEOUT_MS = 120_000;
+
+/** An Error carrying the HTTP status it came from, for retry decisions. */
+function httpError(message: string, status?: number): Error & { status?: number } {
+  const err = new Error(message) as Error & { status?: number };
+  if (status !== undefined) err.status = status;
+  return err;
+}
+
+/**
+ * Which upload failures are worth retrying. A 404 "session not found",
+ * a 400/413, a 500, or a 503 that says Drive is not configured will
+ * never get better by trying again — retrying those is what made one
+ * failed book load for minutes before failing. Only transient problems
+ * are retried: network drops, rate limits, and bad-gateway style 5xx.
+ */
+export function isRetryableUploadError(err: any): boolean {
+  const message = String(err?.message || '');
+  // "Google Drive storage is not set up yet" / "not configured": the
+  // permanent Drive-missing answer. Never retry it.
+  if (/not configured|not set up yet/i.test(message)) return false;
+  if (/cancelled/i.test(message)) return false;
+  const status = typeof err?.status === 'number' ? err.status : undefined;
+  if (status !== undefined) {
+    return status === 408 || status === 429 || status === 502 || status === 503 || status === 504;
+  }
+  // No HTTP status: a network-level failure (fetch TypeError, XHR status 0).
+  return /network error|failed to fetch|load failed|timed? ?out/i.test(message);
+}
+
+/** Byte ranges for splitting a file into chunks (tested). */
+export function chunkRanges(totalBytes: number, chunkSize: number): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+  for (let start = 0; start < totalBytes; start += chunkSize) {
+    ranges.push({ start, end: Math.min(start + chunkSize, totalBytes) });
+  }
+  return ranges;
+}
+
+/**
+ * Next byte to send, from a Drive resumable-upload `Range` header
+ * (`bytes=0-8388607` means Google has bytes 0..8388607, so send from
+ * 8388608). Returns null when the header is missing or unparseable.
+ */
+export function parseResumableRange(rangeHeader: string | null): number | null {
+  if (!rangeHeader) return null;
+  const m = /bytes=0-(\d+)/.exec(rangeHeader);
+  if (!m) return null;
+  const last = Number(m[1]);
+  return Number.isFinite(last) && last >= 0 ? last + 1 : null;
+}
 
 /**
  * Helper to execute a fetch or XHR operation with exponential backoff retries for transient errors.
@@ -88,7 +146,7 @@ async function retryWithBackoff<T>(
       return await fn();
     } catch (err: any) {
       attempt++;
-      if (signal?.aborted || attempt > retries) {
+      if (signal?.aborted || attempt > retries || !isRetryableUploadError(err)) {
         throw err;
       }
       const delay = Math.pow(2, attempt - 1) * 500 + Math.random() * 200; // 500ms, 1200ms, 2200ms
@@ -120,6 +178,7 @@ function uploadSingleXhr(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/admin/upload');
+    xhr.timeout = REQUEST_TIMEOUT_MS;
 
     if (signal) {
       signal.addEventListener('abort', () => {
@@ -144,17 +203,17 @@ function uploadSingleXhr(
             onProgress?.({ loadedBytes: file.size, totalBytes: file.size, percentage: 100 });
             resolve(res);
           } else {
-            reject(new Error(res.error || 'Upload failed'));
+            reject(httpError(res.error || 'Upload failed', xhr.status));
           }
         } catch {
-          reject(new Error('Invalid response from server'));
+          reject(httpError('Invalid response from server', xhr.status));
         }
       } else {
         try {
           const res = JSON.parse(xhr.responseText);
-          reject(new Error(res.error || `HTTP ${xhr.status} upload error`));
+          reject(httpError(res.error || `HTTP ${xhr.status} upload error`, xhr.status));
         } catch {
-          reject(new Error(`Server error (${xhr.status})`));
+          reject(httpError(`Server error (${xhr.status})`, xhr.status));
         }
       }
     };
@@ -189,6 +248,7 @@ function uploadPartXhr(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/admin/upload/part');
+    xhr.timeout = REQUEST_TIMEOUT_MS;
 
     if (signal) {
       signal.addEventListener('abort', () => {
@@ -210,17 +270,17 @@ function uploadPartXhr(
           if (res.success) {
             resolve();
           } else {
-            reject(new Error(res.error || `Failed uploading part ${partNumber}`));
+            reject(httpError(res.error || `Failed uploading part ${partNumber}`, xhr.status));
           }
         } catch {
-          reject(new Error(`Invalid response uploading part ${partNumber}`));
+          reject(httpError(`Invalid response uploading part ${partNumber}`, xhr.status));
         }
       } else {
         try {
           const res = JSON.parse(xhr.responseText);
-          reject(new Error(res.error || `HTTP ${xhr.status} uploading part ${partNumber}`));
+          reject(httpError(res.error || `HTTP ${xhr.status} uploading part ${partNumber}`, xhr.status));
         } catch {
-          reject(new Error(`Server error (${xhr.status}) uploading part ${partNumber}`));
+          reject(httpError(`Server error (${xhr.status}) uploading part ${partNumber}`, xhr.status));
         }
       }
     };
@@ -250,6 +310,187 @@ function uploadPartXhr(
  * - Progress is summed from each part's own bytes (see uploadPartXhr),
  *   so the bar and the MB counter never jump backwards.
  */
+/**
+ * Combine the caller's abort signal with a timeout, without
+ * AbortSignal.any (too new for some browsers). The returned cancel()
+ * clears the timer; timedOut() tells a timeout apart from a user cancel.
+ */
+function withTimeout(
+  signal: AbortSignal | undefined,
+  ms: number
+): { signal: AbortSignal; cancel: () => void; timedOut: () => boolean } {
+  const controller = new AbortController();
+  let expired = false;
+  const timer = setTimeout(() => {
+    expired = true;
+    controller.abort();
+  }, ms);
+  const onAbort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', onAbort, { once: true });
+  }
+  return {
+    signal: controller.signal,
+    cancel: () => {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener('abort', onAbort);
+    },
+    timedOut: () => expired,
+  };
+}
+
+/**
+ * Ask Google how much of a resumable upload it already has, so a failed
+ * chunk resumes instead of restarting. PUT with an empty body and
+ * `Content-Range: bytes *\/total`: Google answers 308 with a `Range`
+ * header, or 200/201 with the finished file when the upload already
+ * completed. Returns null when the session is gone (fail, don't loop).
+ */
+async function queryResumableOffset(
+  sessionUri: string,
+  totalBytes: number,
+  signal?: AbortSignal
+): Promise<{ nextOffset: number; finishedFileId?: string } | null> {
+  const t = withTimeout(signal, REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(sessionUri, {
+      method: 'PUT',
+      headers: {
+        'Content-Length': '0',
+        'Content-Range': `bytes */${totalBytes}`,
+      },
+      signal: t.signal,
+    });
+  } catch {
+    t.cancel();
+    return null;
+  }
+  t.cancel();
+  if (res.status === 200 || res.status === 201) {
+    const data = await res.json().catch(() => null);
+    return { nextOffset: totalBytes, finishedFileId: data?.id };
+  }
+  if (res.status === 308) {
+    const next = parseResumableRange(res.headers.get('Range'));
+    return { nextOffset: next ?? 0 };
+  }
+  return null;
+}
+
+/**
+ * PUT one chunk to a Drive resumable session. Returns the next byte
+ * Google expects, and the finished file id when this was the last chunk.
+ */
+async function putResumableChunk(
+  sessionUri: string,
+  chunk: Blob,
+  start: number,
+  end: number,
+  totalBytes: number,
+  signal?: AbortSignal
+): Promise<{ nextOffset: number; finishedFileId?: string }> {
+  const t = withTimeout(signal, REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(sessionUri, {
+      method: 'PUT',
+      headers: {
+        'Content-Length': String(end - start),
+        'Content-Range': `bytes ${start}-${end - 1}/${totalBytes}`,
+      },
+      body: chunk,
+      signal: t.signal,
+    });
+  } catch (err: any) {
+    t.cancel();
+    if (signal?.aborted) throw new Error('Upload cancelled by user.');
+    if (t.timedOut()) throw httpError('Upload timed out. Please check the connection and try again.');
+    throw err;
+  }
+  t.cancel();
+  if (res.status === 200 || res.status === 201) {
+    const data = await res.json().catch(() => null);
+    return { nextOffset: totalBytes, finishedFileId: data?.id };
+  }
+  if (res.status === 308) {
+    // A 308 without a Range header means Google stored nothing of this
+    // chunk yet — resume from the chunk start, never skip past it.
+    const next = parseResumableRange(res.headers.get('Range'));
+    return { nextOffset: next ?? start };
+  }
+  const text = await res.text().catch(() => '');
+  throw httpError(
+    `Google Drive upload failed (${res.status})${text ? `: ${text.slice(0, 120)}` : ''}`,
+    res.status
+  );
+}
+
+/**
+ * Upload a file straight to Google Drive through a resumable session.
+ * Ranges go up in order — Drive sessions reject out-of-order chunks, so
+ * this path is sequential on purpose, one 8 MB PUT at a time, resumed
+ * from wherever Google confirms it has data. Nothing goes through this
+ * site's server: no 4.5 MB cap, no per-instance session to lose.
+ */
+export async function uploadDriveResumable(
+  file: File,
+  sessionUri: string,
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
+): Promise<{ driveFileId: string }> {
+  const total = file.size;
+  const trackSpeed = createSpeedTracker();
+  let offset = 0;
+  let finishedFileId: string | undefined;
+
+  while (offset < total) {
+    if (signal?.aborted) throw new Error('Upload cancelled by user.');
+    const end = Math.min(offset + DRIVE_CHUNK_SIZE, total);
+    const chunk = file.slice(offset, end);
+    const result = await retryWithBackoff(async () => {
+      try {
+        return await putResumableChunk(sessionUri, chunk, offset, end, total, signal);
+      } catch (err: any) {
+        // The PUT may have stored a prefix of this chunk before failing.
+        // Ask Google what it has and resume from there instead of
+        // resending (and possibly re-failing) the same range.
+        if (isRetryableUploadError(err)) {
+          const queried = await queryResumableOffset(sessionUri, total, signal).catch(() => null);
+          if (queried === null) throw err;
+          if (queried.finishedFileId) return { nextOffset: total, finishedFileId: queried.finishedFileId };
+          if (queried.nextOffset > offset) return { nextOffset: queried.nextOffset };
+        }
+        throw err;
+      }
+    }, MAX_RETRIES, signal);
+    offset = result.nextOffset;
+    if (result.finishedFileId) {
+      finishedFileId = result.finishedFileId;
+      break;
+    }
+    onProgress?.({
+      loadedBytes: offset,
+      totalBytes: total,
+      percentage: Math.min(99, Math.round((offset / total) * 100)),
+      speedBytesPerSec: trackSpeed(offset),
+    });
+  }
+
+  if (!finishedFileId) {
+    // The loop ended without a finished file id (should not happen: the
+    // last chunk's 200/201 carries it). Ask Google for the final state.
+    const queried = await queryResumableOffset(sessionUri, total, signal).catch(() => null);
+    finishedFileId = queried?.finishedFileId;
+  }
+  if (!finishedFileId) {
+    throw new Error('Google Drive did not confirm the finished file. Please try the upload again.');
+  }
+  onProgress?.({ loadedBytes: total, totalBytes: total, percentage: 100 });
+  return { driveFileId: finishedFileId };
+}
+
 async function uploadMultipart(
   file: File,
   folderId?: string,
@@ -274,11 +515,40 @@ async function uploadMultipart(
       signal,
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to initialize multipart upload session');
+    if (!res.ok) throw httpError(data.error || 'Failed to initialize multipart upload session', res.status);
     return data;
   }, MAX_RETRIES, signal);
 
   const uploadId: string = initRes.uploadId;
+
+  // Direct-to-Drive: the browser PUTs the bytes straight to Google.
+  // Nothing goes through this site's server, so there is no 4.5 MB cap,
+  // no per-instance session to lose, and no local disk involved.
+  if (initRes.driveResumable && initRes.sessionUri) {
+    const done = await uploadDriveResumable(file, initRes.sessionUri, onProgress, signal);
+    const completeRes = await retryWithBackoff(async () => {
+      const res = await fetch('/api/admin/upload/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId, driveFileId: done.driveFileId }),
+        signal,
+      });
+      const data = await res.json();
+      if (!res.ok) throw httpError(data.error || 'Failed to confirm the uploaded file', res.status);
+      return data;
+    }, MAX_RETRIES, signal);
+    onProgress?.({ loadedBytes: file.size, totalBytes: file.size, percentage: 100 });
+    return {
+      success: true,
+      fileUrl: completeRes.fileUrl,
+      driveFileId: completeRes.driveFileId,
+      driveUrl: completeRes.driveUrl,
+      fileType: completeRes.fileType,
+      mimeType: completeRes.mimeType,
+      sizeBytes: completeRes.sizeBytes,
+      size: completeRes.size,
+    };
+  }
 
   try {
     // 2. Upload chunks in parallel with retries. Small (4 MB) parts mean
@@ -349,7 +619,7 @@ async function uploadMultipart(
         signal,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to assemble completed file');
+      if (!res.ok) throw httpError(data.error || 'Failed to assemble completed file', res.status);
       return data;
     }, MAX_RETRIES, signal);
 

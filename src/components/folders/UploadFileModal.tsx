@@ -846,15 +846,17 @@ export const UploadFileModal: React.FC<UploadFileModalProps> = ({
             </div>
           )}
 
-          {/* Local uploads are temporary while Google Drive is not
-              connected: the live site stores them in serverless /tmp, so
-              the books can stop opening later. Paste Drive links below
-              instead — those always work, the file stays in Drive. */}
+          {/* File upload from this device cannot be saved while Google
+              Drive is not connected: the live site has nowhere durable
+              to put the file, so the upload fails. Paste Drive links
+              below instead — those always work, the file stays in Drive.
+              Once Drive is connected in Vercel, file upload works again
+              (the browser sends the book straight to Drive). */}
           {driveConfigured === false && (
             <div className="p-3 bg-amber-400/10 border border-amber-400/40 text-amber-200 rounded-lg text-xs leading-relaxed flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
-                Google Drive is not connected yet, so files uploaded from this device are only stored temporarily on the live site and may stop opening later. For books that must keep working, paste Google Drive links below instead.
+                Google Drive is not connected yet, so file upload from this device will not work here — it will fail, not just go slow. For books that must keep working, paste Google Drive links below instead.
               </span>
             </div>
           )}

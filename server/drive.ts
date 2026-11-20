@@ -176,6 +176,90 @@ export function getDriveClient() {
   return driveClientInstance;
 }
 
+/** Cached service-account auth for raw Drive API calls (resumable sessions). */
+let driveAuthInstance: any = null;
+function getDriveAuth(): any | null {
+  if (!hasServiceAccountCredentials()) return null;
+  if (!driveAuthInstance) {
+    driveAuthInstance = new google.auth.JWT({
+      email: getServiceAccountEmail(),
+      key: getServiceAccountPrivateKey(),
+      scopes: [
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
+    });
+  }
+  return driveAuthInstance;
+}
+
+/** A short-lived OAuth access token for the service account, or null. */
+export async function getDriveAccessToken(): Promise<string | null> {
+  const auth = getDriveAuth();
+  if (!auth) return null;
+  try {
+    const res: any = await auth.getAccessToken();
+    const token = typeof res === "string" ? res : res?.token;
+    return token || null;
+  } catch {
+    return null;
+  }
+}
+
+// Direct-to-Drive resumable upload sessions.
+//
+// Serverless functions have no shared disk, so chunked uploads assembled
+// from per-instance /tmp (or per-isolate memory) can never work there:
+// parts land on different instances and the session is gone — the admin
+// sees slow, endless loading, then failure. The fix is to keep the bytes
+// out of the function entirely: the server only creates a Drive
+// resumable-upload session (one small authenticated call) and hands the
+// session URI to the admin's browser, which PUTs the chunks straight to
+// Google. The session URI is a capability for this one upload only — it
+// is returned only to an authenticated admin, over HTTPS, and must never
+// be logged.
+export async function createDriveResumableSession(options: {
+  filename: string;
+  mimeType?: string;
+  folderId?: string;
+}): Promise<{ sessionUri: string }> {
+  if (!isSharedDriveConfigured()) {
+    throw new Error("Ilm-e-Ghayb Library storage is not configured with a Shared Drive.");
+  }
+  const token = await getDriveAccessToken();
+  if (!token) {
+    throw new Error("Google Drive authentication failed (no access token).");
+  }
+  const rootFolderId = getDriveFolderId();
+  const targetFolderId = options.folderId || rootFolderId;
+  const res = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": options.mimeType || "application/octet-stream",
+      },
+      body: JSON.stringify({
+        name: options.filename,
+        parents: targetFolderId ? [targetFolderId] : undefined,
+        mimeType: options.mimeType || "application/octet-stream",
+        description: "Uploaded via Ilm-e-Ghayb Library",
+      }),
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Google Drive resumable session failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+  const sessionUri = res.headers.get("location");
+  if (!sessionUri) {
+    throw new Error("Google Drive did not return an upload session.");
+  }
+  return { sessionUri };
+}
+
 export interface DriveDiagnosticResult {
   googleDriveConfigured: boolean;
   sharedDriveConfigured: boolean;

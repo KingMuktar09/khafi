@@ -981,3 +981,70 @@ export async function deleteDriveFileCf(fileId: string, config: GoogleDriveConfi
     return false;
   }
 }
+
+// Direct-to-Drive resumable upload sessions (same reason as the Express
+// side: Workers have no shared disk, so chunked uploads assembled from
+// per-isolate memory can never work — parts land on different isolates
+// and the session is gone. The server only creates the session; the
+// admin's browser PUTs the chunks straight to Google. The session URI is
+// a capability for this one upload only: returned only to an
+// authenticated admin, over HTTPS, never logged.
+export async function createDriveResumableSessionCf(
+  config: GoogleDriveConfig,
+  options: { filename: string; mimeType?: string; folderId?: string }
+): Promise<{ sessionUri: string }> {
+  const accessToken = await getGoogleDriveAccessToken(config);
+  const targetParent = options.folderId || config.folderId;
+  const res = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": options.mimeType || "application/octet-stream",
+      },
+      body: JSON.stringify({
+        name: options.filename,
+        parents: targetParent ? [targetParent] : undefined,
+        mimeType: options.mimeType || "application/octet-stream",
+        description: "Uploaded via Ilm-e-Ghayb Library",
+      }),
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Google Drive resumable session failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+  const sessionUri = res.headers.get("location");
+  if (!sessionUri) {
+    throw new Error("Google Drive did not return an upload session.");
+  }
+  return { sessionUri };
+}
+
+/** Confirm a Drive file exists and read its metadata (complete step). */
+export async function getDriveFileMetadataCf(
+  fileId: string,
+  config: GoogleDriveConfig
+): Promise<{ id: string; name: string; mimeType: string; size: number } | null> {
+  if (!isDriveConfigured(config) || !fileId) return null;
+  try {
+    const accessToken = await getGoogleDriveAccessToken(config);
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,size&supportsAllDrives=true`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!res.ok) return null;
+    const data: any = await res.json();
+    if (!data?.id) return null;
+    return {
+      id: data.id,
+      name: data.name || "file",
+      mimeType: data.mimeType || "application/octet-stream",
+      size: data.size ? Number(data.size) : 0,
+    };
+  } catch {
+    return null;
+  }
+}

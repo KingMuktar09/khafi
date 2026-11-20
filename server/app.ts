@@ -22,6 +22,8 @@ import {
   isValidPrivateKey,
   getDriveClient,
   uploadFileToDrive,
+  createDriveResumableSession,
+  getDriveFileMetadata,
   deleteFileFromDrive,
   syncCatalogWithDrive,
   pullCatalogFromDrive,
@@ -711,6 +713,29 @@ export const ALLOWED_UPLOAD_EXTS = new Set([
 /** Server-side cap for an assembled chunked upload (M-5): the same
  *  500 MB as the single-upload multer limit. */
 export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
+
+/** Shown when file upload cannot be saved: Drive storage is not set up.
+ *  The same message is used on both hosts so the admin always gets one
+ *  clear answer instead of endless loading. */
+export const DRIVE_NOT_CONFIGURED_UPLOAD_ERROR =
+  "Google Drive storage is not set up yet, so file uploads cannot be saved on the live site. Paste a Google Drive link instead — it works instantly and the book keeps working.";
+
+/** Chunk size for direct-to-Drive resumable uploads: 8 MiB, a multiple
+ *  of Drive's 256 KiB resumable chunk unit. Bytes go straight from the
+ *  admin's browser to Google, never through this function. */
+export const DRIVE_RESUMABLE_CHUNK_SIZE = 8 * 1024 * 1024;
+
+/** Pure decision for the upload entry point (tested): which upload path
+ *  a file takes. Serverless functions have no shared disk, so the old
+ *  disk-session path only works on a long-lived local server. */
+export function resolveUploadInitMode(opts: {
+  driveConfigured: boolean;
+  serverless: boolean;
+}): "drive-resumable" | "local-disk" | "unavailable" {
+  if (opts.driveConfigured) return "drive-resumable";
+  if (opts.serverless) return "unavailable";
+  return "local-disk";
+}
 
 const upload = multer({
   storage,
@@ -3133,6 +3158,14 @@ app.delete(["/api/admin/folders/:id", "/admin/folders/:id"], requireAdmin, async
 
 // 6. Admin File Upload (PDFs or Covers)
 app.post(["/api/admin/upload", "/admin/upload"], requireAdmin, (req, res) => {
+  // Fail fast: on the live site (serverless) an upload without Drive has
+  // nowhere durable to go — the file would land in one instance's /tmp
+  // and vanish. Refuse before the client uploads a single byte, instead
+  // of letting it load endlessly and then fail.
+  if (isServerless && !isGoogleDriveConfigured()) {
+    res.status(503).json({ error: DRIVE_NOT_CONFIGURED_UPLOAD_ERROR });
+    return;
+  }
   upload.single("file")(req, res, async (err: any) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
@@ -3193,7 +3226,7 @@ app.post(["/api/admin/upload", "/admin/upload"], requireAdmin, (req, res) => {
 });
 
 // 6.1 Multipart Resumable Upload Endpoints
-app.post(["/api/admin/upload/init", "/admin/upload/init"], requireAdmin, (req, res) => {
+app.post(["/api/admin/upload/init", "/admin/upload/init"], requireAdmin, async (req, res) => {
   const { filename, fileSize, mimeType, chunkSize, totalChunks, folderId } = req.body;
   if (!filename || !fileSize) {
     res.status(400).json({ error: "Filename and fileSize are required." });
@@ -3207,6 +3240,45 @@ app.post(["/api/admin/upload/init", "/admin/upload/init"], requireAdmin, (req, r
   }
   if (!Number.isFinite(Number(fileSize)) || Number(fileSize) <= 0 || Number(fileSize) > MAX_UPLOAD_BYTES) {
     res.status(400).json({ error: "fileSize must be between 1 byte and 500 MB." });
+    return;
+  }
+  // Which path this upload takes. On the live site (serverless) there is
+  // no shared disk: disk sessions only ever worked on a long-lived local
+  // server, and on Vercel the parts land on different instances and the
+  // session is gone — slow, endless loading, then failure. So on the live
+  // site the only working path is direct-to-Drive, and without Drive the
+  // honest answer is a fast 503, not a session that can never complete.
+  const mode = resolveUploadInitMode({
+    driveConfigured: isGoogleDriveConfigured(),
+    serverless: isServerless,
+  });
+  if (mode === "unavailable") {
+    res.status(503).json({ error: DRIVE_NOT_CONFIGURED_UPLOAD_ERROR });
+    return;
+  }
+  if (mode === "drive-resumable") {
+    try {
+      const { sessionUri } = await createDriveResumableSession({
+        filename,
+        mimeType: mimeType || getMimeType(filename),
+        folderId: typeof folderId === "string" ? folderId : undefined,
+      });
+      const driveChunkSize = DRIVE_RESUMABLE_CHUNK_SIZE;
+      res.json({
+        success: true,
+        uploadId: `drv-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+        driveResumable: true,
+        // A capability for this one upload only: returned only to the
+        // authenticated admin, never logged. The browser PUTs the chunks
+        // straight to this URI; the bytes never pass through this server.
+        sessionUri,
+        chunkSize: driveChunkSize,
+        totalChunks: Math.ceil(Number(fileSize) / driveChunkSize),
+      });
+    } catch (err: any) {
+      console.error("Drive resumable session failed:", err?.message || err);
+      res.status(502).json({ error: "Could not start the Google Drive upload. Please try again." });
+    }
     return;
   }
   const ext = path.extname(filename);
@@ -3314,6 +3386,27 @@ app.post(["/api/admin/upload/complete", "/admin/upload/complete"], requireAdmin,
   const { uploadId } = req.body;
   if (!uploadId) {
     res.status(400).json({ error: "uploadId is required." });
+    return;
+  }
+
+  // Direct-to-Drive resumable upload: the browser already PUT the bytes
+  // straight to Google. Just confirm the file exists in Drive and hand
+  // back its library URL — no disk involved at all.
+  if (req.body?.driveFileId) {
+    const meta = await getDriveFileMetadata(String(req.body.driveFileId));
+    if (!meta) {
+      res.status(400).json({ error: "Google Drive could not confirm that file. Please try the upload again." });
+      return;
+    }
+    res.json({
+      success: true,
+      fileUrl: `/api/drive/file/${meta.id}`,
+      driveFileId: meta.id,
+      filename: meta.name,
+      mimeType: meta.mimeType,
+      sizeBytes: meta.size,
+      size: `${(meta.size / (1024 * 1024)).toFixed(2)} MB`,
+    });
     return;
   }
 

@@ -10,6 +10,8 @@ import {
   createDriveFolderCf,
   renameDriveFolderCf,
   uploadBinaryToDriveCf,
+  createDriveResumableSessionCf,
+  getDriveFileMetadataCf,
   invalidateDriveCacheCf,
 } from "./cf-drive";
 import {
@@ -2135,6 +2137,56 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
     }
   }
 
+  // Same message as server/app.ts DRIVE_NOT_CONFIGURED_UPLOAD_ERROR —
+  // keep the two in sync so the admin gets one clear answer on both hosts.
+  const DRIVE_NOT_CONFIGURED_UPLOAD_ERROR_CF =
+    "Google Drive storage is not set up yet, so file uploads cannot be saved on the live site. Paste a Google Drive link instead — it works instantly and the book keeps working.";
+
+  // 12a. Admin Upload Init: POST /api/admin/upload/init
+  // Same contract as the Express side: with Drive configured, create a
+  // direct-to-Drive resumable session (the browser PUTs chunks straight
+  // to Google — Workers have no shared disk for chunk sessions); without
+  // Drive, fail fast with a clear message instead of a session that can
+  // never complete.
+  if (path === "/api/admin/upload/init" && method === "POST") {
+    try {
+      const body = (await request.json()) as {
+        filename?: string;
+        fileSize?: number;
+        mimeType?: string;
+        folderId?: string;
+      };
+      const filename = body.filename || "";
+      const fileSize = Number(body.fileSize);
+      if (!filename || !Number.isFinite(fileSize) || fileSize <= 0 || fileSize > MAX_UPLOAD_BYTES_CF) {
+        return jr({ success: false, error: "Filename and a fileSize between 1 byte and 500 MB are required." }, 400);
+      }
+      const ext = filename.includes(".") ? filename.split(".").pop()!.toLowerCase() : "";
+      if (!ALLOWED_UPLOAD_EXTS_CF.has(`.${ext}`)) {
+        return jr({ success: false, error: `File type .${ext || "(none)"} is not allowed.` }, 400);
+      }
+      if (!isDriveConfigured(driveConfig)) {
+        return jr({ success: false, error: DRIVE_NOT_CONFIGURED_UPLOAD_ERROR_CF }, 503);
+      }
+      const driveChunkSize = 8 * 1024 * 1024;
+      const { sessionUri } = await createDriveResumableSessionCf(driveConfig, {
+        filename,
+        mimeType: body.mimeType || getMimeType(filename),
+        folderId: body.folderId || undefined,
+      });
+      return jr({
+        success: true,
+        uploadId: `drv-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+        driveResumable: true,
+        sessionUri,
+        chunkSize: driveChunkSize,
+        totalChunks: Math.ceil(fileSize / driveChunkSize),
+      });
+    } catch (err: any) {
+      return jr({ success: false, error: "Could not start the Google Drive upload. Please try again." }, 502);
+    }
+  }
+
   // 12. Admin File Upload: POST /api/admin/upload
   if (path === "/api/admin/upload" && method === "POST") {
     try {
@@ -2215,6 +2267,11 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
   // 13. Admin Chunk Upload: POST /api/admin/upload/chunk
   if (path === "/api/admin/upload/chunk" && method === "POST") {
     try {
+      // Fail fast: without Drive the assembled file has nowhere durable
+      // to go, so refuse before the client uploads any chunk.
+      if (!isDriveConfigured(driveConfig)) {
+        return jr({ success: false, error: DRIVE_NOT_CONFIGURED_UPLOAD_ERROR_CF }, 503);
+      }
       const formData = await request.formData();
       const sessionId = formData.get("sessionId") as string;
       const chunkIndex = parseInt(formData.get("chunkIndex") as string, 10);
@@ -2254,12 +2311,34 @@ export async function handleCloudflareApiRequest(request: Request, env: any): Pr
   if (path === "/api/admin/upload/complete" && method === "POST") {
     try {
       const body = (await request.json()) as {
-        sessionId: string;
+        sessionId?: string;
+        uploadId?: string;
+        driveFileId?: string;
         filename?: string;
         mimeType?: string;
         folderId?: string;
       };
+      // Direct-to-Drive resumable upload: the browser already PUT the
+      // bytes straight to Google. Just confirm the file exists in Drive.
+      if (body.driveFileId) {
+        const meta = await getDriveFileMetadataCf(String(body.driveFileId), driveConfig);
+        if (!meta) {
+          return jr({ success: false, error: "Google Drive could not confirm that file. Please try the upload again." }, 400);
+        }
+        return jr({
+          success: true,
+          fileUrl: `/api/drive/file/${meta.id}`,
+          driveFileId: meta.id,
+          filename: meta.name,
+          mimeType: meta.mimeType,
+          sizeBytes: meta.size,
+          size: `${(meta.size / (1024 * 1024)).toFixed(2)} MB`,
+        });
+      }
       const sessionId = body.sessionId;
+      if (!sessionId) {
+        return jr({ success: false, error: "Upload session not found or expired." }, 404);
+      }
       const session = chunkSessions.get(sessionId);
 
       if (!session) {
