@@ -18,5 +18,20 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
+    build: {
+      // Smooth first load: split the big vendors out of the main chunk so
+      // the browser caches them separately and the home page downloads
+      // less on first visit. pdf.js stays in its own chunk too (it only
+      // loads when the reader opens).
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-pdfjs': ['pdfjs-dist'],
+          },
+        },
+      },
+    },
   };
 });

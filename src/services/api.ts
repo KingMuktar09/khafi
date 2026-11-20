@@ -230,7 +230,7 @@ export const api = {
 
       // 2) Static fallback: public/catalog.json, copied from
       // data/catalog.json at build time (scripts/copy-catalog.mjs) and
-      // served as a plain file, so the library still shows all 173 books
+      // served as a plain file, so the library still shows all 138 books
       // on a static-only deploy where /api/catalog 404s (Vercel Drop
       // deploy without the serverless api/index.ts). It is a snapshot
       // from build time, and paid-book links are stripped in the copy,

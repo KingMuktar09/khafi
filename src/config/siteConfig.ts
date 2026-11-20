@@ -3,11 +3,11 @@ export const siteConfig = {
   brand: 'Ghayb Chronicles',
   /** Official logo: halftone gold arch doorway with a geometric star and
    * light, on dark navy (1600x1600, 18 Nov 2026).
-   * Hosted on Google Drive (thumbnail URL) because binary files cannot be
-   * pushed to GitHub through the snapshot tool, so /logo.jpg 404s live.
+   * Local file: /logo.jpg serves 200 on the live Vercel site (verified
+   * 20 Nov 2026), so the Drive thumbnail is no longer needed.
    * Shown whole and centred everywhere (object-cover on a square box, so
    * nothing is cropped). */
-  logo: 'https://drive.google.com/thumbnail?id=1EILLlQUdXJ4pWIYZP81HdnFq_ZpKnEdA&sz=w400',
+  logo: '/logo.jpg',
   /**
    * Known catalog totals from the last catalog build
    * (data/catalog.json: All Islamic History Books, 17 Nov 2026).

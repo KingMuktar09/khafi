@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, Download, ExternalLink, RefreshCw } from 'lucide-react';
 import { Book } from '../../types';
 import {
@@ -31,6 +31,21 @@ export const DrivePdfViewer: React.FC<DrivePdfViewerProps> = ({ book }) => {
   const viewUrl = getDriveViewUrl(book);
   const [isLoading, setIsLoading] = useState(true);
   const [showTrouble, setShowTrouble] = useState(false);
+  // Preview fix: Drive's viewer runs in a cross-origin iframe, so the app
+  // cannot tell a blank / sign-in page from a slow load, and the spinner
+  // used to spin forever when Drive hung. If the iframe has not reported
+  // loaded after 15 seconds, stop waiting and open the trouble panel by
+  // itself, so the reader always has Open in Drive / Download in front
+  // of them instead of a frozen spinner. Paid books never reach this
+  // viewer without a key or admin (the lock screen comes first).
+  useEffect(() => {
+    if (!isLoading) return;
+    const t = window.setTimeout(() => {
+      setIsLoading(false);
+      setShowTrouble(true);
+    }, 15000);
+    return () => window.clearTimeout(t);
+  }, [isLoading]);
 
   if (!previewUrl) {
     return (

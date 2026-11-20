@@ -41,6 +41,14 @@ export const LibraryView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('arranged');
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
+  // Debounce the search box: without this, every keystroke re-filters
+  // and re-renders all 138 book cards at once, which hangs typing on
+  // slow phones. The list only re-filters 150 ms after the last keystroke.
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery || '');
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(localSearch), 150);
+    return () => window.clearTimeout(t);
+  }, [localSearch]);
   // Admin "Upload a book here" modal, opened from a category header.
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadFolderId, setUploadFolderId] = useState<string | null>(null);
@@ -109,7 +117,7 @@ export const LibraryView: React.FC = () => {
     setLocalSearch(searchQuery || '');
   }, [searchQuery]);
 
-  const q = (searchQuery || localSearch || '').trim().toLowerCase();
+  const q = (searchQuery || debouncedSearch || '').trim().toLowerCase();
 
   const categories = appState.getCategories();
   const authenticCount = appState.getVisibleBooks().filter((b) => b.isAuthentic).length;
@@ -168,8 +176,19 @@ export const LibraryView: React.FC = () => {
     // selectedTopic is a dep too: filtering by topic must recompute.
   }, [appState.catalog, q, selectedCategory, selectedGroup, selectedTopic, authenticOnly, typeFilter, statusFilter, sortBy]);
 
+  // Paginate the flat list: rendering all 138 cards at once (each with
+  // a cover image, badges and a staggered entrance animation) janks the
+  // scroll on phones. Show 48 first, then more on tap. Resets whenever
+  // the filters change, so a new search never lands on page 3 of the old one.
+  const PAGE_SIZE = 48;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [q, selectedCategory, selectedGroup, selectedTopic, authenticOnly, typeFilter, statusFilter, sortBy]);
+  const visibleBooks = displayedBooks.slice(0, visibleCount);
+
   // 6 big topics with book counts — the simple way to pick a category.
-  // Cheap to compute every render (173 books), so no memo needed.
+  // Cheap to compute every render (138 books), so no memo needed.
   const groupCounts = topicGroupCounts(appState.getVisibleBooks());
   const activeGroup = TOPIC_GROUPS.find((g) => g.id === selectedGroup) || null;
   // Categories shown as chips: the active group's categories, or all of
@@ -186,7 +205,7 @@ export const LibraryView: React.FC = () => {
   const grouped = useMemo(() => {
     if (q || selectedTopic || sortBy !== 'arranged') return null;
     const groups: Array<{ category: string; topics: Array<{ topic: string; books: Book[] }> }> = [];
-    for (const book of displayedBooks) {
+    for (const book of visibleBooks) {
       const category = cleanLabel(book.category) || 'General';
       const topic = cleanLabel(book.topic) || 'General';
       let cat = groups.find((g) => g.category === category);
@@ -202,7 +221,7 @@ export const LibraryView: React.FC = () => {
       top.books.push(book);
     }
     return groups;
-  }, [displayedBooks, q, selectedTopic, sortBy]);
+  }, [visibleBooks, q, selectedTopic, sortBy]);
 
   if (appState.loading) {
     return (
@@ -280,7 +299,7 @@ export const LibraryView: React.FC = () => {
         />
       </div>
 
-      {/* Pick a topic — 6 big topics instead of 36 folders. Tap one to see its books. */}
+      {/* Pick a topic — 6 big topics instead of 27 folders. Tap one to see its books. */}
       <div className="space-y-3">
         <div className="relative">
           <Search className="w-4 h-4 text-[var(--gold)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -293,7 +312,7 @@ export const LibraryView: React.FC = () => {
             className="tap-target w-full pl-10 pr-4 py-2.5 text-sm bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] rounded-xl focus:outline-none focus:border-[var(--gold)]"
           />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2" role="group" aria-label={t('library.topicsAria', lang)}>
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 gap-2" role="group" aria-label={t('library.topicsAria', lang)}>
           <button
             type="button"
             onClick={() => { setSelectedGroup(null); setSelectedCategory(null); setSelectedTopic(null); }}
@@ -499,10 +518,22 @@ export const LibraryView: React.FC = () => {
         ))
       ) : (
         <BookGrid
-          books={displayedBooks}
+          books={visibleBooks}
           emptyMessage={q ? tf('library.noBooksSearch', lang, { q }) : t('library.noBooksFilters', lang)}
           onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
         />
+      )}
+
+      {displayedBooks.length > visibleCount && (
+        <div className="pt-2 text-center">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+            className="tap-target px-6 py-3 rounded-xl text-sm font-bold bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-main)] hover:border-[var(--gold)]/50 cursor-pointer"
+          >
+            {tf('library.showMore', lang, { shown: visibleBooks.length, total: displayedBooks.length })}
+          </button>
+        </div>
       )}
 
       <UploadFileModal

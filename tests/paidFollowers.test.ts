@@ -13,7 +13,7 @@ import {
   isPaidBookLocked as isPaidBookLockedCf,
   handleCloudflareApiRequest,
 } from '../server/cf-api-handler';
-import { getPaidBadgeLabel } from '../src/utils/fileUtils';
+import { getPaidBadgeLabel, formatBookPrice } from '../src/utils/fileUtils';
 import {
   FOLLOW_UNLOCK_HEADER,
   getFollowUnlockHeaders,
@@ -30,8 +30,11 @@ import {
 //   gate-unlocked follower (x-follow-unlocked: 1, no key) -> still locked
 //   admin                 -> links kept, files served
 //   visitor with the key  -> only THAT book's links kept, files served
-// A key unlocks ONE paid book only — never a different paid book. No
-// money anywhere: no price, no UPI, no payment step.
+// A key unlocks ONE paid book only — never a different paid book. The
+// price itself is public info, not a payment step: the lock screen shows
+// it when the book has one set (the Info page says the price is shown on
+// the book), and shows no price at all when it has none. There is still
+// no UPI / pay step on the lock screen itself.
 
 const PAID_BOOK = {
   id: 'b-bulhan',
@@ -226,7 +229,7 @@ describe('Cloudflare catalog endpoint', () => {
 });
 
 describe('PaidLockScreen (locked visitor screen)', () => {
-  it('says the book needs a key and offers the key entry — never free-for-followers, a price or UPI', () => {
+  it('says the book needs a key and offers the key entry — never free-for-followers or a payment step', () => {
     const html = renderToStaticMarkup(
       React.createElement(PaidLockScreen, { book: PAID_BOOK as any })
     );
@@ -236,10 +239,49 @@ describe('PaidLockScreen (locked visitor screen)', () => {
     expect(html).toContain('Unlock');
     expect(html).not.toContain('free for followers');
     expect(html).not.toContain('Free for followers');
-    expect(html).not.toContain('Rs 99');
+    // Kitab Al Bulhan has no price set: no price shown at all.
     expect(html).not.toContain('Rs ');
+    expect(html).not.toContain('undefined');
     expect(html).not.toContain('UPI');
     expect(html).not.toContain('Pay by');
+  });
+
+  it('shows the price when the book has one — Rs 99 for Manba', () => {
+    const priced = {
+      ...PAID_BOOK,
+      id: 'b-manba-usul-al-hikma',
+      title: 'Manba Usul al-Hikma',
+      price: 99,
+      priceCurrency: 'INR',
+    };
+    const html = renderToStaticMarkup(
+      React.createElement(PaidLockScreen, { book: priced as any })
+    );
+    expect(html).toContain('Rs 99');
+    expect(html).toContain('unlock with a key');
+    expect(html).toContain('needs a key');
+  });
+
+  it('shows no price for a paid book with price 0', () => {
+    const html = renderToStaticMarkup(
+      React.createElement(PaidLockScreen, { book: { ...PAID_BOOK, price: 0 } as any })
+    );
+    expect(html).not.toContain('Rs ');
+    expect(html).not.toContain('Rs 0');
+  });
+});
+
+describe('formatBookPrice', () => {
+  it('formats an INR price as Rs, and returns null with no usable price', () => {
+    expect(formatBookPrice({ price: 99, priceCurrency: 'INR' } as any)).toBe('Rs 99');
+    expect(formatBookPrice({ price: 99 } as any)).toBe('Rs 99');
+    expect(formatBookPrice({ price: 50, priceCurrency: 'USD' } as any)).toBe('USD 50');
+    expect(formatBookPrice({} as any)).toBeNull();
+    expect(formatBookPrice({ price: undefined } as any)).toBeNull();
+    expect(formatBookPrice({ price: 0 } as any)).toBeNull();
+    expect(formatBookPrice({ price: -10 } as any)).toBeNull();
+    expect(formatBookPrice(null)).toBeNull();
+    expect(formatBookPrice(undefined)).toBeNull();
   });
 });
 

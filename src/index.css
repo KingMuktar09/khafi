@@ -151,6 +151,11 @@ html[lang="ur"] body {
 html[lang="ur"] .font-mono {
   font-family: 'Noto Nastaliq Urdu', 'Amiri', sans-serif;
 }
+/* Keys and codes must stay readable Latin mono under Urdu (the paid-key
+ * input uses .font-mono; Nastaliq would garble the key). */
+html[lang="ur"] input.font-mono {
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+}
 
 /* Premium polish: generous, calm surfaces */
 body {
@@ -260,6 +265,10 @@ body {
    a real hover exists (desktop mouse/trackpad). Touch screens never
    get a stuck lift from a tap. */
 .motion-card {
+  /* Off-screen book cards are skipped by the browser until scrolled
+     into view, so a 138-book list scrolls without jank. */
+  content-visibility: auto;
+  contain-intrinsic-size: 300px 460px;
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.35s ease, box-shadow 0.35s ease, background-color 0.2s ease;
 }

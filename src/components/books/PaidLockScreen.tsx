@@ -3,7 +3,8 @@ import { Instagram, Lock, KeyRound, Check } from 'lucide-react';
 import { Book } from '../../types';
 import { api, DEFAULT_BROADCAST_CHANNEL_URL } from '../../services/api';
 import { storage } from '../../services/storage';
-import { t } from '../../data/i18n';
+import { t, tf } from '../../data/i18n';
+import { formatBookPrice } from '../../utils/fileUtils';
 
 interface PaidLockScreenProps {
   book: Book;
@@ -34,6 +35,10 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
   // rendered in node tests. updateSettings always persists + notifies,
   // and the app re-renders the whole tree, so this stays fresh.
   const lang = storage.getSettings().language;
+  // The price is public info (it survives catalog sanitisation — only
+  // links are stripped for locked visitors), so the lock screen shows it
+  // when the book has one. No price set means no price shown at all.
+  const priceLabel = formatBookPrice(book);
   const [keyInput, setKeyInput] = useState('');
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
@@ -91,6 +96,14 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
           <Lock className="w-3.5 h-3.5" />
           <span>{t('paid.lockBadge', lang)}</span>
         </p>
+        {priceLabel && (
+          <p className="text-sm font-bold text-[var(--gold)]">
+            {tf('paid.priceLine', lang, { price: priceLabel })}
+          </p>
+        )}
+        {book.paymentNote && (
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">{book.paymentNote}</p>
+        )}
         <p className="font-display font-semibold text-lg text-[var(--text-main)]">
           {t('paid.freeTitle', lang)}
         </p>

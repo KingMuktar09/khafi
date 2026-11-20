@@ -23,6 +23,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     'library.searchTitle': 'Search: "{q}"',
     'library.countOne': '{n} book',
     'library.countMany': '{n} books',
+    'library.showMore': 'Show more books ({shown} of {total})',
     'library.groupedNote': 'Grouped by topic and category. No folders to open.',
     'library.totalInLibrary': '{n} books in the library',
     'library.searchPlaceholder': 'Search books: try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…',
@@ -186,7 +187,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     'shelf.statusAria': 'Shelf status',
     'shelf.emptyTitle': 'Your shelf is empty.',
     'shelf.emptyText':
-      'Open any book and tap “Save to My Shelf”, or tap it on a Surprise Me book. Then set it to To Read, Reading or Finished.',
+      'Open any book and tap “Save to My Shelf”, or open a Surprise Me book and save it from there. Then set it to To Read, Reading or Finished.',
     'shelf.browseLibrary': 'Browse the Library',
     'shelf.noBooksStatus': 'No books with this status yet.',
     'shelf.changeStatus': "Change a book's status from its own page.",
@@ -376,6 +377,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     // ---- Paid lock ----
     'paid.badge': 'Paid',
     'paid.lockBadge': 'Paid book — needs a key',
+    'paid.priceLine': 'Paid book — {price} · unlock with a key',
     'paid.freeTitle': 'This book needs a key',
     'paid.freeText':
       "Followers get the key from the broadcast channel. Or enter this book's key below. One key unlocks only this book, on this device.",
@@ -402,6 +404,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     'library.searchTitle': 'Search: "{q}"',
     'library.countOne': '{n} kitab',
     'library.countMany': '{n} kitabein',
+    'library.showMore': 'Aur kitabein dikhao ({shown} of {total})',
     'library.groupedNote': 'Topic aur category ke hisab se lagi hain. Koi folder kholne ki zaroorat nahi.',
     'library.totalInLibrary': 'Library mein {n} kitabein hain',
     'library.searchPlaceholder': 'Kitabein dhoondhein: “Sufi”, “Tafsir”, “Ibn Kathir” ya “notes” try karein…',
@@ -755,6 +758,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     // ---- Paid lock ----
     'paid.badge': 'Paid',
     'paid.lockBadge': 'Paid kitab — key chahiye',
+    'paid.priceLine': 'Paid kitab — {price} · key se kholein',
     'paid.freeTitle': 'Is kitab ke liye key chahiye',
     'paid.freeText':
       "Followers ko key broadcast channel se milti hai. Ya neeche is kitab ki key likhein. Ek key sirf is kitab ko, is device par kholti hai.",
@@ -781,6 +785,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     'library.searchTitle': 'খুঁজছেন: "{q}"',
     'library.countOne': '{n}টি বই',
     'library.countMany': '{n}টি বই',
+    'library.showMore': 'আরও বই দেখাও ({shown} of {total})',
     'library.groupedNote': 'টপিক ও ক্যাটাগরি অনুযায়ী সাজানো। কোনো ফোল্ডার খুলতে হবে না।',
     'library.totalInLibrary': 'লাইব্রেরিতে {n}টি বই আছে',
     'library.searchPlaceholder': 'বই খুঁজুন: “Sufi”, “Tafsir”, “Ibn Kathir” বা “notes” লিখে দেখুন…',
@@ -1134,6 +1139,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     // ---- Paid lock ----
     'paid.badge': 'Paid',
     'paid.lockBadge': 'পেইড বই — চাবি লাগবে',
+    'paid.priceLine': 'পেইড বই — {price} · চাবি দিয়ে খুলুন',
     'paid.freeTitle': 'এই বইয়ের জন্য চাবি লাগবে',
     'paid.freeText':
       'ফলোয়াররা চাবি broadcast channel থেকে পায়। অথবা নিচে এই বইয়ের চাবি লিখুন। একটি চাবি শুধু এই বইটি, এই ডিভাইসে খোলে।',
@@ -1159,6 +1165,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     'library.searchTitle': 'تلاش: "{q}"',
     'library.countOne': '{n} کتاب',
     'library.countMany': '{n} کتابیں',
+    'library.showMore': 'اور کتابیں دکھائیں ({shown} of {total})',
     'library.groupedNote': 'موضوع اور زمرے کے حساب سے ترتیب دی گئی۔ کوئی فولڈر کھولنے کی ضرورت نہیں۔',
     'library.totalInLibrary': 'لائبریری میں {n} کتابیں',
     'library.searchPlaceholder': 'کتابیں تلاش کریں: “Sufi” ، “Tafsir” ، “Ibn Kathir” یا “notes” آزمائیں…',
@@ -1465,6 +1472,7 @@ export const I18N_LIBRARY: Record<SiteLanguage, Record<string, string>> = {
     'wafq.copied': 'نقل ہو گیا!',
     'paid.badge': 'پیڈ',
     'paid.lockBadge': 'پیڈ کتاب، چابی چاہیے',
+    'paid.priceLine': 'پیڈ کتاب — {price} · چابی سے کھولیں',
     'paid.freeTitle': 'اس کتاب کے لیے چابی چاہیے',
     'paid.freeText': 'فالوورز کو چابی براڈکاسٹ چینل سے ملتی ہے۔ یا نیچے اس کتاب کی چابی لکھیں۔ ایک چابی صرف اسی کتاب کو کھولتی ہے، اسی ڈیوائس پر۔',
     'paid.keyTitle': 'اس کتاب کے لیے اپنی چابی لکھیں',

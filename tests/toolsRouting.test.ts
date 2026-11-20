@@ -36,7 +36,7 @@ const SHELL_TOOLS = [
   { id: 'shart', route: 'tools-shart', url: '/tools/shart', view: 'ShartView' },
   { id: 'sirr-al-jalil', route: 'tools-sirr-al-jalil', url: '/tools/sirr-al-jalil', view: 'SirrJalilView' },
   { id: 'durus', route: 'tools-durus', url: '/tools/durus', view: 'DurusView' },
-  { id: 'index', route: 'tools-index', url: '/tools/index', view: 'IndexView' },
+  { id: 'index', route: 'tools-index', url: '/tools/all', view: 'IndexView' },
   { id: 'library', route: 'tools-library', url: '/tools/library', view: 'ToolsLibraryView' },
   { id: 'atlas', route: 'tools-atlas', url: '/tools/atlas', view: 'AtlasView' },
   { id: 'qalam', route: 'tools-qalam', url: '/tools/qalam', view: 'QalamView' },
@@ -100,10 +100,16 @@ describe('Phase 2 + 3 tools are in the router and App', () => {
     }
   });
 
+  it("the legacy '/tools/index' URL still parses to the tools index (in-app alias)", () => {
+    const router = readSource('src/router/router.ts');
+    expect(router).toContain("pathname === '/tools/all' || pathname === '/tools/index'");
+  });
+
   it('App.tsx imports and renders every new view', () => {
     const app = readSource('src/App.tsx');
     for (const tool of ALL_WIRED_TOOLS) {
-      expect(app).toContain(`import { ${tool.view} }`);
+      // Lazy-loaded since the performance pass: const X = lazy(() => import(...))
+      expect(app).toContain(`const ${tool.view} = lazy(`);
       expect(app).toContain(`case '${tool.route}':`);
       expect(app).toContain(`<${tool.view} />`);
     }
@@ -148,7 +154,8 @@ describe('The four Tier A tools (Fawatih, Sawaqit, Shields, About) are wired', (
   it('App.tsx imports and renders every new view', () => {
     const app = readSource('src/App.tsx');
     for (const tool of FOUR_TOOLS) {
-      expect(app).toContain(`import { ${tool.view} }`);
+      // Lazy-loaded since the performance pass: const X = lazy(() => import(...))
+      expect(app).toContain(`const ${tool.view} = lazy(`);
       expect(app).toContain(`case '${tool.route}':`);
       expect(app).toContain(`<${tool.view} />`);
     }
@@ -195,7 +202,8 @@ describe('Stage 3A topic routes are wired', () => {
   it('App.tsx imports and renders every topic view', () => {
     const app = readSource('src/App.tsx');
     for (const topic of TOPIC_ROUTES) {
-      expect(app).toContain(`import { ${topic.view} }`);
+      // Lazy-loaded since the performance pass: const X = lazy(() => import(...))
+      expect(app).toContain(`const ${topic.view} = lazy(`);
       expect(app).toContain(`case '${topic.route}':`);
       expect(app).toContain(`<${topic.view} />`);
     }
@@ -241,7 +249,8 @@ describe('Stage 3B topic routes are wired', () => {
   it('App.tsx imports and renders every new view', () => {
     const app = readSource('src/App.tsx');
     for (const topic of STAGE_3B_ROUTES) {
-      expect(app).toContain(`import { ${topic.view} }`);
+      // Lazy-loaded since the performance pass: const X = lazy(() => import(...))
+      expect(app).toContain(`const ${topic.view} = lazy(`);
       expect(app).toContain(`case '${topic.route}':`);
       expect(app).toContain(`<${topic.view} />`);
     }

@@ -10,95 +10,90 @@ import { api } from './services/api';
 import { siteConfig } from './config/siteConfig';
 import { shouldShowGate } from './utils/gateDecision';
 
-// Import Views
+// Import Views — Home stays eager (first paint). Every other view is
+// lazy-loaded: the main bundle used to be ~3 MB because all 60+ views
+// (Topics, study tools, Journeys, Timeline, Shelf, Finder, Wafq, Amals,
+// Library, Book details, Favorites, Info) shipped in the first load.
+// Each lazy view downloads only when the reader opens it, so the home
+// page loads light on slow phones. Named exports are wrapped so
+// React.lazy gets a default export.
 import { HomeView } from './views/HomeView';
-import { LibraryView } from './views/LibraryView';
-import { BookDetailsView } from './views/BookDetailsView';
-import { FavoritesView } from './views/FavoritesView';
-import { InfoView } from './views/InfoView';
-import { JourneysView } from './views/JourneysView';
-import { TimelineView } from './views/TimelineView';
-import { ShelfView } from './views/ShelfView';
-import { BookFinderView } from './views/BookFinderView';
-import { WafqView } from './views/WafqView';
-import { AmalsView } from './views/AmalsView';
 
-// Topics: open to everyone, no gate. The hub, every topic page, the
-// Questions part, and the Guides page all load without a follow or a
-// key. The library, the books, and the study tools stay behind the
-// gate exactly as before. Only Topics is public.
-import { TopicsHubView } from './views/topics/TopicsHubView';
-import { TopicRetreatView } from './views/topics/TopicRetreatView';
-import { TopicMalakutView } from './views/topics/TopicMalakutView';
-import { TopicRuhView } from './views/topics/TopicRuhView';
-import { TopicAlifView } from './views/topics/TopicAlifView';
-import { TopicSealView } from './views/topics/TopicSealView';
-import { TopicDreamsView } from './views/topics/TopicDreamsView';
-import { TopicSabaView } from './views/topics/TopicSabaView';
-import { TopicKhidrView } from './views/topics/TopicKhidrView';
-import { TopicRijalView } from './views/topics/TopicRijalView';
-import { TopicUwaisiView } from './views/topics/TopicUwaisiView';
-import { TopicRenewalView } from './views/topics/TopicRenewalView';
-import { TopicDrinksView } from './views/topics/TopicDrinksView';
-import { TopicBasmalahView } from './views/topics/TopicBasmalahView';
-import { TopicKursiView } from './views/topics/TopicKursiView';
-import { TopicGreatestNameView } from './views/topics/TopicGreatestNameView';
-import { TopicFawatihView } from './views/topics/TopicFawatihView';
-import { TopicTawaqifView } from './views/topics/TopicTawaqifView';
-import { TopicKhayasView } from './views/topics/TopicKhayasView';
-import { TopicZayirjahView } from './views/topics/TopicZayirjahView';
-import { TopicIhatahView } from './views/topics/TopicIhatahView';
-import { TopicSimiyaView } from './views/topics/TopicSimiyaView';
-import { TopicKhalawatView } from './views/topics/TopicKhalawatView';
-import { QuestionsView } from './views/topics/QuestionsView';
-import { GuidesView } from './views/topics/GuidesView';
+const LibraryView = lazy(() => import('./views/LibraryView').then((m) => ({ default: m.LibraryView })));
+const BookDetailsView = lazy(() => import('./views/BookDetailsView').then((m) => ({ default: m.BookDetailsView })));
+const FavoritesView = lazy(() => import('./views/FavoritesView').then((m) => ({ default: m.FavoritesView })));
+const InfoView = lazy(() => import('./views/InfoView').then((m) => ({ default: m.InfoView })));
+const JourneysView = lazy(() => import('./views/JourneysView').then((m) => ({ default: m.JourneysView })));
+const TimelineView = lazy(() => import('./views/TimelineView').then((m) => ({ default: m.TimelineView })));
+const ShelfView = lazy(() => import('./views/ShelfView').then((m) => ({ default: m.ShelfView })));
+const BookFinderView = lazy(() => import('./views/BookFinderView').then((m) => ({ default: m.BookFinderView })));
+const WafqView = lazy(() => import('./views/WafqView').then((m) => ({ default: m.WafqView })));
+const AmalsView = lazy(() => import('./views/AmalsView').then((m) => ({ default: m.AmalsView })));
+const TopicsHubView = lazy(() => import('./views/topics/TopicsHubView').then((m) => ({ default: m.TopicsHubView })));
+const TopicRetreatView = lazy(() => import('./views/topics/TopicRetreatView').then((m) => ({ default: m.TopicRetreatView })));
+const TopicMalakutView = lazy(() => import('./views/topics/TopicMalakutView').then((m) => ({ default: m.TopicMalakutView })));
+const TopicRuhView = lazy(() => import('./views/topics/TopicRuhView').then((m) => ({ default: m.TopicRuhView })));
+const TopicAlifView = lazy(() => import('./views/topics/TopicAlifView').then((m) => ({ default: m.TopicAlifView })));
+const TopicSealView = lazy(() => import('./views/topics/TopicSealView').then((m) => ({ default: m.TopicSealView })));
+const TopicDreamsView = lazy(() => import('./views/topics/TopicDreamsView').then((m) => ({ default: m.TopicDreamsView })));
+const TopicSabaView = lazy(() => import('./views/topics/TopicSabaView').then((m) => ({ default: m.TopicSabaView })));
+const TopicKhidrView = lazy(() => import('./views/topics/TopicKhidrView').then((m) => ({ default: m.TopicKhidrView })));
+const TopicRijalView = lazy(() => import('./views/topics/TopicRijalView').then((m) => ({ default: m.TopicRijalView })));
+const TopicUwaisiView = lazy(() => import('./views/topics/TopicUwaisiView').then((m) => ({ default: m.TopicUwaisiView })));
+const TopicRenewalView = lazy(() => import('./views/topics/TopicRenewalView').then((m) => ({ default: m.TopicRenewalView })));
+const TopicDrinksView = lazy(() => import('./views/topics/TopicDrinksView').then((m) => ({ default: m.TopicDrinksView })));
+const TopicBasmalahView = lazy(() => import('./views/topics/TopicBasmalahView').then((m) => ({ default: m.TopicBasmalahView })));
+const TopicKursiView = lazy(() => import('./views/topics/TopicKursiView').then((m) => ({ default: m.TopicKursiView })));
+const TopicGreatestNameView = lazy(() => import('./views/topics/TopicGreatestNameView').then((m) => ({ default: m.TopicGreatestNameView })));
+const TopicFawatihView = lazy(() => import('./views/topics/TopicFawatihView').then((m) => ({ default: m.TopicFawatihView })));
+const TopicTawaqifView = lazy(() => import('./views/topics/TopicTawaqifView').then((m) => ({ default: m.TopicTawaqifView })));
+const TopicKhayasView = lazy(() => import('./views/topics/TopicKhayasView').then((m) => ({ default: m.TopicKhayasView })));
+const TopicZayirjahView = lazy(() => import('./views/topics/TopicZayirjahView').then((m) => ({ default: m.TopicZayirjahView })));
+const TopicIhatahView = lazy(() => import('./views/topics/TopicIhatahView').then((m) => ({ default: m.TopicIhatahView })));
+const TopicSimiyaView = lazy(() => import('./views/topics/TopicSimiyaView').then((m) => ({ default: m.TopicSimiyaView })));
+const TopicKhalawatView = lazy(() => import('./views/topics/TopicKhalawatView').then((m) => ({ default: m.TopicKhalawatView })));
+const QuestionsView = lazy(() => import('./views/topics/QuestionsView').then((m) => ({ default: m.QuestionsView })));
+const GuidesView = lazy(() => import('./views/topics/GuidesView').then((m) => ({ default: m.GuidesView })));
+const ToolsHubView = lazy(() => import('./views/tools/ToolsHubView').then((m) => ({ default: m.ToolsHubView })));
+const HurufView = lazy(() => import('./views/tools/HurufView').then((m) => ({ default: m.HurufView })));
+const AsmaView = lazy(() => import('./views/tools/AsmaView').then((m) => ({ default: m.AsmaView })));
+const BastView = lazy(() => import('./views/tools/BastView').then((m) => ({ default: m.BastView })));
+const FawatihView = lazy(() => import('./views/tools/FawatihView').then((m) => ({ default: m.FawatihView })));
+const SawaqitView = lazy(() => import('./views/tools/SawaqitView').then((m) => ({ default: m.SawaqitView })));
+const ShieldsView = lazy(() => import('./views/tools/ShieldsView').then((m) => ({ default: m.ShieldsView })));
+const JournalView = lazy(() => import('./views/tools/JournalView').then((m) => ({ default: m.JournalView })));
+const WirdView = lazy(() => import('./views/tools/WirdView').then((m) => ({ default: m.WirdView })));
+const GrimoireView = lazy(() => import('./views/tools/GrimoireView').then((m) => ({ default: m.GrimoireView })));
+const MethodView = lazy(() => import('./views/tools/MethodView').then((m) => ({ default: m.MethodView })));
+const AboutView = lazy(() => import('./views/tools/AboutView').then((m) => ({ default: m.AboutView })));
+const TodayView = lazy(() => import('./views/tools/TodayView').then((m) => ({ default: m.TodayView })));
+const HoursView = lazy(() => import('./views/tools/HoursView').then((m) => ({ default: m.HoursView })));
+const MoonView = lazy(() => import('./views/tools/MoonView').then((m) => ({ default: m.MoonView })));
+const MansionsView = lazy(() => import('./views/tools/MansionsView').then((m) => ({ default: m.MansionsView })));
+const FalakView = lazy(() => import('./views/tools/FalakView').then((m) => ({ default: m.FalakView })));
+const MajlisView = lazy(() => import('./views/tools/MajlisView').then((m) => ({ default: m.MajlisView })));
+const ForgeView = lazy(() => import('./views/tools/ForgeView').then((m) => ({ default: m.ForgeView })));
+const QawaidView = lazy(() => import('./views/tools/QawaidView').then((m) => ({ default: m.QawaidView })));
+const KitabView = lazy(() => import('./views/tools/KitabView').then((m) => ({ default: m.KitabView })));
+const TalasimView = lazy(() => import('./views/tools/TalasimView').then((m) => ({ default: m.TalasimView })));
+const AshkalView = lazy(() => import('./views/tools/AshkalView').then((m) => ({ default: m.AshkalView })));
+const FigureForgeView = lazy(() => import('./views/tools/FigureForgeView').then((m) => ({ default: m.FigureForgeView })));
+const TalismStudioView = lazy(() => import('./views/tools/TalismStudioView').then((m) => ({ default: m.TalismStudioView })));
+const HaqaiqView = lazy(() => import('./views/tools/HaqaiqView').then((m) => ({ default: m.HaqaiqView })));
+const ShartView = lazy(() => import('./views/tools/ShartView').then((m) => ({ default: m.ShartView })));
+const SirrJalilView = lazy(() => import('./views/tools/SirrJalilView').then((m) => ({ default: m.SirrJalilView })));
+const DurusView = lazy(() => import('./views/tools/DurusView').then((m) => ({ default: m.DurusView })));
+const IndexView = lazy(() => import('./views/tools/IndexView').then((m) => ({ default: m.IndexView })));
+const ToolsLibraryView = lazy(() => import('./views/tools/ToolsLibraryView').then((m) => ({ default: m.ToolsLibraryView })));
+const AtlasView = lazy(() => import('./views/tools/AtlasView').then((m) => ({ default: m.AtlasView })));
+const QalamView = lazy(() => import('./views/tools/QalamView').then((m) => ({ default: m.QalamView })));
+const KhatamView = lazy(() => import('./views/tools/KhatamView').then((m) => ({ default: m.KhatamView })));
+const PlateView = lazy(() => import('./views/tools/PlateView').then((m) => ({ default: m.PlateView })));
+const WorksView = lazy(() => import('./views/tools/WorksView').then((m) => ({ default: m.WorksView })));
+const BakhurAdadView = lazy(() => import('./views/tools/BakhurAdadView').then((m) => ({ default: m.BakhurAdadView })));
+const ShurutView = lazy(() => import('./views/tools/ShurutView').then((m) => ({ default: m.ShurutView })));
+const GlossaryView = lazy(() => import('./views/tools/GlossaryView').then((m) => ({ default: m.GlossaryView })));
 
-// Study tools (Phase 1): calculators + device-only tools, behind the gate.
-import { ToolsHubView } from './views/tools/ToolsHubView';
-import { HurufView } from './views/tools/HurufView';
-import { AsmaView } from './views/tools/AsmaView';
-import { BastView } from './views/tools/BastView';
-import { FawatihView } from './views/tools/FawatihView';
-import { SawaqitView } from './views/tools/SawaqitView';
-import { ShieldsView } from './views/tools/ShieldsView';
-import { JournalView } from './views/tools/JournalView';
-import { WirdView } from './views/tools/WirdView';
-import { GrimoireView } from './views/tools/GrimoireView';
-import { MethodView } from './views/tools/MethodView';
-import { AboutView } from './views/tools/AboutView';
-
-// Study tools (Phase 2): time and sky facts, behind the gate.
-import { TodayView } from './views/tools/TodayView';
-import { HoursView } from './views/tools/HoursView';
-import { MoonView } from './views/tools/MoonView';
-import { MansionsView } from './views/tools/MansionsView';
-import { FalakView } from './views/tools/FalakView';
-import { MajlisView } from './views/tools/MajlisView';
-
-// Study tools (Phase 3): magic squares with a separate validator.
-import { ForgeView } from './views/tools/ForgeView';
-import { QawaidView } from './views/tools/QawaidView';
-
-// Study tools (Phase 4): Tier B shells — templates and empty states only.
-import { KitabView } from './views/tools/KitabView';
-import { TalasimView } from './views/tools/TalasimView';
-import { AshkalView } from './views/tools/AshkalView';
-import { FigureForgeView } from './views/tools/FigureForgeView';
-import { TalismStudioView } from './views/tools/TalismStudioView';
-import { HaqaiqView } from './views/tools/HaqaiqView';
-import { ShartView } from './views/tools/ShartView';
-import { SirrJalilView } from './views/tools/SirrJalilView';
-import { DurusView } from './views/tools/DurusView';
-import { IndexView } from './views/tools/IndexView';
-import { ToolsLibraryView } from './views/tools/ToolsLibraryView';
-import { AtlasView } from './views/tools/AtlasView';
-import { QalamView } from './views/tools/QalamView';
-import { KhatamView } from './views/tools/KhatamView';
-import { PlateView } from './views/tools/PlateView';
-import { WorksView } from './views/tools/WorksView';
-import { BakhurAdadView } from './views/tools/BakhurAdadView';
-import { ShurutView } from './views/tools/ShurutView';
-import { GlossaryView } from './views/tools/GlossaryView';
 
 // Heavy views are lazy-loaded so the first paint stays light on mobile:
 // the PDF reader (pdf.js) and the admin dashboard only download when opened.
@@ -398,7 +393,7 @@ export default function App() {
             : 'px-4 sm:px-6 lg:px-8 py-6 sm:py-8'
         }`}>
           <ErrorBoundary>
-            {renderView()}
+            <Suspense fallback={<ViewLoading />}>{renderView()}</Suspense>
           </ErrorBoundary>
         </main>
 

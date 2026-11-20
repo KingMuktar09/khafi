@@ -37,6 +37,7 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'home.hero.browse': 'Browse the Library',
     'home.hero.follow': 'Follow @ghayb.chronicles',
     'home.hero.statCategories': 'Categories',
+    'home.hero.statBookTopics': 'Book topics',
     'home.hero.searchPlaceholder': 'Search books: try “Sufi”, “Tafsir”, “Ibn Kathir” or “notes”…',
     'home.hero.searchAria': 'Search books by title, author or topic',
     'home.hero.searchButton': 'Search',
@@ -216,6 +217,28 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'info.connectText': 'Questions, or a book to suggest? Message us here:',
     'info.telegramToBeAdded': 'To be added',
     'info.explore': 'Explore Library',
+    'info.whyTitle': 'Why we made this',
+    'info.why1':
+      'We made this library because we wanted to share this knowledge with our followers, and with anyone who wants to know. A lot of this knowledge is hidden in old books that are hard to find. We wanted one simple place where anyone can come, read, and learn, for free.',
+    'info.why2':
+      'Ghayb Chronicles is about Islamic esoteric knowledge, Sufism and hidden knowledge, told through art. The library is the books behind those stories, with the source named in every entry, so you can check it yourself.',
+    'info.howTitle': 'How it works',
+    'info.how1':
+      'Follow @ghayb.chronicles on Instagram, then tap unlock. That opens the library on your device. Most books are free after that.',
+    'info.how2':
+      'Books are grouped by category and topic, not by folders. Use the search bar or the topic chips to find a book, then tap its card to open it.',
+    'info.how3':
+      'Journeys walk you through books in order, step by step. My Shelf saves the books you want to read. The tools — Magic Square Maker, Amals, Book Finder and more — are in the Tools section.',
+    'info.how4':
+      'Some books are paid, and they open only with a key. Where a book has a price, it is shown on the book — pay it by UPI, get your key from Ghayb Chronicles, and enter it on the book page. One key opens one book, and the admin sets how many times a key can be used.',
+    'info.paidTitle': 'Why some books are paid',
+    'info.paid1':
+      'Some books are paid because when people pay for a book, it is worth something to them, so they value it and read it properly. If it is free, many people do not read it properly.',
+    'info.paid2':
+      'Most books in this library are free. Only a few special books, like the al-Buni books, are paid. Where a book has a price, it is shown on the book, and the key is the way in. Some paid books show no price — they still need their key.',
+    'info.followTitle': 'Follow Ghayb Chronicles',
+    'info.follow1':
+      'New books, topics and reels come on Instagram @ghayb.chronicles. Follow there to enter the library and to hear about new books first.',
 
     // ---- Journeys (shown on Home; step notes live on the Journeys page) ----
     'specials.journey.seekers-path.title': 'The Seeker\'s Path',
@@ -344,6 +367,7 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'home.hero.browse': 'Library dekhein',
     'home.hero.follow': '@ghayb.chronicles ko follow karein',
     'home.hero.statCategories': 'Categories',
+    'home.hero.statBookTopics': 'Kitabon ke vishay',
     'home.hero.searchPlaceholder': 'Kitabein dhoondhein: “Sufi”, “Tafsir”, “Ibn Kathir” ya “notes” try karein…',
     'home.hero.searchAria': 'Kitab ka naam, lekhak ya topic se dhoondhein',
     'home.hero.searchButton': 'Dhoondhein',
@@ -523,6 +547,28 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'info.connectText': 'Koi sawaal hai, ya koi kitab sujhani hai? Yahan message karein:',
     'info.telegramToBeAdded': 'Jald aayega',
     'info.explore': 'Library ghumein',
+    'info.whyTitle': 'Humne yeh kyun banaya',
+    'info.why1':
+      'Humne yeh library isliye banayi, taaki yeh ilm apne followers ke saath share kar sakein, aur un sabke saath jo jaanna chahte hain. Bahut saara ilm purani kitabon mein chhupa hai, jo milna mushkil hai. Hum chahte the ek simple si jagah ho, jahan koi bhi aaye, padhe aur seekhe, free mein.',
+    'info.why2':
+      'Ghayb Chronicles Islami esoteric knowledge, Sufism aur chhupe hue ilm ke baare mein hai, art ke saath. Library un kahaniyon ke peeche ki kitabein hain, har entry mein source likha hai, taaki aap khud check kar sakein.',
+    'info.howTitle': 'Yeh kaise kaam karta hai',
+    'info.how1':
+      'Instagram par @ghayb.chronicles ko follow karo, phir unlock dabao. Isse library aapke device par khul jayegi. Zyada tar kitabein uske baad free hain.',
+    'info.how2':
+      'Kitabein category aur topic ke hisaab se hain, folder ke hisaab se nahi. Search bar ya topic chips se kitab dhoondho, phir card par tap karke kholo.',
+    'info.how3':
+      'Journeys aapko kitabein order mein padhati hain, kadam dar kadam. My Shelf mein aap apni kitabein save kar sakte ho. Tools — Magic Square Maker, Amals, Book Finder aur bhi — Tools section mein hain.',
+    'info.how4':
+      'Kuch kitabein paid hain, woh sirf key se khulti hain. Agar kitab par price likhi hai to use UPI se pay karo, key Ghayb Chronicles se lo, aur kitab ke page par daalo. Ek key sirf ek kitab kholti hai, aur admin tay karta hai key kitni baar chalegi.',
+    'info.paidTitle': 'Kuch kitabein paid kyun hain',
+    'info.paid1':
+      'Kuch kitabein paid isliye hain, kyunki jab log kitab ke liye pay karte hain, to woh unke liye keemti hoti hai, to woh use value dete hain aur theek se padhte hain. Agar free ho, to bahut se log use theek se padhte nahi.',
+    'info.paid2':
+      'Library ki zyada tar kitabein free hain. Sirf kuch khaas kitabein, jaise al-Buni ki kitabein, paid hain. Jis kitab ki price hai, woh kitab par likhi hai, aur key hi andar jaane ka raasta hai.',
+    'info.followTitle': 'Ghayb Chronicles ko follow karo',
+    'info.follow1':
+      'Nayi kitabein, topics aur reels Instagram par @ghayb.chronicles par aati hain. Wahan follow karo, library mein enter karo, aur nayi kitabon ki khabar sabse pehle pao.',
 
     // ---- Journeys ----
     'specials.journey.seekers-path.title': 'Talib ka Raasta',
@@ -651,6 +697,7 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'home.hero.browse': 'লাইব্রেরি দেখুন',
     'home.hero.follow': '@ghayb.chronicles কে ফলো করুন',
     'home.hero.statCategories': 'ক্যাটাগরি',
+    'home.hero.statBookTopics': 'বইয়ের বিষয়',
     'home.hero.searchPlaceholder': 'বই খুঁজুন: “Sufi”, “Tafsir”, “Ibn Kathir” বা “notes” লিখে দেখুন…',
     'home.hero.searchAria': 'বইয়ের নাম, লেখক বা টপিক দিয়ে খুঁজুন',
     'home.hero.searchButton': 'খুঁজুন',
@@ -830,6 +877,28 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'info.connectText': 'কোনো প্রশ্ন আছে, বা কোনো বইয়ের পরামর্শ দিতে চান? এখানে মেসেজ করুন:',
     'info.telegramToBeAdded': 'শীঘ্রই যোগ করা হবে',
     'info.explore': 'লাইব্রেরি ঘুরে দেখুন',
+    'info.whyTitle': 'আমরা এটা কেন বানালাম',
+    'info.why1':
+      'আমরা এই লাইব্রেরি বানিয়েছি, যাতে এই জ্ঞান আমাদের ফলোয়ারদের সঙ্গে আর যারা জানতে চায় সবার সঙ্গে ভাগ করে নিতে পারি। অনেক জ্ঞান পুরনো বইয়ে লুকিয়ে আছে, যা পাওয়া কঠিন। আমরা চেয়েছি একটা সহজ জায়গা, যেখানে যে কেউ এসে পড়তে আর শিখতে পারে, ফ্রি।',
+    'info.why2':
+      'Ghayb Chronicles ইসলামি গোপন জ্ঞান, সুফিবাদ আর লুকানো জ্ঞান নিয়ে, শিল্পের মাধ্যমে। লাইব্রেরি হল সেই গল্পগুলোর পেছনের বইগুলো, প্রতিটি লেখায় উৎস দেওয়া আছে, যাতে আপনি নিজে যাচাই করতে পারেন।',
+    'info.howTitle': 'এটা কীভাবে কাজ করে',
+    'info.how1':
+      'Instagram-এ @ghayb.chronicles-কে ফলো করুন, তারপর আনলক চাপুন। তাতে আপনার ডিভাইসে লাইব্রেরি খুলে যাবে। বেশিরভাগ বই তারপর ফ্রি।',
+    'info.how2':
+      'বইগুলো ক্যাটাগরি আর বিষয় অনুযায়ী সাজানো, ফোল্ডার অনুযায়ী নয়। সার্চ বার বা টপিক চিপ দিয়ে বই খুঁজুন, তারপর কার্ডে ট্যাপ করে খুলুন।',
+    'info.how3':
+      'Journeys বইগুলো ধাপে ধাপে ক্রমানুসারে পড়ায়। My Shelf-এ আপনি পড়তে চাওয়া বই সেভ করতে পারেন। Tools — Magic Square Maker, Amals, Book Finder আরও — Tools বিভাগে আছে।',
+    'info.how4':
+      'কিছু বই পেইড, সেগুলো শুধু চাবি দিয়ে খোলে। বইয়ে দাম লেখা থাকলে সেটা UPI দিয়ে দিন, চাবি Ghayb Chronicles থেকে নিন, আর বইয়ের পাতায় দিন। একটা চাবি একটা বই খোলে, আর অ্যাডমিন ঠিক করে চাবি কতবার চলবে।',
+    'info.paidTitle': 'কিছু বই পেইড কেন',
+    'info.paid1':
+      'কিছু বই পেইড, কারণ মানুষ যখন বইয়ের জন্য টাকা দেয়, তখন সেটা তাদের কাছে মূল্যবান হয়, তাই তারা সেটাকে গুরুত্ব দেয় আর ঠিকমতো পড়ে। ফ্রি হলে অনেকেই ঠিকমতো পড়ে না।',
+    'info.paid2':
+      'লাইব্রেরির বেশিরভাগ বই ফ্রি। শুধু কয়েকটি বিশেষ বই, যেমন al-Buni-র বই, পেইড। যে বইয়ের দাম আছে, সেটা বইয়ে লেখা আছে, আর চাবিই ভেতরে যাওয়ার পথ।',
+    'info.followTitle': 'Ghayb Chronicles-কে ফলো করুন',
+    'info.follow1':
+      'নতুন বই, টপিক আর রিল Instagram-এ @ghayb.chronicles-এ আসে। সেখানে ফলো করুন, লাইব্রেরিতে ঢুকুন, আর নতুন বইয়ের খবর সবার আগে পান।',
 
     // ---- Journeys ----
     'specials.journey.seekers-path.title': 'সন্ধানকারীর পথ',
@@ -958,6 +1027,7 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'home.hero.browse': 'لائبریری دیکھیں',
     'home.hero.follow': '@ghayb.chronicles کو فالو کریں',
     'home.hero.statCategories': 'زمرے',
+    'home.hero.statBookTopics': 'کتابوں کے موضوعات',
     'home.hero.searchPlaceholder': 'کتابیں تلاش کریں: “Sufi” ، “Tafsir” ، “Ibn Kathir” یا “notes” آزمائیں…',
     'home.hero.searchAria': 'کتابوں کو عنوان، مصنف یا موضوع سے تلاش کریں',
     'home.hero.searchButton': 'تلاش کریں',
@@ -1114,6 +1184,28 @@ export const I18N_HOME: Record<SiteLanguage, Record<string, string>> = {
     'info.connectText': 'کوئی سوال ہے، یا کوئی کتاب بتانی ہے؟ یہاں پیغام بھیجیں:',
     'info.telegramToBeAdded': 'جلد شامل ہوگا',
     'info.explore': 'لائبریری دیکھیں',
+    'info.whyTitle': 'ہم نے یہ کیوں بنایا',
+    'info.why1':
+      'ہم نے یہ لائبریری اس لیے بنائی تاکہ یہ علم اپنے فالوورز کے ساتھ اور ان سب کے ساتھ بانٹ سکیں جو جاننا چاہتے ہیں۔ بہت سا علم پرانی کتابوں میں چھپا ہے جو ملنا مشکل ہے۔ ہم چاہتے تھے ایک سادہ جگہ ہو جہاں کوئی بھی آئے، پڑھے اور سیکھے، مفت میں۔',
+    'info.why2':
+      'Ghayb Chronicles اسلامی باطنی علم، تصوف اور چھپے ہوئے علم کے بارے میں ہے، فن کے ذریعے۔ لائبریری ان کہانیوں کے پیچھے کی کتابیں ہیں، ہر کتاب کے ساتھ اس کا ماخذ لکھا ہے تاکہ آپ خود جانچ سکیں۔',
+    'info.howTitle': 'یہ کیسے کام کرتا ہے',
+    'info.how1':
+      'Instagram پر @ghayb.chronicles کو فالو کریں، پھر انلاک دبائیں۔ اس سے لائبریری آپ کے آلے پر کھل جائے گی۔ زیادہ تر کتابیں اس کے بعد مفت ہیں۔',
+    'info.how2':
+      'کتابیں کیٹیگری اور موضوع کے حساب سے ہیں، فولڈر کے حساب سے نہیں۔ سرچ بار یا ٹاپک چپس سے کتاب ڈھونڈیں، پھر کارڈ پر ٹیپ کر کے کھولیں۔',
+    'info.how3':
+      'Journeys کتابیں ترتیب سے قدم بہ قدم پڑھاتے ہیں۔ My Shelf میں آپ اپنی کتابیں محفوظ کر سکتے ہیں۔ Tools — Magic Square Maker، Amals، Book Finder اور بھی — Tools والے حصے میں ہیں۔',
+    'info.how4':
+      'کچھ کتابیں پیڈ ہیں، وہ صرف چابی سے کھلتی ہیں۔ اگر کتاب پر قیمت لکھی ہے تو اسے UPI سے ادا کریں، چابی Ghayb Chronicles سے لیں، اور کتاب والے صفحے پر ڈالیں۔ ایک چابی صرف ایک کتاب کھولتی ہے، اور ایڈمن طے کرتا ہے چابی کتنی بار چلے گی۔',
+    'info.paidTitle': 'کچھ کتابیں پیڈ کیوں ہیں',
+    'info.paid1':
+      'کچھ کتابیں پیڈ اس لیے ہیں، کیونکہ جب لوگ کتاب کے لیے پیسے دیتے ہیں تو وہ ان کے لیے قیمتی ہوتی ہے، تو وہ اس کی قدر کرتے ہیں اور اسے اچھی طرح پڑھتے ہیں۔ اگر مفت ہو تو بہت سے لوگ اسے اچھی طرح نہیں پڑھتے۔',
+    'info.paid2':
+      'لائبریری کی زیادہ تر کتابیں مفت ہیں۔ صرف کچھ خاص کتابیں، جیسے البونی کی کتابیں، پیڈ ہیں۔ جس کتاب کی قیمت ہے وہ کتاب پر لکھی ہے، اور چابی ہی اندر جانے کا راستہ ہے۔',
+    'info.followTitle': 'Ghayb Chronicles کو فالو کریں',
+    'info.follow1':
+      'نئی کتابیں، موضوعات اور ریلز Instagram پر @ghayb.chronicles پر آتی ہیں۔ وہاں فالو کریں، لائبریری میں داخل ہوں، اور نئی کتابوں کی خبر سب سے پہلے پائیں۔',
 
     // ---- Journeys ----
     'specials.journey.seekers-path.title': 'طالب کا راستہ',

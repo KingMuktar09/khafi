@@ -566,7 +566,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           </div>
         </div>
 
-        {/* Row 3b: Topic groups — 6 big topics instead of 36 folder names */}
+        {/* Row 3b: Topic groups — 6 big topics instead of 27 folder names */}
         {folderGroupCounts.length > 0 && (
           <div className="pt-2 border-t border-[var(--border-subtle)]">
             <p className="text-[11px] text-[var(--text-muted)] mb-2">Pick a topic to narrow the folders:</p>

@@ -221,7 +221,7 @@ class Router {
       case 'tools-durus':
         return '/tools/durus';
       case 'tools-index':
-        return '/tools/index';
+        return '/tools/all';
       case 'tools-library':
         return '/tools/library';
       case 'tools-atlas':
@@ -247,6 +247,13 @@ class Router {
 
   private parseUrl(pathname: string, search: string): RouteState {
     const params = new URLSearchParams(search);
+
+    // Normalise trailing slashes: Cloudflare Pages 308-redirects
+    // "/tools/index" to "/tools/", and a URL like "/tools/" should
+    // render the tools hub, not fall through to Home.
+    if (pathname.length > 1 && pathname.endsWith('/')) {
+      pathname = pathname.replace(/\/+$/, '');
+    }
 
     if (pathname.startsWith('/book/')) {
       const bookId = pathname.replace('/book/', '').trim();
@@ -520,7 +527,11 @@ class Router {
       return { view: 'tools-durus' };
     }
 
-    if (pathname === '/tools/index') {
+    // Canonical path is /tools/all: Cloudflare Pages treats a path
+    // ending in "/index" as a directory index and 308-redirects it
+    // to /tools/, so a direct deep link to /tools/index never reaches
+    // the app on Pages. /tools/index is kept as a legacy in-app alias.
+    if (pathname === '/tools/all' || pathname === '/tools/index') {
       return { view: 'tools-index' };
     }
 

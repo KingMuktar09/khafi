@@ -71,7 +71,7 @@ export const HomeView: React.FC = () => {
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
             style={{ animationDelay: '0ms' }}
           />
-          <div className="flex items-center gap-2 animate-fade-up" style={{ animationDelay: '0ms' }}>
+          <div className="flex flex-wrap items-center gap-2 animate-fade-up" style={{ animationDelay: '0ms' }}>
             <span className="text-[11px] px-2.5 py-1 bg-[var(--gold-faint)] border border-[var(--gold)]/30 text-[var(--gold)] font-semibold rounded-full flex items-center gap-1.5 tracking-wide">
               <Compass className="w-3.5 h-3.5 text-[var(--gold)]" />
               <span>Ghayb Chronicles • {t('home.hero.eyebrow', lang)}</span>
@@ -125,7 +125,7 @@ export const HomeView: React.FC = () => {
             </div>
             <div>
               <p className="font-display font-semibold text-2xl text-[var(--text-main)]">{topics.length}</p>
-              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('nav.topics', lang)}</p>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('home.hero.statBookTopics', lang)}</p>
             </div>
             <div>
               <p className="font-display font-semibold text-2xl text-[var(--gold)]">{t('gate.free', lang)}</p>

@@ -16,7 +16,7 @@ export default {
         return assetRes;
       }
       // SPA Fallback: for client-side routing, serve index.html if request is for HTML navigation
-      if (request.method === "GET" && !url.pathname.includes(".")) {
+      if (request.method === "GET" && !/\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|woff2?|ttf|map|json|pdf|xml|txt)$/i.test(url.pathname)) {
         const indexRequest = new Request(new URL("/index.html", request.url), request);
         return env.ASSETS.fetch(indexRequest);
       }

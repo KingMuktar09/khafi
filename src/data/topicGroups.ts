@@ -4,10 +4,10 @@ import type { Book, Folder } from '../types';
 /**
  * The 6 big topics — display grouping ONLY.
  *
- * The catalog still has 36 folders and 11 categories with their own
+ * The catalog still has 27 folders and 11 categories with their own
  * ids and names (data/catalog.json is untouched). These groups exist
  * only so a normal person can pick what to read without digging
- * through 36 long folder names, duplicates and deep nesting. A group
+ * through 27 long folder names, duplicates and deep nesting. A group
  * is just a set of the library's real categories; a folder belongs to
  * the group that holds most of the books inside it.
  */

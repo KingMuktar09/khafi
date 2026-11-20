@@ -2087,7 +2087,7 @@ export const I18N_TOOLS: Record<SiteLanguage, Record<string, string>> = {
       'Talisman kya hai, uski shaklein aur lineage, aur use banane ki chaar sakht shartein.',
     'tools.data.toolTitle.ashkal': 'Ashkal (Roop)',
     'tools.data.toolBlurb.ashkal':
-      'Roop rooh ke liye bartan hain: Point aur Circle, Triangle aur Square, figure ke roop mein magic squares, aur aur bhi.',
+      'Roop rooh ke liye bartan hain: Point aur Circle, Triangle aur Square, figure ke roop mein magic squares, aur bhi.',
     'tools.data.toolTitle.figure-forge': 'Figure Forge',
     'tools.data.toolBlurb.figure-forge':
       'Figure kaise banaya jata hai: dhaat aur patthar, waqt, dhona, consecration, aur karigar.',
@@ -2281,7 +2281,7 @@ export const I18N_TOOLS: Record<SiteLanguage, Record<string, string>> = {
     'tools.data.alAsrarIntro.bakhur-adad':
       'Bakhur aur Adad ek catalogue hai, isse zyada kuch nahi. Yeh khushboo wali cheezon aur number ke kaam ka naam deta hai, har ek ka source aur page ke saath, taaki reader entries ko gin sake aur har ek ko dekh sake. Yeh kabhi quantity, taiyari ya recipe nahi deta.',
     'tools.data.alAsrarIntro.shurut':
-      'Shurut shartein hain. Sharton ke bahar kiya gaya kaam galat kiya gaya kaam hai. Kitabein jo shartein batati hain, maine jama ki hain, har ek apne source aur page ke saath, taaki reader unhe ek ek karke check kar sake.',
+      'Shurut shartein hain. Sharton ke bahar kiya gaya kaam galat kaam hai. Kitabein jo shartein batati hain, maine jama ki hain, har ek apne source aur page ke saath, taaki reader unhe ek ek karke check kar sake.',
     'tools.data.alAsrarIntro.glossary':
       'Glossary is section mein use hone wale lafzon ko seedhe shabdon mein samjhata hai. Yeh ab tak jama kiye gaye terms hain, har ek apne source aur page ke saath. Poori table abhi bhi notebook se jama ki ja rahi hai, aur yahan aur terms jude jayenge.',
 

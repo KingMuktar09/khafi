@@ -5,7 +5,8 @@ import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
 import { siteConfig } from '../config/siteConfig';
 import { BUNI_AMALS, BUNI_BOOK_TITLE, BUNI_CHAPTERS } from '../data/buniAmals';
-import { FRIEND_AMALS, FRIEND_AMALS_SOURCE, FRIEND_AMALS_WARNING } from '../data/friendAmals';
+import { FRIEND_AMALS, FRIEND_AMALS_SOURCE } from '../data/friendAmals';
+import { localizeAmal, localizeChapterTitle, FRIEND_WARNING } from '../data/amalsI18n';
 
 /**
  * Amals from the Books of Ahmad al-Buni — the main content of this page.
@@ -79,7 +80,7 @@ export const AmalsView: React.FC = () => {
           <section key={chapter} className="space-y-3">
             <div className="px-1 pt-2">
               <h2 className="font-display font-semibold text-xl sm:text-2xl text-[var(--text-main)]">
-                {chapter} — {title}
+                {localizeChapterTitle(chapter, title, lang)}
               </h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">
                 {tf(amals.length === 1 ? 'amals.countOne' : 'amals.countMany', lang, { n: amals.length })}
@@ -88,6 +89,7 @@ export const AmalsView: React.FC = () => {
             <div className="space-y-3">
               {amals.map((amal) => {
                 const isOpen = openBuniId === amal.id;
+                const text = localizeAmal(amal, lang);
                 return (
                   <div
                     key={amal.id}
@@ -104,7 +106,7 @@ export const AmalsView: React.FC = () => {
                       className="w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer min-h-[4rem]"
                     >
                       <span className="font-semibold text-base sm:text-lg text-[var(--text-main)] flex-1 min-w-0 leading-snug">
-                        {amal.title}
+                        {text.title}
                       </span>
                       <ChevronDown
                         className={`w-5 h-5 text-[var(--gold)] shrink-0 transition-transform duration-200 ${
@@ -116,7 +118,7 @@ export const AmalsView: React.FC = () => {
                       <div className="px-5 pb-5 pt-0 space-y-3 animate-fade-in">
                         <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                           <span className="text-[var(--gold)] font-semibold">{t('amals.whatFor', lang)}</span>
-                          {amal.purpose}
+                          {text.purpose}
                         </p>
                         {amal.words && (
                           <p className="text-sm text-[var(--text-main)] leading-relaxed bg-[var(--bg-main)] border border-[var(--gold)]/30 rounded-xl px-4 py-3">
@@ -126,12 +128,12 @@ export const AmalsView: React.FC = () => {
                         )}
                         <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                           <span className="text-[var(--gold)] font-semibold">{t('amals.howTo', lang)}</span>
-                          {amal.how}
+                          {text.how}
                         </p>
-                        {amal.note && (
+                        {text.note && (
                           <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-amber-500/5 border border-amber-500/30 rounded-xl px-4 py-3">
                             <span className="font-semibold text-[var(--text-main)]">{t('amals.note', lang)}</span>
-                            {amal.note}
+                            {text.note}
                           </p>
                         )}
                         <p className="text-xs text-[var(--text-muted)] leading-relaxed">
@@ -174,12 +176,13 @@ export const AmalsView: React.FC = () => {
         <div className="p-4 bg-amber-500/10 border-2 border-amber-500/60 rounded-xl flex items-start gap-3" role="alert">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <p className="text-sm font-semibold text-[var(--text-main)] leading-relaxed">
-            {FRIEND_AMALS_WARNING}
+            {FRIEND_WARNING[lang]}
           </p>
         </div>
         <div className="space-y-3">
           {FRIEND_AMALS.map((amal) => {
             const isOpen = openFriendId === amal.id;
+            const text = localizeAmal(amal, lang);
             return (
               <div
                 key={amal.id}
@@ -196,7 +199,7 @@ export const AmalsView: React.FC = () => {
                   className="w-full flex items-center gap-3 px-5 py-4 text-left cursor-pointer min-h-[4rem]"
                 >
                   <span className="font-semibold text-base sm:text-lg text-[var(--text-main)] flex-1 min-w-0 leading-snug">
-                    {amal.title}
+                    {text.title}
                   </span>
                   <ChevronDown
                     className={`w-5 h-5 text-[var(--gold)] shrink-0 transition-transform duration-200 ${
@@ -208,7 +211,7 @@ export const AmalsView: React.FC = () => {
                   <div className="px-5 pb-5 pt-0 space-y-3 animate-fade-in">
                     <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                       <span className="text-[var(--gold)] font-semibold">{t('amals.whatFor', lang)}</span>
-                      {amal.purpose}
+                      {text.purpose}
                     </p>
                     {amal.words && (
                       <p className="text-sm text-[var(--text-main)] leading-relaxed bg-[var(--bg-main)] border border-[var(--gold)]/30 rounded-xl px-4 py-3">
@@ -218,12 +221,12 @@ export const AmalsView: React.FC = () => {
                     )}
                     <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                       <span className="text-[var(--gold)] font-semibold">{t('amals.howTo', lang)}</span>
-                      {amal.how}
+                      {text.how}
                     </p>
-                    {amal.note && (
+                    {text.note && (
                       <p className="text-xs text-[var(--text-muted)] leading-relaxed bg-amber-500/5 border border-amber-500/30 rounded-xl px-4 py-3">
                         <span className="font-semibold text-[var(--text-main)]">{t('amals.note', lang)}</span>
-                        {amal.note}
+                        {text.note}
                       </p>
                     )}
                     <p className="text-xs text-[var(--text-muted)] leading-relaxed">

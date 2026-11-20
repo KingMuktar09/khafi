@@ -34,6 +34,7 @@ export const GuidesView: React.FC = () => {
       </div>
 
       <p className="ms-note-box">{tt('guides.studyNote', lang)}</p>
+      {lang === 'hi' && <p className="ms-note-box">{tt('guides.englishOnly', lang)}</p>}
 
       <nav className="ms-card space-y-2" aria-label={tt('guides.onThisPage', lang)}>
         <h2 className="ms-h2">{tt('guides.onThisPage', lang)}</h2>

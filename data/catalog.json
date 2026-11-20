@@ -4082,7 +4082,11 @@
       "updatedDate": "2026-11-18T14:36:12.000Z",
       "featured": false,
       "visible": true,
-      "sortOrder": 1
+      "sortOrder": 1,
+      "coverUrl": "/covers/manba-usul-al-hikma.jpg",
+      "price": 99,
+      "priceCurrency": "INR",
+      "paymentNote": "Pay Rs 99 via UPI, then enter the key shared by the admin to unlock this book."
     }
   ],
   "categoryOrder": [
@@ -4090,7 +4094,6 @@
     "Hadith",
     "Seerah & Prophets",
     "Islamic History",
-    "Aqeedah & Foundations",
     "Sufism & Tasawwuf",
     "Soul, Death & Afterlife",
     "Dreams & the Unseen",
@@ -4119,7 +4122,6 @@
     "Early Islamic Texts",
     "Ancient History",
     "Philosophy of History",
-    "Foundations of Faith",
     "Ibn Arabi",
     "Sufi Poetry & Stories",
     "Nafs & the Soul",
@@ -4131,12 +4133,8 @@
     "Ihya Ulum al-Din",
     "End Times & the Mahdi",
     "The Soul",
-    "Death & Barzakh",
     "End Times & Qiyamah",
-    "Dreams",
     "Dream Interpretation",
-    "Creation",
-    "The Universe",
     "Cosmos & Science",
     "Shams al-Ma'arif",
     "Books of Wonders",

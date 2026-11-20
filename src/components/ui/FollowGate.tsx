@@ -99,7 +99,7 @@ export const FollowGate: React.FC<FollowGateProps> = ({ onUnlock, bookCount, cat
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 0 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">{categoryCount}</p>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">{t('gate.collections', lang)}</p>
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">{t('gate.folders', lang)}</p>
             </div>
             <div className="motion-item p-3 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-xl" style={{ '--motion-i': 1 } as React.CSSProperties}>
               <p className="font-bold text-lg text-[var(--gold)]">{bookCount}</p>

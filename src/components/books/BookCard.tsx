@@ -5,7 +5,7 @@ import { CoverImage } from './CoverImage';
 import { appState } from '../../state/appState';
 import { t, tf } from '../../data/i18n';
 import { router } from '../../router/router';
-import { getItemType, getTypeLabel, getTypeBadgeColor, getBookCoverUrl, getPaidBadgeLabel } from '../../utils/fileUtils';
+import { getItemType, getTypeLabel, getTypeBadgeColor, getBookCoverUrl, getPaidBadgeLabel, formatBookPrice } from '../../utils/fileUtils';
 
 interface BookCardProps {
   book: Book;
@@ -17,7 +17,10 @@ interface BookCardProps {
   onDelete?: (book: Book) => void;
 }
 
-export const BookCard: React.FC<BookCardProps> = ({ book, onSelect, index = 0, onDelete }) => {
+// Memoised: the Library re-renders on every keystroke / filter change, and
+// without memo every one of the 138 cards re-rendered with it. A card only
+// re-renders when its own book, favourite/progress state or index changes.
+export const BookCard: React.FC<BookCardProps> = React.memo(({ book, onSelect, index = 0, onDelete }) => {
   const lang = appState.settings.language;
 const typeLabelText = (label: string): string =>
   label === 'Document' ? t('book.typeDocument', lang)
@@ -36,6 +39,9 @@ const typeLabelText = (label: string): string =>
   const itemType = getItemType(book);
   const typeLabel = getTypeLabel(book);
   const badgeColor = getTypeBadgeColor(itemType);
+  // Paid books show their price on the card when one is set (public
+  // info); no price set means nothing shown here either.
+  const priceLabel = book.isPaid ? formatBookPrice(book) : null;
 
   const handleCardClick = () => {
     if (onSelect) {
@@ -192,6 +198,11 @@ const typeLabelText = (label: string): string =>
               )}
             </p>
           )}
+          {priceLabel && (
+            <p className="text-[11px] font-bold text-[var(--gold)] mt-0.5">
+              {priceLabel}
+            </p>
+          )}
         </div>
 
         <div className="pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px] text-[var(--text-muted)] mt-2">
@@ -210,4 +221,4 @@ const typeLabelText = (label: string): string =>
       </div>
     </div>
   );
-};
+});

@@ -63,10 +63,11 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
       'Short practical guides for the seeker, gathered from the books with their sources named. {count} guides so far.',
     'guides.studyNote':
       'These guides are for study only. They do not promise any outcome, and they give no religious ruling. Read them slowly, and check the sources named at the end of each one.',
+    'guides.englishOnly': 'These guides are in English for now. The Hinglish, Bengali and Urdu versions are being prepared.',
     'guides.onThisPage': 'Guides on this page',
 
     // ---- Instagram send box ----
-    'sendbox.instagramName': 'Your Instagram name (optional)',
+    'sendbox.instagramName': 'Your Instagram name (needed unless you post anonymous)',
     'sendbox.postAnonymous': 'Post as anonymous',
     'sendbox.send': 'Send',
     'sendbox.sending': 'Sending…',
@@ -92,7 +93,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
       'Send your question with your Instagram name, or post as anonymous. If you give your name, the answer comes back to you on Instagram too. New answers get added here so others can read them too.',
     'sendbox.askDone':
       'Thanks. Your question is saved. The answer will come back to you on Instagram, and it will be added here too.',
-    'sendbox.commentTitle': 'Comments and wants',
+    'sendbox.commentTitle': 'Comments and requests',
+    'topics.replyFromLibrary': 'Reply from the library',
     'sendbox.commentLabel': 'Your comment, or a topic you need',
     'sendbox.commentPlaceholder': 'Share a thought on this topic, or write a topic you need.',
     'sendbox.commentNote': 'Good comments and answered wants get added to this page.',
@@ -147,10 +149,11 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
       'Talib ke liye chhote amli guides, kitabon se jama kiye gaye, har ek ke saath uska source. Ab tak {count} guides.',
     'guides.studyNote':
       'Yeh guides sirf padhai ke liye hain. Yeh kisi nateeje ka wada nahi karti, aur koi mazhabi faisla nahi deti. Aahista padho, aur har ek ke aakhir mein diye gaye sources ko check karo.',
+    'guides.englishOnly': 'Yeh guides abhi English mein hain. Hinglish version taiyaar ho raha hai.',
     'guides.onThisPage': 'Is page par guides',
 
     // ---- Instagram send box ----
-    'sendbox.instagramName': 'Apna Instagram naam (zaroori nahi)',
+    'sendbox.instagramName': 'Apna Instagram naam (anonymous post kar rahe ho to zaroori nahi)',
     'sendbox.postAnonymous': 'Bina naam ke post karo',
     'sendbox.send': 'Bhejo',
     'sendbox.sending': 'Bheja ja raha hai…',
@@ -176,7 +179,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
       'Apna sawal apne Instagram naam ke saath bhejo, ya bina naam ke post karo. Agar tum apna naam doge, to jawab Instagram par tumhe bhi milega. Naye jawab yahan judte hain taaki doosre bhi padh sakein.',
     'sendbox.askDone':
       'Shukriya. Tumhara sawal save ho gaya. Jawab Instagram par tumhe milega, aur yahan bhi jud jayega.',
-    'sendbox.commentTitle': 'Comments aur chahat',
+    'sendbox.commentTitle': 'Comments aur requests',
+    'topics.replyFromLibrary': 'Library ki taraf se jawab',
     'sendbox.commentLabel': 'Tumhara comment, ya woh topic jo tumhe chahiye',
     'sendbox.commentPlaceholder': 'Is topic par apna khayal likho, ya woh topic likho jo tumhe chahiye.',
     'sendbox.commentNote': 'Achhe comments aur jawab diye gaye chahat is page par jud jaate hain.',
@@ -231,10 +235,11 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
       'সন্ধানকারীর জন্য ছোট বাস্তব গাইড, বই থেকে জোগাড় করা, প্রতিটির সঙ্গে তার উৎস। এখন পর্যন্ত {count}টি গাইড।',
     'guides.studyNote':
       'এই গাইডগুলো শুধু পড়াশোনার জন্য। এগুলো কোনো ফলাফলের ওয়াদা করে না, আর কোনো ধর্মীয় ফতোয়া দেয় না। আস্তে পড়ো, আর প্রতিটির শেষে দেওয়া উৎসগুলো দেখো।',
+    'guides.englishOnly': 'এই গাইডগুলো আপাতত ইংরেজিতে আছে। বাংলা সংস্করণ তৈরি হচ্ছে।',
     'guides.onThisPage': 'এই পাতায় গাইডগুলো',
 
     // ---- Instagram send box ----
-    'sendbox.instagramName': 'আপনার ইনস্টাগ্রাম নাম (ঐচ্ছিক)',
+    'sendbox.instagramName': 'আপনার ইনস্টাগ্রাম নাম (অ্যানোনিমাস পোস্ট করলে লাগবে না)',
     'sendbox.postAnonymous': 'নাম ছাড়া পোস্ট করো',
     'sendbox.send': 'পাঠাও',
     'sendbox.sending': 'পাঠানো হচ্ছে…',
@@ -260,7 +265,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
       'তোমার প্রশ্ন তোমার ইনস্টাগ্রাম নামসহ পাঠাও, অথবা নাম ছাড়া পোস্ট করো। তুমি নাম দিলে, উত্তর ইনস্টাগ্রামেও তোমার কাছে আসবে। নতুন উত্তর এখানে যোগ হয় যাতে অন্যরাও পড়তে পারে।',
     'sendbox.askDone':
       'ধন্যবাদ। তোমার প্রশ্ন সেভ হয়েছে। উত্তর ইনস্টাগ্রামে তোমার কাছে আসবে, আর এখানেও যোগ হবে।',
-    'sendbox.commentTitle': 'মন্তব্য আর চাওয়া',
+    'sendbox.commentTitle': 'মন্তব্য আর অনুরোধ',
+    'topics.replyFromLibrary': 'লাইব্রেরির পক্ষ থেকে উত্তর',
     'sendbox.commentLabel': 'তোমার মন্তব্য, অথবা যে টপিকটি তোমার দরকার',
     'sendbox.commentPlaceholder': 'এই টপিক নিয়ে তোমার ভাবনা লেখো, অথবা যে টপিকটি তোমার দরকার তা লেখো।',
     'sendbox.commentNote': 'ভালো মন্তব্য আর উত্তর দেওয়া চাওয়াগুলো এই পাতায় যোগ হয়।',
@@ -301,8 +307,9 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'guides.title': 'مطالعے کی رہنما کتابیں',
     'guides.subtitle': 'طالب کے لیے چھوٹی عملی رہنما کتابیں، کتابوں سے ماخذ کے ساتھ جمع کی گئی۔ اب تک {count} رہنما کتابیں۔',
     'guides.studyNote': 'یہ رہنما کتابیں صرف مطالعے کے لیے ہیں۔ یہ کسی نتیجے کا وعدہ نہیں کرتیں، اور کوئی دینی حکم نہیں دیتیں۔ آہستہ پڑھیں، اور ہر ایک کے آخر میں بتائے گئے ماخذ کو جانچیں۔',
+    'guides.englishOnly': 'یہ گائیڈز فی الحال انگریزی میں ہیں۔ اردو ورژن تیار ہو رہا ہے۔',
     'guides.onThisPage': 'اس صفحے پر رہنما کتابیں',
-    'sendbox.instagramName': 'آپ کا Instagram نام (اختیاری)',
+    'sendbox.instagramName': 'آپ کا Instagram نام (اگر گمنام پوسٹ کر رہے ہیں تو ضروری نہیں)',
     'sendbox.postAnonymous': 'گمنام پوسٹ کریں',
     'sendbox.send': 'بھیجیں',
     'sendbox.sending': 'بھیجا جا رہا ہے…',
@@ -323,7 +330,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'sendbox.askPlaceholder': 'کیا جاننا چاہتے ہیں؟',
     'sendbox.askNote': 'اپنا سوال اپنے Instagram نام کے ساتھ بھیجیں، یا گمنام پوسٹ کریں۔ اگر آپ نام دیں گے تو جواب Instagram پر بھی آپ تک پہنچے گا۔ نئے جواب یہاں شامل ہوتے ہیں تاکہ دوسرے بھی پڑھ سکیں۔',
     'sendbox.askDone': 'شکریہ۔ آپ کا سوال محفوظ ہو گیا۔ جواب Instagram پر آپ تک پہنچے گا، اور یہاں بھی شامل ہو جائے گا۔',
-    'sendbox.commentTitle': 'تبصرے اور خواہشیں',
+    'sendbox.commentTitle': 'تبصرے اور درخواستیں',
+    'topics.replyFromLibrary': 'لائبریری کی طرف سے جواب',
     'sendbox.commentLabel': 'آپ کا تبصرہ، یا جو موضوع چاہیے',
     'sendbox.commentPlaceholder': 'اس موضوع پر اپنی سوچ لکھیں، یا جو موضوع چاہیے وہ لکھیں۔',
     'sendbox.commentNote': 'اچھے تبصرے اور جواب دی گئی خواہشیں اس صفحے پر شامل ہوتی ہیں۔',

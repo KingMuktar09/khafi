@@ -131,10 +131,10 @@ export function getDriveDownloadUrl(item: Partial<Book>): string | null {
 
 /**
  * Drive files whose thumbnail is NOT a usable cover, checked 18 Nov 2026
- * against every book in the catalog (all 173 thumbnail URLs fetched):
+ * against every book in the catalog (all 138 thumbnail URLs fetched):
  * their first page renders blank white (or, for the docx, a junk web-page
  * export), so the generated title cover looks better. Files Drive has no
- * thumbnail for at all (the 36 Markdown notes, a few PDFs) are NOT listed
+ * thumbnail for at all (Markdown notes in Drive, a few PDFs) are NOT listed
  * here — the <img> onError already falls back for those, because Drive
  * answers those with an HTML 404 the browser refuses to render as an image.
  */
@@ -167,14 +167,20 @@ export function getDriveThumbnailUrl(item: Partial<Book>, width = 400): string |
 }
 
 /**
- * Best cover image for a book card. Drive books get their real first page
- * (the thumbnail); anything else falls back to the stored cover, then
- * undefined (the UI draws its generated title cover). Paid books get no
- * Drive id for visitors, so they never leak a thumbnail here.
+ * Best cover image for a book card. A stored cover wins first (the admin
+ * gave the book a real cover, e.g. Manba's first page); then the Drive
+ * thumbnail (the real first page, free from Drive); then undefined and
+ * the UI draws its generated title cover. Paid books get no Drive id
+ * for visitors, so they never leak a thumbnail here — but a stored
+ * cover file is safe to show, it is only the first page.
  */
 export function getBookCoverUrl(book: Partial<Book> | null | undefined): string | undefined {
   if (!book) return undefined;
-  return getDriveThumbnailUrl(book) || book.thumbnailUrl || book.coverUrl || undefined;
+  // An explicit stored cover wins over the Drive thumbnail: a book the
+  // admin gave a real cover (e.g. Manba, whose first page was rendered
+  // to /covers/manba-usul-al-hikma.jpg) must show that cover, not a
+  // Drive thumbnail that may be blank or missing for paid books.
+  return book.coverUrl || book.thumbnailUrl || getDriveThumbnailUrl(book) || undefined;
 }
 
 export function getItemUrl(item: Partial<Book>): string {
@@ -213,6 +219,23 @@ export function getItemUrl(item: Partial<Book>): string {
  */
 export function getPaidBadgeLabel(book: Partial<Book> | null | undefined): string | null {
   return book?.isPaid ? 'Paid' : null;
+}
+
+/**
+ * Public price label for a paid book, e.g. "Rs 99".
+ * The price is public info: it survives every catalog sanitiser
+ * (server/app.ts, server/cf-api-handler.ts, scripts/copy-catalog.mjs),
+ * which strip only open/download links for locked visitors — never the
+ * price. Returns null when the book has no usable price (missing, not a
+ * number, zero or negative): callers must show no price at all then,
+ * never "Rs undefined" or "Rs 0".
+ */
+export function formatBookPrice(book: Partial<Book> | null | undefined): string | null {
+  const price = book?.price;
+  if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
+  const currency = (book?.priceCurrency || 'INR').toUpperCase();
+  if (currency === 'INR') return `Rs ${price}`;
+  return `${currency} ${price}`;
 }
 
 export function getTypeLabel(itemOrType: Partial<Book> | ItemType, extension?: string): string {

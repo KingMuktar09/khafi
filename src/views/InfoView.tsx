@@ -128,6 +128,63 @@ export const InfoView: React.FC = () => {
         </div>
       </section>
 
+      {/* Why we made this — in Khafi's voice, about Ghayb Chronicles
+          and the library only. No personal details anywhere on this page. */}
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
+          {t('info.whyTitle', lang)}
+        </h2>
+        <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
+          <p>{t('info.why1', lang)}</p>
+          <p>{t('info.why2', lang)}</p>
+        </div>
+      </section>
+
+      {/* How it works — follow gate, categories, journeys, shelf, tools, keys. */}
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
+          {t('info.howTitle', lang)}
+        </h2>
+        <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
+          <p>{t('info.how1', lang)}</p>
+          <p>{t('info.how2', lang)}</p>
+          <p>{t('info.how3', lang)}</p>
+          <p>{t('info.how4', lang)}</p>
+        </div>
+      </section>
+
+      {/* Why some books are paid — when people pay, they value it and
+          read it properly; free, many do not read it properly. */}
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
+          {t('info.paidTitle', lang)}
+        </h2>
+        <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
+          <p>{t('info.paid1', lang)}</p>
+          <p>{t('info.paid2', lang)}</p>
+        </div>
+      </section>
+
+      {/* Follow Ghayb Chronicles — new books and topics first on Instagram. */}
+      <section className="ms-panel rounded-2xl p-6 space-y-3">
+        <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">
+          {t('info.followTitle', lang)}
+        </h2>
+        <div className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed space-y-3">
+          <p>{t('info.follow1', lang)}</p>
+        </div>
+        <a
+          href="https://instagram.com/ghayb.chronicles"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-black font-semibold text-xs rounded-lg cursor-pointer"
+        >
+          <Instagram className="w-4 h-4" />
+          <span>@ghayb.chronicles</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </section>
+
       {/* What "Authentic" means */}
       <section className="ms-panel rounded-2xl p-6 space-y-3">
         <h2 className="font-display font-semibold text-lg text-[var(--text-main)]">

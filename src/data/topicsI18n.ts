@@ -63,11 +63,11 @@ export interface QuestionLocalization {
   terms: string[];
 }
 
-// Hinglish topic content is intentionally EMPTY for now. It must come
-// from the Al Asrar notebook (Hinglish, with sources and pages), not
-// from translating the English pages. Until that material lands,
-// localizeTopic falls back to the English topic for 'hi'. The Bengali
-// map below stays translated. Do not re-fill this map by translation.
+// Hinglish topic content comes from the Al Asrar notebook (Hinglish,
+// with sources and pages), not from translating the English pages.
+// The map below is filled (all 22 topics, Nov 2026); localizeTopic
+// falls back to English only for a topic missing here. Do not re-fill
+// this map by machine translation.
 const TOPICS_HI: Record<string, TopicLocalization> = {
   "ibn-arabi-40-day-retreat": {
     eyebrow: "Topics",
@@ -2919,9 +2919,10 @@ const TOPICS_BN: Record<string, TopicLocalization> = {
   },
 };
 
-// Hinglish questions intentionally EMPTY, same reason as TOPICS_HI:
-// the notebook's Hinglish questions (with sources and pages) are
-// coming, and localizeQuestion falls back to English until then.
+// Hinglish questions come from the notebook (Hinglish, with sources
+// and pages), same as TOPICS_HI. The map below is filled (all 9
+// questions, Nov 2026); localizeQuestion falls back to English only
+// for a question missing here.
 const QUESTIONS_HI: Record<string, QuestionLocalization> = {
   "what-is-the-ruh": {
     question: "Ruh aur Nafs mein asal farq kya hai?",

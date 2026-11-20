@@ -269,7 +269,7 @@ const typeLabelText = (label: string): string =>
           {/* My Shelf — save with a reading status, local only. */}
           <div className="w-full max-w-[200px] space-y-1.5">
             <p className="text-[11px] text-[var(--text-muted)] font-semibold text-center">{t('book.shelfHeading', lang)}</p>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {(['to-read', 'reading', 'finished'] as const).map((status) => {
                 const active = appState.getShelfStatus(book.id) === status;
                 const label = t(`shelf.${status}`, lang);

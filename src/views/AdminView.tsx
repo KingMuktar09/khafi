@@ -1213,7 +1213,7 @@ export const AdminView: React.FC = () => {
             <h3 className="font-display font-semibold text-lg text-[var(--text-main)]">Payment settings — UPI</h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">
               {paySettings.upiId
-                ? `UPI set: ${paySettings.upiId} — paid books show this at checkout.`
+                ? `UPI set: ${paySettings.upiId} — the lock screen tells visitors to pay by UPI and enter the key from the broadcast channel.`
                 : 'Not set yet — paid books will ask visitors to message @ghayb.chronicles instead.'}
             </p>
           </div>

@@ -143,7 +143,7 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
                 <p className="ms-body">{comment.message}</p>
                 {comment.reply ? (
                   <div className="ms-note-box space-y-1 border-l-2 border-[var(--ms-gold)]">
-                    <p className="ms-body text-sm font-semibold">Reply from the library</p>
+                    <p className="ms-body text-sm font-semibold">{tt('topics.replyFromLibrary', lang)}</p>
                     <p className="ms-body">{comment.reply.reply}</p>
                     <p className="ms-body ms-muted text-sm">
                       {formatTopicDate(new Date(comment.reply.created_at))}

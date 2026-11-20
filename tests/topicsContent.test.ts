@@ -255,12 +255,16 @@ describe('Topic requests use the public Supabase fallback', () => {
 });
 
 describe('Posting as anonymous', () => {
-  it('the send box offers "Post as anonymous" and an optional name, never "Post as guest"', () => {
+  it('the send box offers "Post as anonymous" and a name that is needed unless anonymous, never "Post as guest"', () => {
     const box = readSource('src/views/topics/InstagramSendBox.tsx');
     // The words live in the topics chunk now (translated in hi/bn);
     // the box renders them through the sendbox.* keys.
     expect(I18N_TOPICS.en['sendbox.postAnonymous']).toBe('Post as anonymous');
-    expect(I18N_TOPICS.en['sendbox.instagramName']).toBe('Your Instagram name (optional)');
+    // The name is required unless "Post as anonymous" is ticked, so the
+    // label must say so (audit fix, 20 Nov 2026) — never "(optional)".
+    expect(I18N_TOPICS.en['sendbox.instagramName']).toBe(
+      'Your Instagram name (needed unless you post anonymous)',
+    );
     expect(box).toContain("tt('sendbox.postAnonymous'");
     expect(box).toContain("tt('sendbox.instagramName'");
     expect(box).not.toContain('Post as guest');

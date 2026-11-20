@@ -94,6 +94,10 @@ import {
 export const app = express();
 export const PORT = 3000;
 
+// Trust the fronting proxy (Vercel) so req.ip is the real visitor IP.
+// Without this, every rate limit keys all visitors to one proxy IP.
+app.set("trust proxy", 1);
+
 // Security & Credentials config (Server-Side ONLY - mapped directly to environment secrets)
 export function getAdminUsername(): string {
   return (process.env.ADMIN_USERNAME || "Khafi").trim();
@@ -130,8 +134,11 @@ export function getSessionSecret(): string {
   return ephemeralSessionSecret;
 }
 
-// Store active admin sessions in server memory
+// Store active admin sessions in server memory. Logged-out tokens go
+// into revokedSessions: verifySessionToken() must never re-validate a
+// revoked token through its HMAC fallback, otherwise logout is cosmetic.
 const activeSessions = new Set<string>();
+const revokedSessions = new Set<string>();
 
 export function generateSessionToken(): string {
   const randomBytes = crypto.randomBytes(32).toString("hex");
@@ -141,6 +148,8 @@ export function generateSessionToken(): string {
 
 export function verifySessionToken(token: string | undefined): boolean {
   if (!token) return false;
+  // A logged-out token stays dead, even though its HMAC would still check out.
+  if (revokedSessions.has(token)) return false;
   if (activeSessions.has(token)) return true;
 
   try {
@@ -157,6 +166,16 @@ export function verifySessionToken(token: string | undefined): boolean {
     // ignore malformed tokens
   }
   return false;
+}
+
+/** Log a session token out for good. A revoked token must never verify
+ *  again, even though its HMAC signature would still check out — the
+ *  old code only removed it from activeSessions and the HMAC fallback
+ *  re-added it on the next request, so logout was cosmetic. */
+export function revokeSessionToken(token: string | undefined): void {
+  if (!token) return;
+  activeSessions.delete(token);
+  revokedSessions.add(token);
 }
 
 // Constant-time secret comparison (via SHA-256 digests) so password checks
@@ -281,6 +300,28 @@ export async function saveBookKeyStoreDurably(): Promise<{ saved: boolean; durab
  *  `x-book-keys` header the browser sends). One key unlocks one book. */
 export function getKeyUnlockedBookIds(req: express.Request): Set<string> {
   return keyUnlockedBookIds(getBookKeyStore(), req.headers["x-book-keys"]);
+}
+
+/** Failed auth attempts, rate-limited per IP + scope (admin login, gate
+ *  key) so neither can be brute-forced: 10 failed tries in 15 minutes,
+ *  then 429 until the window passes. Same shape as the book-key limiter. */
+const authAttemptLog = new Map<string, number[]>();
+const AUTH_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const AUTH_ATTEMPT_MAX = 10;
+
+export function isAuthRateLimited(ip: string, scope: string): boolean {
+  const now = Date.now();
+  const key = `${ip}::${scope}`;
+  const attempts = (authAttemptLog.get(key) || []).filter((t) => now - t < AUTH_ATTEMPT_WINDOW_MS);
+  authAttemptLog.set(key, attempts);
+  return attempts.length >= AUTH_ATTEMPT_MAX;
+}
+
+export function recordAuthFailure(ip: string, scope: string): void {
+  const key = `${ip}::${scope}`;
+  const attempts = authAttemptLog.get(key) || [];
+  attempts.push(Date.now());
+  authAttemptLog.set(key, attempts);
 }
 
 /** Wrong-key attempts, rate-limited per IP + book so a key cannot be
@@ -896,16 +937,18 @@ export function extractDriveFileId(urlOrId?: string): string | null {
   return null;
 }
 
-// Express setup
-app.use(express.json({ limit: "500mb" }));
-app.use(express.urlencoded({ extended: true, limit: "500mb" }));
+// Express setup: JSON bodies are capped at 10 MB. The old 500 MB limit
+// let a single huge body exhaust function memory; chunked uploads use
+// their own multer path and are unaffected.
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 // Global CORS & OPTIONS Preflight handler
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked");
+  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked, x-book-keys");
   res.setHeader(
     "Access-Control-Expose-Headers",
     "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type"
@@ -992,6 +1035,44 @@ export function getMimeType(filePath: string, catalogMime?: string): string {
     default: return "application/octet-stream";
   }
 }
+
+// Maintenance mode, enforced server-side too (the client already shows a
+// maintenance page, but on a real server the API and file routes kept
+// serving while it was ON). Admin routes, login, health and the public
+// site-settings flag stay open so the admin can turn it off again.
+app.use((req, res, next) => {
+  try {
+    if (getSiteSettings().maintenance.enabled && !verifyAdminRequest(req)) {
+      const p = (req.path || "").toLowerCase();
+      // Only API and file routes are blocked: the SPA shell, its JS/CSS
+      // and images must still load so the maintenance page itself renders.
+      const guarded =
+        p.startsWith("/api/") || p === "/api" ||
+        p.startsWith("/uploads/") || p.startsWith("/sample-pdfs/") ||
+        p.startsWith("/download");
+      if (!guarded) {
+        next();
+        return;
+      }
+      const open =
+        p.startsWith("/api/health") ||
+        p === "/api" ||
+        p.startsWith("/api/site-settings") ||
+        p.startsWith("/site-settings") ||
+        p.startsWith("/api/admin/login") ||
+        p.startsWith("/admin/login") ||
+        p.startsWith("/api/admin/me") ||
+        p.startsWith("/admin/me");
+      if (!open) {
+        res.status(503).json({ error: "Maintenance mode is on. Please check back later." });
+        return;
+      }
+    }
+  } catch {
+    // If settings cannot be read, do not block the site.
+  }
+  next();
+});
 
 // Serve static public assets (uploads & sample pdfs)
 const servePdfOptions: Parameters<typeof express.static>[1] = {
@@ -1088,8 +1169,15 @@ app.post(["/api/gate/unlock", "/gate/unlock"], async (req, res) => {
     res.status(404).json({ error: "Gate key is not set." });
     return;
   }
+  // Rate-limited like book-key verify: 10 failed tries per IP in 15 min,
+  // on top of the existing 600 ms delay on failure.
+  if (isAuthRateLimited(req.ip || "unknown", "gate-unlock")) {
+    res.status(429).json({ error: "Too many wrong keys. Try again in 15 minutes." });
+    return;
+  }
   const guess = typeof req.body?.key === "string" ? req.body.key : "";
   if (!safeEqualSecret(guess, stored.gateKey)) {
+    recordAuthFailure(req.ip || "unknown", "gate-unlock");
     await new Promise((r) => setTimeout(r, 600));
     res.status(401).json({ error: "Wrong key. Check the key in the broadcast channel and try again." });
     return;
@@ -1834,9 +1922,28 @@ app.get(["/api/download", "/download"], async (req, res) => {
     );
   }
 
+  // A download must name a catalog book (or be the admin). Without this,
+  // any filename under /uploads/ or /sample-pdfs/ could be pulled through
+  // this route even when it has no catalog entry.
+  if (!book && !verifyAdminRequest(req)) {
+    res.status(404).json({ error: "File not found" });
+    return;
+  }
+
   let relPath = fileParam;
   if (!relPath && book) {
     relPath = book.fileUrl || book.pdfUrl || book.driveUrl || "";
+  }
+
+  // Paid gate first (same rule as the stream/download routes above): a
+  // paid catalog book is never downloadable by a locked visitor. It is
+  // checked before the empty-path 400 so a paid Drive-only book (no
+  // fileUrl) answers 402 "needs its key", not a misleading 400.
+  if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id))) {
+    res.status(402).json({
+      error: 'This is a paid book. It needs its own key — followers get the key from the broadcast channel, or enter the book key shared by the admin.',
+    });
+    return;
   }
 
   if (!relPath) {
@@ -2100,6 +2207,12 @@ app.post(["/api/admin/login", "/admin/login"], (req, res) => {
     return;
   }
 
+  // Rate-limited like book-key verify: 10 failed tries per IP in 15 min.
+  if (isAuthRateLimited(req.ip || "unknown", "admin-login")) {
+    res.status(429).json({ success: false, error: "Too many failed login attempts. Try again in 15 minutes." });
+    return;
+  }
+
   const cleanUsername = (username || "").trim();
   const cleanPassword = (password || "").trim();
   const adminUser = getAdminUsername();
@@ -2130,15 +2243,14 @@ app.post(["/api/admin/login", "/admin/login"], (req, res) => {
 
     res.json({ success: true, token: sessionToken, username: adminUser });
   } else {
+    recordAuthFailure(req.ip || "unknown", "admin-login");
     res.status(401).json({ success: false, error: "Invalid administrator credentials." });
   }
 });
 
 app.post(["/api/admin/logout", "/admin/logout"], (req, res) => {
   const sessionToken = extractAdminToken(req);
-  if (sessionToken) {
-    activeSessions.delete(sessionToken);
-  }
+  revokeSessionToken(sessionToken);
   res.clearCookie("khafi_admin_session");
   res.json({ success: true });
 });

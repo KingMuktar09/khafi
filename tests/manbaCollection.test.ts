@@ -3,7 +3,7 @@ import catalog from '../data/catalog.json';
 import publicCatalog from '../public/catalog.json';
 import { siteConfig } from '../src/config/siteConfig';
 
-// Manba Usul al-Hikma, paid (needs its own key, no price), in its own
+// Manba Usul al-Hikma, paid Rs 99 (needs its own key), in its own
 // separate collection: "Ahmad al-Buni Collection" — a category, not a
 // folder. The two al-Buni books already in the catalog moved there too,
 // still free.
@@ -11,7 +11,7 @@ import { siteConfig } from '../src/config/siteConfig';
 // NOTE (counts): the catalog in this repo has 137 books / 27 folders
 // (the 173-book figure in older notes was stale). Adding Manba makes
 // 138 books. Kitab Al Bulhan stays paid as before (no price set in the
-// working catalog); Manba is the only NEW paid book, also with no price —
+// working catalog); Manba is the only NEW paid book, priced Rs 99 —
 // paid books need their own key, and they open from Drive like the
 // other books once unlocked.
 
@@ -28,11 +28,11 @@ describe('Manba Usul al-Hikma (paid, needs its own key)', () => {
     expect(manba).toBeTruthy();
   });
 
-  it('is paid with no price, with the full title and author', () => {
+  it('is paid Rs 99, with the full title and author', () => {
     expect(manba.isPaid).toBe(true);
-    expect(manba.price).toBeUndefined();
-    expect(manba.priceCurrency).toBeUndefined();
-    expect(manba.paymentNote).toBeUndefined();
+    expect(manba.price).toBe(99);
+    expect(manba.priceCurrency).toBe('INR');
+    expect(manba.paymentNote).toContain('Rs 99');
     expect(manba.title).toContain('Manba Usul al-Hikma');
     expect(manba.title).toContain('Four Treatises');
     expect(manba.author).toContain('al-Buni');
@@ -60,7 +60,7 @@ describe('Manba Usul al-Hikma (paid, needs its own key)', () => {
     expect(bulhan).toBeTruthy();
     expect(bulhan.price).toBeUndefined(); // unchanged: it never had a price in this catalog
     const manbaPaid = paid.find((b) => b.id === 'b-manba-usul-al-hikma');
-    expect(manbaPaid.price).toBeUndefined();
+    expect(manbaPaid.price).toBe(99);
   });
 });
 
@@ -103,11 +103,14 @@ describe('public (static) catalog copy', () => {
     expect((publicCatalog as any).folders).toHaveLength(27);
   });
 
-  it('strips the paid books’ links for visitors, keeps the paid flag, no price', () => {
+  it('strips the paid books’ links for visitors, keeps the paid flag and the price', () => {
     const pub = (publicCatalog as any).books as any[];
     const manba = pub.find((b) => b.id === 'b-manba-usul-al-hikma');
     expect(manba.isPaid).toBe(true);
-    expect(manba.price).toBeUndefined();
+    // The price is public info: it survives sanitisation, only the
+    // open/download links are stripped for locked visitors.
+    expect(manba.price).toBe(99);
+    expect(manba.priceCurrency).toBe('INR');
     expect(manba.fileUrl).toBe('');
     expect(manba.pdfUrl).toBe('');
     expect(manba.driveFileId).toBeUndefined();
