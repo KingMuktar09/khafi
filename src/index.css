@@ -230,10 +230,6 @@ body {
   0% { transform: translateX(-160%) skewX(-12deg); }
   55%, 100% { transform: translateX(280%) skewX(-12deg); }
 }
-@keyframes motion-gate-glow {
-  0%, 100% { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-  50% { box-shadow: 0 25px 60px -12px rgba(232, 184, 79, 0.3), 0 0 0 1px rgba(232, 184, 79, 0.14); }
-}
 @keyframes motion-breathe {
   /* Standalone `scale` property, not transform, so the pulse composes
      with the hover lift (translateY) instead of overriding it. Gentle:
@@ -303,9 +299,9 @@ body {
   animation: motion-shimmer-x 5s ease-in-out infinite;
 }
 
-/* Slow breathing gold glow on the follow-gate card. */
+/* Static gold glow on the follow-gate card (see above). */
 .gate-glow {
-  animation: motion-gate-glow 4.5s ease-in-out infinite;
+  box-shadow: 0 25px 60px -12px rgba(232, 184, 79, 0.3), 0 0 0 1px rgba(232, 184, 79, 0.14);
 }
 
 /* Gentle breathing scale for the gate brand mark. */

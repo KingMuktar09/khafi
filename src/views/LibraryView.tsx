@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { appState } from '../state/appState';
 import { t, tf } from '../data/i18n';
 import { BookGrid } from '../components/books/BookGrid';
 import { CompactAdvisoryBanner } from '../components/ui/CompactAdvisoryBanner';
 import { RefreshCw, AlertTriangle, LayoutGrid, FileText, BookOpen, ShieldCheck, Search, Upload } from 'lucide-react';
-import { UploadFileModal } from '../components/folders/UploadFileModal';
+// Admin-only, opened on click: lazy so the upload modal (and its
+// cover-extraction chain) is not in the Library chunk on first load.
+const UploadFileModal = lazy(() => import('../components/folders/UploadFileModal').then((m) => ({ default: m.UploadFileModal })));
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { api } from '../services/api';
 import { Book } from '../types';
@@ -52,6 +54,16 @@ export const LibraryView: React.FC = () => {
   // Admin "Upload a book here" modal, opened from a category header.
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadFolderId, setUploadFolderId] = useState<string | null>(null);
+  // The modal is only mounted after its first open, so its lazy chunk
+  // downloads on the admin's click, not on the Library's first load.
+  // It stays mounted afterwards, so an in-progress upload queue is
+  // not lost when the modal is closed and reopened.
+  const [uploadModalMounted, setUploadModalMounted] = useState(false);
+  const openUploadModal = useCallback((folderId: string | null) => {
+    setUploadFolderId(folderId);
+    setUploadModalMounted(true);
+    setUploadModalOpen(true);
+  }, []);
   // Admin delete from the Library: the book waiting for confirmation.
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -125,11 +137,24 @@ export const LibraryView: React.FC = () => {
   // Search matches title, author, category, topic, description and tags.
   // Searching "authentic" finds books marked Authentic. Folder names are
   // deliberately NOT searched — folders are not how you find a book.
+  // Each book's lowercase haystack is built once per catalog, not once
+  // per book per keystroke (it used to be rebuilt 138 times a keystroke).
+  const searchHaystacks = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const b of appState.catalog.books || []) {
+      map.set(
+        b.id,
+        [b.title, b.author, b.category, b.topic, b.description, b.isAuthentic ? 'authentic' : '', ...(Array.isArray(b.tags) ? b.tags : [])]
+          .filter((t): t is string => typeof t === 'string')
+          .join(' ')
+          .toLowerCase()
+      );
+    }
+    return map;
+  }, [appState.catalog]);
+
   const matchesSearch = (b: Book, query: string): boolean => {
-    const haystack = [b.title, b.author, b.category, b.topic, b.description, b.isAuthentic ? 'authentic' : '', ...(Array.isArray(b.tags) ? b.tags : [])]
-      .filter((t): t is string => typeof t === 'string')
-      .join(' ')
-      .toLowerCase();
+    const haystack = searchHaystacks.get(b.id) || '';
     return query.split(/\s+/).every((word) => word === '' || haystack.includes(word));
   };
 
@@ -185,7 +210,17 @@ export const LibraryView: React.FC = () => {
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [q, selectedCategory, selectedGroup, selectedTopic, authenticOnly, typeFilter, statusFilter, sortBy]);
-  const visibleBooks = displayedBooks.slice(0, visibleCount);
+  const visibleBooks = useMemo(
+    () => displayedBooks.slice(0, visibleCount),
+    [displayedBooks, visibleCount]
+  );
+
+  // Stable admin delete callback: an inline arrow here would be a new
+  // function every render, which defeats BookCard's memo on every card.
+  const handleDeleteBook = useCallback(
+    (book: Book) => setDeleteTarget(book),
+    []
+  );
 
   // 6 big topics with book counts — the simple way to pick a category.
   // Cheap to compute every render (138 books), so no memo needed.
@@ -202,9 +237,12 @@ export const LibraryView: React.FC = () => {
 
   // Group by category, then topic, in the library's arrange order — only
   // when the reader is browsing freely (no search / no single topic).
+  // Each topic group carries its startIndex in the whole visible list,
+  // so the first-12 entrance stagger is global, not per group.
   const grouped = useMemo(() => {
     if (q || selectedTopic || sortBy !== 'arranged') return null;
-    const groups: Array<{ category: string; topics: Array<{ topic: string; books: Book[] }> }> = [];
+    const groups: Array<{ category: string; topics: Array<{ topic: string; books: Book[]; startIndex: number }> }> = [];
+    let running = 0;
     for (const book of visibleBooks) {
       const category = cleanLabel(book.category) || 'General';
       const topic = cleanLabel(book.topic) || 'General';
@@ -215,10 +253,11 @@ export const LibraryView: React.FC = () => {
       }
       let top = cat.topics.find((t) => t.topic === topic);
       if (!top) {
-        top = { topic, books: [] };
+        top = { topic, books: [], startIndex: running };
         cat.topics.push(top);
       }
       top.books.push(book);
+      running += 1;
     }
     return groups;
   }, [visibleBooks, q, selectedTopic, sortBy]);
@@ -486,10 +525,7 @@ export const LibraryView: React.FC = () => {
               {appState.isAdmin() && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setUploadFolderId(folderForCategory(group.category));
-                    setUploadModalOpen(true);
-                  }}
+                  onClick={() => openUploadModal(folderForCategory(group.category))}
                   className="ml-auto self-center px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--gold)]/50 bg-[var(--gold-faint)] text-[var(--gold)] hover:bg-[var(--gold)] hover:text-black transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
                 >
                   <Upload className="w-3.5 h-3.5" />
@@ -510,7 +546,8 @@ export const LibraryView: React.FC = () => {
                 <BookGrid
                   books={topicGroup.books}
                   emptyMessage={t('library.noBooksInTopic', lang)}
-                  onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
+                  onDeleteBook={appState.isAdmin() ? handleDeleteBook : undefined}
+                  indexOffset={topicGroup.startIndex}
                 />
               </div>
             ))}
@@ -520,7 +557,7 @@ export const LibraryView: React.FC = () => {
         <BookGrid
           books={visibleBooks}
           emptyMessage={q ? tf('library.noBooksSearch', lang, { q }) : t('library.noBooksFilters', lang)}
-          onDeleteBook={appState.isAdmin() ? (book) => setDeleteTarget(book) : undefined}
+          onDeleteBook={appState.isAdmin() ? handleDeleteBook : undefined}
         />
       )}
 
@@ -536,12 +573,16 @@ export const LibraryView: React.FC = () => {
         </div>
       )}
 
-      <UploadFileModal
-        isOpen={uploadModalOpen}
-        folderId={uploadFolderId}
-        onClose={() => setUploadModalOpen(false)}
-        onUploaded={() => appState.loadCatalog()}
-      />
+      {uploadModalMounted && (
+        <Suspense fallback={null}>
+          <UploadFileModal
+            isOpen={uploadModalOpen}
+            folderId={uploadFolderId}
+            onClose={() => setUploadModalOpen(false)}
+            onUploaded={() => appState.loadCatalog()}
+          />
+        </Suspense>
+      )}
 
       {/* Admin delete confirmation — title shown, catalog entry only. */}
       <ConfirmModal

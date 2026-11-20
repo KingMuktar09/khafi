@@ -154,10 +154,20 @@ describe('insertTopicReply', () => {
     expect(result).toEqual({ ok: false, error: 'Message not found.' });
   });
 
+  it('refuses a reply to a message that is not approved yet (F9)', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.includes('/topic_requests')) return { ok: true, status: 200, body: [{ id: 3, status: 'new' }] };
+      return { ok: true, status: 200, body: [] };
+    });
+    const result = await insertTopicReply(fetch as never, CONFIG, 3, 'Hello');
+    expect(result).toEqual({ ok: false, error: 'Approve this message before replying to it.' });
+    expect(calls).toHaveLength(1);
+  });
+
   it('saves the reply and returns the saved row', async () => {
     const saved = { id: 20, request_id: 2, reply: 'Walaikum salaam', created_at: '2026-11-19T05:00:00Z' };
     const { fetch, calls } = mockFetch((url, init) => {
-      if (url.includes('/topic_requests')) return { ok: true, status: 200, body: [{ id: 2 }] };
+      if (url.includes('/topic_requests')) return { ok: true, status: 200, body: [{ id: 2, status: 'approved' }] };
       if (url.includes('/topic_replies')) {
         expect(init?.method).toBe('POST');
         expect(JSON.parse(String(init?.body))).toEqual({ request_id: 2, reply: 'Walaikum salaam' });

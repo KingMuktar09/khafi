@@ -51,8 +51,9 @@ import {
   keyUsesLeft,
   publicKeyView,
   keyMonitorTotals,
-  keyUnlockedBookIds,
-  parseBookKeysHeader,
+  createBookUnlockToken,
+  unlockTokenBookIds,
+  isValidDeviceId,
   DEFAULT_KEY_MAX_USES,
   type BookKeyStore,
 } from "./bookKeys.js";
@@ -61,7 +62,8 @@ import {
   listTopicRequestsWithReplies,
   approveTopicRequest,
   insertTopicReply,
-  countUnread,
+  countUnreadRequests,
+  deleteTopicRequest,
   SERVICE_KEY_MISSING_MESSAGE,
   SupabaseAdminError,
 } from "./topicInbox.js";
@@ -97,6 +99,19 @@ export const PORT = 3000;
 // Trust the fronting proxy (Vercel) so req.ip is the real visitor IP.
 // Without this, every rate limit keys all visitors to one proxy IP.
 app.set("trust proxy", 1);
+
+/** Real client IP: the first X-Forwarded-For entry, validated as an
+ *  IPv4/IPv6 address, falling back to req.ip. Without this the book-key
+ *  limiter keyed every visitor to one Vercel proxy IP, so one attacker
+ *  could lock everyone out of a book. */
+export function getClientIp(req: express.Request): string {
+  const xff = req.headers["x-forwarded-for"];
+  const first = (Array.isArray(xff) ? xff[0] : (xff || "").split(",")[0] || "").trim();
+  const isIPv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(first);
+  const isIPv6 = /^[0-9a-fA-F:]*:[0-9a-fA-F:]+$/.test(first);
+  if (first && (isIPv4 || isIPv6)) return first;
+  return (req.ip || (req.socket as any)?.remoteAddress || "unknown").toString();
+}
 
 // Security & Credentials config (Server-Side ONLY - mapped directly to environment secrets)
 export function getAdminUsername(): string {
@@ -134,34 +149,40 @@ export function getSessionSecret(): string {
   return ephemeralSessionSecret;
 }
 
-// Store active admin sessions in server memory. Logged-out tokens go
-// into revokedSessions: verifySessionToken() must never re-validate a
-// revoked token through its HMAC fallback, otherwise logout is cosmetic.
-const activeSessions = new Set<string>();
+// Admin session tokens carry their own expiry: `random.exp.hmac`,
+// exp = now + 24h (matches the cookie). verifySessionToken() rejects
+// expired tokens and tokens on the logout denylist — a stolen token
+// dies at logout or after 24 hours, and no HMAC fallback can resurrect
+// it. Old 2-part tokens stop working on deploy; admins re-login once.
+export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Logged-out tokens. Entries are pruned by their embedded expiry (see
+// pruneSecurityState); a revoked token must never verify again, even
+// though its HMAC signature would still check out.
 const revokedSessions = new Set<string>();
 
-export function generateSessionToken(): string {
+export function generateSessionToken(nowMs: number = Date.now()): string {
   const randomBytes = crypto.randomBytes(32).toString("hex");
-  const signature = crypto.createHmac("sha256", getSessionSecret()).update(randomBytes).digest("hex");
-  return `${randomBytes}.${signature}`;
+  const exp = nowMs + SESSION_TTL_MS;
+  const payload = `${randomBytes}.${exp}`;
+  const signature = crypto.createHmac("sha256", getSessionSecret()).update(payload).digest("hex");
+  return `${payload}.${signature}`;
 }
 
-export function verifySessionToken(token: string | undefined): boolean {
+export function verifySessionToken(token: string | undefined, nowMs: number = Date.now()): boolean {
   if (!token) return false;
   // A logged-out token stays dead, even though its HMAC would still check out.
   if (revokedSessions.has(token)) return false;
-  if (activeSessions.has(token)) return true;
 
   try {
     const parts = token.split(".");
-    if (parts.length === 2) {
-      const [randomBytes, signature] = parts;
-      const expectedSignature = crypto.createHmac("sha256", getSessionSecret()).update(randomBytes).digest("hex");
-      if (signature.length === expectedSignature.length && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
-        activeSessions.add(token);
-        return true;
-      }
-    }
+    if (parts.length !== 3) return false; // old 2-part tokens are dead on purpose
+    const [randomBytes, expRaw, signature] = parts;
+    const exp = Number(expRaw);
+    if (!Number.isFinite(exp) || exp <= nowMs) return false; // expired
+    const expectedSignature = crypto.createHmac("sha256", getSessionSecret()).update(`${randomBytes}.${exp}`).digest("hex");
+    if (signature.length !== expectedSignature.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
   } catch (err) {
     // ignore malformed tokens
   }
@@ -174,8 +195,21 @@ export function verifySessionToken(token: string | undefined): boolean {
  *  re-added it on the next request, so logout was cosmetic. */
 export function revokeSessionToken(token: string | undefined): void {
   if (!token) return;
-  activeSessions.delete(token);
   revokedSessions.add(token);
+}
+
+/** Prune expired entries out of the logout denylist (by embedded exp)
+ *  and cap its size. Exported for tests. */
+export function pruneRevokedSessions(nowMs: number = Date.now()): number {
+  let removed = 0;
+  for (const token of revokedSessions) {
+    const exp = Number(token.split(".")[1]);
+    if (!Number.isFinite(exp) || exp <= nowMs) {
+      revokedSessions.delete(token);
+      removed++;
+    }
+  }
+  return removed;
 }
 
 // Constant-time secret comparison (via SHA-256 digests) so password checks
@@ -210,7 +244,7 @@ export function verifyAdminRequest(req: express.Request): boolean {
 // opens the library and all FREE books, but it no longer opens a paid
 // book. A paid book opens only for the admin, or for a visitor who
 // entered that book's own key (see server/bookKeys.ts and the
-// `x-book-keys` header), even if they never unlocked the gate. No
+// `x-book-unlock` header), even if they never unlocked the gate. No
 // payment step exists anywhere in this flow (the UPI step is Phase 2,
 // not built yet).
 export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
@@ -296,15 +330,18 @@ export async function saveBookKeyStoreDurably(): Promise<{ saved: boolean; durab
   return { saved: true, durable: true };
 }
 
-/** Book ids in this request that carry a valid, usable key (from the
- *  `x-book-keys` header the browser sends). One key unlocks one book. */
+/** Book ids in this request that carry a valid unlock token (from the
+ *  `x-book-unlock` header the browser sends). One token unlocks one
+ *  book for 30 days. Raw book keys are NEVER accepted here — see
+ *  server/bookKeys.ts (H-4). */
 export function getKeyUnlockedBookIds(req: express.Request): Set<string> {
-  return keyUnlockedBookIds(getBookKeyStore(), req.headers["x-book-keys"]);
+  return unlockTokenBookIds(req.headers["x-book-unlock"], getSessionSecret());
 }
 
-/** Failed auth attempts, rate-limited per IP + scope (admin login, gate
- *  key) so neither can be brute-forced: 10 failed tries in 15 minutes,
- *  then 429 until the window passes. Same shape as the book-key limiter. */
+/** Failed auth attempts, rate-limited per IP + scope (gate key) so it
+ *  cannot be brute-forced: 10 failed tries in 15 minutes, then 429
+ *  until the window passes. Same shape as the book-key limiter.
+ *  Admin login has its own, stricter limiter below (5 tries). */
 const authAttemptLog = new Map<string, number[]>();
 const AUTH_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
 const AUTH_ATTEMPT_MAX = 10;
@@ -322,6 +359,32 @@ export function recordAuthFailure(ip: string, scope: string): void {
   const attempts = authAttemptLog.get(key) || [];
   attempts.push(Date.now());
   authAttemptLog.set(key, attempts);
+}
+
+/** Admin-login limiter (H-1): 5 failed tries per IP + username in
+ *  15 minutes, then 429. Stricter than the gate limiter because a
+ *  login gives full admin. Cleared on a successful login. */
+const loginAttemptLog = new Map<string, number[]>();
+const LOGIN_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_ATTEMPT_MAX = 5;
+
+export function isLoginRateLimited(ip: string, username: string): boolean {
+  const now = Date.now();
+  const key = `${ip}::${username.toLowerCase()}`;
+  const attempts = (loginAttemptLog.get(key) || []).filter((t) => now - t < LOGIN_ATTEMPT_WINDOW_MS);
+  loginAttemptLog.set(key, attempts);
+  return attempts.length >= LOGIN_ATTEMPT_MAX;
+}
+
+export function recordLoginFailure(ip: string, username: string): void {
+  const key = `${ip}::${username.toLowerCase()}`;
+  const attempts = loginAttemptLog.get(key) || [];
+  attempts.push(Date.now());
+  loginAttemptLog.set(key, attempts);
+}
+
+export function clearLoginFailures(ip: string, username: string): void {
+  loginAttemptLog.delete(`${ip}::${username.toLowerCase()}`);
 }
 
 /** Wrong-key attempts, rate-limited per IP + book so a key cannot be
@@ -345,6 +408,131 @@ export function recordKeyVerifyFailure(ip: string, bookId: string): void {
   attempts.push(Date.now());
   keyAttemptLog.set(key, attempts);
 }
+
+/** (keyId, deviceId) pairs that already spent one use of a book key
+ *  (H-4 / L-4). /verify counts a use ONLY on the first presentation
+ *  per pair, so re-entering the key on the same device never burns
+ *  another use. Bounded in memory; a redeploy may reset it, which can
+ *  over-count by one use per device — accepted, see the report. */
+const countedKeyDevicePairs = new Set<string>();
+const COUNTED_PAIRS_MAX = 10000;
+
+export function wasKeyDeviceCounted(keyId: string, deviceId: string): boolean {
+  return countedKeyDevicePairs.has(`${keyId}::${deviceId}`);
+}
+
+export function markKeyDeviceCounted(keyId: string, deviceId: string): void {
+  if (countedKeyDevicePairs.size >= COUNTED_PAIRS_MAX) {
+    // Drop the oldest pairs first (insertion order) to stay bounded.
+    const drop = countedKeyDevicePairs.size - COUNTED_PAIRS_MAX + 1;
+    let i = 0;
+    for (const old of countedKeyDevicePairs) {
+      if (i++ >= drop) break;
+      countedKeyDevicePairs.delete(old);
+    }
+  }
+  countedKeyDevicePairs.add(`${keyId}::${deviceId}`);
+}
+
+// Admin password verification (M-4): ADMIN_PASSWORD_HASH is a salted
+// slow hash, `pbkdf2:<iterations>:<saltHex>:<hashHex>` (PBKDF2-SHA256,
+// 210000 iterations — chosen because Node AND Cloudflare Workers both
+// verify it natively, so one hash works on both hosts; crypto.scrypt
+// is Node-only and would silently fail on Pages). The unsalted SHA-256
+// branch below is a DEPRECATED migration shim only: it logs a warning
+// once and must be replaced by generating a pbkdf2 hash (see the
+// security report for the one-time command). The plaintext
+// ADMIN_PASSWORD env path is unchanged.
+export const PBKDF2_ITERATIONS = 210000;
+export const PBKDF2_KEY_LEN = 32;
+
+export function hashAdminPasswordPbkdf2(password: string): string {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEY_LEN, "sha256");
+  return `pbkdf2:${PBKDF2_ITERATIONS}:${salt.toString("hex")}:${hash.toString("hex")}`;
+}
+
+export function verifyPbkdf2Password(password: string, stored: string): boolean {
+  try {
+    const parts = stored.split(":");
+    if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
+    const iterations = Number(parts[1]);
+    if (!Number.isFinite(iterations) || iterations < 1000 || iterations > 10000000) return false;
+    const salt = Buffer.from(parts[2], "hex");
+    const expected = Buffer.from(parts[3], "hex");
+    if (salt.length === 0 || expected.length === 0) return false;
+    const hash = crypto.pbkdf2Sync(password, salt, iterations, expected.length, "sha256");
+    if (hash.length !== expected.length) return false;
+    return crypto.timingSafeEqual(hash, expected);
+  } catch {
+    return false;
+  }
+}
+
+let warnedLegacyPasswordHash = false;
+
+export function isAdminPasswordValid(cleanPassword: string): boolean {
+  const adminPass = getAdminPassword();
+  if (adminPass !== "" && safeEqualSecret(cleanPassword, adminPass)) return true;
+  const adminPassHash = getAdminPasswordHash();
+  if (adminPassHash === "") return false;
+  if (adminPassHash.startsWith("pbkdf2:")) {
+    return verifyPbkdf2Password(cleanPassword, adminPassHash);
+  }
+  // DEPRECATED shim: unsalted SHA-256 (or a plaintext value put in the
+  // _HASH var by mistake). Works for migration only — replace it with a
+  // pbkdf2 hash. Logs once per process so the admin notices.
+  if (!warnedLegacyPasswordHash) {
+    warnedLegacyPasswordHash = true;
+    console.warn(
+      "SECURITY WARNING: ADMIN_PASSWORD_HASH uses unsalted SHA-256 (deprecated). Generate a salted pbkdf2 hash and replace it — see the security report for the one-time command."
+    );
+  }
+  const passwordHash = crypto.createHash("sha256").update(cleanPassword).digest("hex");
+  return (
+    safeEqualSecret(cleanPassword, adminPassHash) ||
+    safeEqualSecret(passwordHash, adminPassHash.toLowerCase())
+  );
+}
+
+// Prune in-memory security state (M-8): every 5 minutes, drop expired
+// limiter entries and expired revoked sessions, and cap every map at
+// 10,000 entries (oldest first). Without this, distinct IP+book pairs
+// accumulate forever. The interval is unref'd so it never keeps a
+// serverless function or a test process alive.
+const SECURITY_MAP_CAP = 10000;
+
+function pruneAttemptMap(map: Map<string, number[]>, windowMs: number): void {
+  const now = Date.now();
+  for (const [key, times] of map) {
+    const kept = times.filter((t) => now - t < windowMs);
+    if (kept.length) map.set(key, kept);
+    else map.delete(key);
+  }
+  if (map.size > SECURITY_MAP_CAP) {
+    let drop = map.size - SECURITY_MAP_CAP;
+    for (const key of map.keys()) {
+      if (drop-- <= 0) break;
+      map.delete(key);
+    }
+  }
+}
+
+export function pruneSecurityState(): void {
+  pruneAttemptMap(authAttemptLog, AUTH_ATTEMPT_WINDOW_MS);
+  pruneAttemptMap(loginAttemptLog, LOGIN_ATTEMPT_WINDOW_MS);
+  pruneAttemptMap(keyAttemptLog, KEY_ATTEMPT_WINDOW_MS);
+  pruneRevokedSessions();
+  if (countedKeyDevicePairs.size > SECURITY_MAP_CAP) {
+    let drop = countedKeyDevicePairs.size - SECURITY_MAP_CAP;
+    for (const pair of countedKeyDevicePairs) {
+      if (drop-- <= 0) break;
+      countedKeyDevicePairs.delete(pair);
+    }
+  }
+}
+
+setInterval(pruneSecurityState, 5 * 60 * 1000).unref();
 
 // Site settings (data/site-settings.json): maintenance mode. The public
 // endpoint only ever exposes the maintenance flag + message — nothing else.
@@ -506,9 +694,35 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
+/** Allowed upload extensions (M-5). Shared by the multer fileFilter,
+ *  the chunked-upload init, and the Cloudflare handler. */
+export const ALLOWED_UPLOAD_EXTS = new Set([
+  ".pdf",
+  ".docx",
+  ".doc",
+  ".epub",
+  ".txt",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".webp",
+]);
+
+/** Server-side cap for an assembled chunked upload (M-5): the same
+ *  500 MB as the single-upload multer limit. */
+export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
+
 const upload = multer({
   storage,
   limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB limit
+  // M-5: only library file types. An uploaded .svg/.html served from
+  // this origin would run script in the site origin (stored XSS), so
+  // anything outside the allowlist is refused before it is stored.
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (ALLOWED_UPLOAD_EXTS.has(ext)) cb(null, true);
+    else cb(new Error(`File type ${ext || "(none)"} is not allowed.`));
+  },
 });
 
 // Helper to read catalog
@@ -670,11 +884,20 @@ async function githubApiFetch(
 // Reads the file's current sha first, then PUTs the new content. A 409
 // means the file changed between our read and write: re-read the sha once
 // and retry once. Returns ok:false (never throws) on any failure.
+//
+// SECURITY (C-1): some files must NEVER be committed — they may contain
+// secrets, and this repo is public. The denylist is checked before any
+// network call so no future caller can commit a secret file by mistake.
+const NEVER_COMMIT = new Set(["data/gate-settings.json"]);
+
 export async function commitFileToGitHub(
   repoPath: string,
   content: string,
   commitMessage: string
 ): Promise<{ ok: boolean; error?: string }> {
+  if (NEVER_COMMIT.has(repoPath)) {
+    return { ok: false, error: `Refusing to commit ${repoPath}: it may contain secrets.` };
+  }
   const token = (process.env.GITHUB_SYNC_TOKEN || "").trim();
   if (!token) return { ok: false, error: "GITHUB_SYNC_TOKEN is not set." };
   const [owner, repo] = GITHUB_SYNC_REPO.split("/").map((s) => s.trim());
@@ -849,14 +1072,56 @@ export function writePaymentSettings(data: any) {
 }
 
 // Gate key settings (admin-only writes; the public gate only learns whether
-// a key is set, never the key itself). Stored in data/gate-settings.json.
-// The key is shared by the admin in the Instagram broadcast channel; the
-// site never distributes it. Empty key by default, so the key field on the
-// gate stays hidden until the admin sets one.
+// a key is set, never the key itself).
+//
+// SECURITY (C-1): the gate key is stored ONLY as a salted SHA-256 hash
+// (gateKeyHash + gateKeySalt, same pattern as server/bookKeys.ts), and
+// data/gate-settings.json is NEVER committed to GitHub (see the
+// NEVER_COMMIT denylist in commitFileToGitHub). The plaintext key
+// exists only in memory, briefly, while the admin saves it — it is
+// hashed before any write, so even a committed file leaks nothing
+// usable. A file written by an older version may still hold a
+// plaintext `gateKey`; it keeps working until the next save, which
+// re-hashes it and drops the plaintext. Empty hash + empty legacy key
+// means "key not set", exactly as before.
 export const DEFAULT_BROADCAST_CHANNEL_URL = "https://www.instagram.com/channel/ZKdxHLW9r2VpKow7/";
+export const GATE_KEY_MIN_LENGTH = 12;
 export const EMPTY_GATE_SETTINGS = { gateKey: "", channelUrl: DEFAULT_BROADCAST_CHANNEL_URL };
 
-export function readGateSettings() {
+export interface GateSettings {
+  /** Legacy plaintext key, only ever read from an old file. Never written. */
+  gateKey: string;
+  gateKeyHash: string;
+  gateKeySalt: string;
+  channelUrl: string;
+}
+
+export function hashGateKey(key: string, salt: string): string {
+  return crypto.createHash("sha256").update(`${salt}:${key}`).digest("hex");
+}
+
+export function verifyGateKey(guess: string, settings: GateSettings): boolean {
+  if (settings.gateKeyHash && settings.gateKeySalt) {
+    const candidate = hashGateKey(guess, settings.gateKeySalt);
+    const a = Buffer.from(candidate, "utf8");
+    const b = Buffer.from(settings.gateKeyHash, "utf8");
+    if (a.length !== b.length) return false;
+    try {
+      return crypto.timingSafeEqual(a, b);
+    } catch {
+      return false;
+    }
+  }
+  // Legacy plaintext file (pre-hash): constant-time compare, same as before.
+  if (settings.gateKey) return safeEqualSecret(guess, settings.gateKey);
+  return false;
+}
+
+export function isGateKeySet(settings: GateSettings): boolean {
+  return Boolean(settings.gateKeyHash || settings.gateKey);
+}
+
+export function readGateSettings(): GateSettings {
   const pick = (filePath: string) => {
     try {
       if (fs.existsSync(filePath)) {
@@ -868,8 +1133,10 @@ export function readGateSettings() {
     }
     return null;
   };
-  const clean = (raw: any) => ({
+  const clean = (raw: any): GateSettings => ({
     gateKey: typeof raw?.gateKey === "string" ? raw.gateKey.trim().slice(0, 200) : "",
+    gateKeyHash: typeof raw?.gateKeyHash === "string" ? raw.gateKeyHash.trim().slice(0, 128) : "",
+    gateKeySalt: typeof raw?.gateKeySalt === "string" ? raw.gateKeySalt.trim().slice(0, 128) : "",
     // An empty stored link falls back to the default broadcast channel.
     channelUrl:
       typeof raw?.channelUrl === "string" && raw.channelUrl.trim()
@@ -880,45 +1147,67 @@ export function readGateSettings() {
   if (fromDataDir) return clean(fromDataDir);
   const fromRoot = pick(path.join(process.cwd(), "data", "gate-settings.json"));
   if (fromRoot) return clean(fromRoot);
-  return { ...EMPTY_GATE_SETTINGS };
+  return { gateKey: "", gateKeyHash: "", gateKeySalt: "", channelUrl: DEFAULT_BROADCAST_CHANNEL_URL };
 }
 
 export function writeGateSettings(data: any) {
-  const clean = {
-    gateKey: typeof data?.gateKey === "string" ? data.gateKey.trim().slice(0, 200) : "",
-    channelUrl: typeof data?.channelUrl === "string" ? data.channelUrl.trim().slice(0, 500) : "",
-  };
+  const current = readGateSettings();
+  const channelUrl =
+    typeof data?.channelUrl === "string" ? data.channelUrl.trim().slice(0, 500) : current.channelUrl;
+  let stored: GateSettings;
+  if (typeof data?.gateKey === "string" && data.gateKey.trim() !== "") {
+    // New key: hash it now. The plaintext never reaches the file.
+    const salt = crypto.randomBytes(16).toString("hex");
+    stored = {
+      gateKey: "",
+      gateKeyHash: hashGateKey(data.gateKey.trim(), salt),
+      gateKeySalt: salt,
+      channelUrl,
+    };
+  } else if (data?.gateKey === "") {
+    // Explicit clear.
+    stored = { gateKey: "", gateKeyHash: "", gateKeySalt: "", channelUrl };
+  } else if (typeof data?.gateKeyHash === "string" && data.gateKeyHash) {
+    // Internal: carry an already-hashed key over (e.g. a channel-only save).
+    stored = {
+      gateKey: "",
+      gateKeyHash: data.gateKeyHash,
+      gateKeySalt: typeof data?.gateKeySalt === "string" ? data.gateKeySalt : "",
+      channelUrl,
+    };
+  } else {
+    // No key change: keep whatever is stored, but drop any legacy
+    // plaintext by re-hashing it once.
+    if (current.gateKey && !current.gateKeyHash) {
+      const salt = crypto.randomBytes(16).toString("hex");
+      stored = { gateKey: "", gateKeyHash: hashGateKey(current.gateKey, salt), gateKeySalt: salt, channelUrl };
+    } else {
+      stored = { ...current, channelUrl };
+    }
+  }
   try {
-    fs.writeFileSync(gateSettingsFilePath, JSON.stringify(clean, null, 2), "utf8");
-    return clean;
+    fs.writeFileSync(gateSettingsFilePath, JSON.stringify(stored, null, 2), "utf8");
+    return stored;
   } catch (err) {
     console.error("Error writing gate settings:", err);
     return null;
   }
 }
 
-// Same durability as the payment settings: local write first, then a GitHub
-// commit when the token is configured. Never throws. Never logs the key.
+// Same durability as the payment settings, MINUS the GitHub commit:
+// gate settings are never committed (C-1 — the repo is public). The
+// key lives in the local file only until redeploy, so the response
+// always carries durable:false with a plain-language warning. Never
+// logs the key.
 export async function saveGateSettingsDurably(data: any): Promise<CatalogSaveResult> {
   const saved = writeGateSettings(data);
   if (!saved) return { saved: false, durable: false };
-  if (!isGitHubSyncConfigured()) {
-    return { saved: true, durable: false, durableWarning: DURABLE_SAVE_WARNING };
-  }
-  const committed = await commitFileToGitHub(
-    "data/gate-settings.json",
-    JSON.stringify(saved, null, 2),
-    "Admin: update gate settings"
-  );
-  if (!committed.ok) {
-    console.warn("GitHub gate-settings commit failed:", committed.error);
-    return {
-      saved: true,
-      durable: false,
-      durableWarning: `Saved for now only — the permanent GitHub save failed (${committed.error || "unknown error"}). It will vanish on redeploy.`,
-    };
-  }
-  return { saved: true, durable: true };
+  return {
+    saved: true,
+    durable: false,
+    durableWarning:
+      "Saved for now only — the gate key is never committed to GitHub, so it will vanish on redeploy. Set it again after a redeploy, or keep it in the broadcast channel.",
+  };
 }
 
 // Helper to extract Google Drive file ID
@@ -937,22 +1226,45 @@ export function extractDriveFileId(urlOrId?: string): string | null {
   return null;
 }
 
-// Express setup: JSON bodies are capped at 10 MB. The old 500 MB limit
-// let a single huge body exhaust function memory; chunked uploads use
-// their own multer path and are unaffected.
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// Express setup: JSON bodies are capped at 1 MB. The old 500 MB limit
+// let a single huge body exhaust function memory on ANY route,
+// unauthenticated; chunked uploads use their own multer path and are
+// unaffected.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
+
+// Security headers + CORS. CORS is restricted to the two real origins
+// (never `*`): the header is set only for an allowlisted Origin, with
+// `Vary: Origin`. CSP: the app ships no inline scripts (one external
+// Vite module script), so `script-src 'self'` holds; Google Fonts needs
+// its two origins added to style-src/font-src or the fonts break —
+// that is the only deviation from the audit's draft CSP.
+export const ALLOWED_ORIGINS = new Set([
+  "https://ilmeghayb.vercel.app",
+  "https://ilmeghayb.pages.dev",
+]);
+
+export const CONTENT_SECURITY_POLICY =
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://icbqkqvlonjzqokxljpg.supabase.co https://www.googleapis.com https://drive.google.com; frame-src https://docs.google.com; object-src 'none'; base-uri 'self'; form-action 'self'";
+
+export const STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains; preload";
 
 // Global CORS & OPTIONS Preflight handler
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+  if (typeof origin === "string" && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked, x-book-keys");
+  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked, x-book-unlock, x-device-id");
   res.setHeader(
     "Access-Control-Expose-Headers",
     "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type"
   );
+  res.setHeader("Content-Security-Policy", CONTENT_SECURITY_POLICY);
+  res.setHeader("Strict-Transport-Security", STRICT_TRANSPORT_SECURITY);
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Max-Age", "86400");
     res.sendStatus(204);
@@ -994,6 +1306,34 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+/** Second CSRF layer (M-1): state-changing admin routes reject a
+ *  request whose Origin header is present but not allowlisted. Missing
+ *  Origin is allowed (non-browser clients). Placed AFTER the path
+ *  normalisation above, so /api/index?__path=admin/... is seen as its
+ *  real /api/admin/... path. Cookie auth is already SameSite=Lax; this
+ *  is the second layer, not the only one. */
+export function requireSameOrigin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const method = (req.method || "").toUpperCase();
+  if (method !== "POST" && method !== "PUT" && method !== "DELETE" && method !== "PATCH") {
+    next();
+    return;
+  }
+  const p = req.path || "";
+  const isAdminRoute = p === "/api/admin" || p.startsWith("/api/admin/") || p === "/admin" || p.startsWith("/admin/");
+  if (!isAdminRoute) {
+    next();
+    return;
+  }
+  const origin = req.headers.origin;
+  if (typeof origin === "string" && origin && !ALLOWED_ORIGINS.has(origin)) {
+    res.status(403).json({ error: "Forbidden: cross-origin request." });
+    return;
+  }
+  next();
+}
+
+app.use(requireSameOrigin);
 
 // Handle JSON parsing syntax errors gracefully - ALWAYS return valid JSON
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -1074,18 +1414,31 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static public assets (uploads & sample pdfs)
+// Serve static public assets (uploads & sample pdfs). Uploads are
+// served as attachments with nosniff (M-5): nothing uploaded may ever
+// execute inline in the site origin. The site's own sample PDFs keep
+// inline display for the reader.
 const servePdfOptions: Parameters<typeof express.static>[1] = {
   setHeaders: (res, filePath) => {
     const mime = getMimeType(filePath);
     res.setHeader("Content-Type", mime);
+    res.setHeader("X-Content-Type-Options", "nosniff");
     if (filePath.toLowerCase().endsWith(".pdf")) {
       res.setHeader("Content-Disposition", "inline");
     }
   },
 };
 
-app.use("/uploads", express.static(uploadsDir, servePdfOptions));
+const serveUploadOptions: Parameters<typeof express.static>[1] = {
+  setHeaders: (res, filePath) => {
+    const mime = getMimeType(filePath);
+    res.setHeader("Content-Type", mime);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Disposition", "attachment");
+  },
+};
+
+app.use("/uploads", express.static(uploadsDir, serveUploadOptions));
 app.use("/sample-pdfs", express.static(samplePdfDir, servePdfOptions));
 
 // 404 JSON handler for missing static upload files (prevents falling through to index.html SPA)
@@ -1158,26 +1511,27 @@ app.post(["/api/admin/payment-settings", "/admin/payment-settings"], requireAdmi
 // link. The key itself is never returned here.
 app.get(["/api/gate/status", "/gate/status"], (req, res) => {
   const settings = readGateSettings();
-  res.json({ keySet: settings.gateKey.length > 0, channelUrl: settings.channelUrl });
+  res.json({ keySet: isGateKeySet(settings), channelUrl: settings.channelUrl });
 });
 
-// Public gate unlock: checks the key server-side, constant-time. The key is
-// never logged and never returned.
+// Public gate unlock: checks the key server-side, constant-time, against
+// the stored hash (or a legacy plaintext file). The key is never logged
+// and never returned.
 app.post(["/api/gate/unlock", "/gate/unlock"], async (req, res) => {
   const stored = readGateSettings();
-  if (!stored.gateKey) {
+  if (!isGateKeySet(stored)) {
     res.status(404).json({ error: "Gate key is not set." });
     return;
   }
   // Rate-limited like book-key verify: 10 failed tries per IP in 15 min,
   // on top of the existing 600 ms delay on failure.
-  if (isAuthRateLimited(req.ip || "unknown", "gate-unlock")) {
+  if (isAuthRateLimited(getClientIp(req), "gate-unlock")) {
     res.status(429).json({ error: "Too many wrong keys. Try again in 15 minutes." });
     return;
   }
   const guess = typeof req.body?.key === "string" ? req.body.key : "";
-  if (!safeEqualSecret(guess, stored.gateKey)) {
-    recordAuthFailure(req.ip || "unknown", "gate-unlock");
+  if (!verifyGateKey(guess, stored)) {
+    recordAuthFailure(getClientIp(req), "gate-unlock");
     await new Promise((r) => setTimeout(r, 600));
     res.status(401).json({ error: "Wrong key. Check the key in the broadcast channel and try again." });
     return;
@@ -1188,21 +1542,36 @@ app.post(["/api/gate/unlock", "/gate/unlock"], async (req, res) => {
 // Admin-only: gate settings, without the key value.
 app.get(["/api/admin/gate-settings", "/admin/gate-settings"], requireAdmin, (req, res) => {
   const settings = readGateSettings();
-  res.json({ keySet: settings.gateKey.length > 0, channelUrl: settings.channelUrl });
+  res.json({ keySet: isGateKeySet(settings), channelUrl: settings.channelUrl });
 });
 
 // Admin-only: save gate settings. removeKey clears the key; a non-empty
-// gateKey sets a new one; an absent/empty gateKey with removeKey false keeps
+// gateKey sets a new one (at least 12 characters — a short human word is
+// brute-forceable); an absent/empty gateKey with removeKey false keeps
 // the existing key (never wiped by accident). channelUrl, when provided as a
 // string, replaces the stored one (empty falls back to the default on read).
 app.post(["/api/admin/gate-settings", "/admin/gate-settings"], requireAdmin, async (req, res) => {
   const body = req.body || {};
   const current = readGateSettings();
-  const next = { gateKey: current.gateKey, channelUrl: current.channelUrl };
+  // Carry the stored hash over unless the key is being replaced/cleared.
+  const next: any = {
+    gateKeyHash: current.gateKeyHash,
+    gateKeySalt: current.gateKeySalt,
+    channelUrl: current.channelUrl,
+  };
   if (body.removeKey === true) {
     next.gateKey = "";
+    delete next.gateKeyHash;
+    delete next.gateKeySalt;
   } else if (typeof body.gateKey === "string" && body.gateKey.trim() !== "") {
-    next.gateKey = body.gateKey;
+    const candidate = body.gateKey.trim();
+    if (candidate.length < GATE_KEY_MIN_LENGTH) {
+      res.status(400).json({ error: "Gate key must be at least 12 characters. Use a long phrase, not a single word." });
+      return;
+    }
+    next.gateKey = candidate;
+    delete next.gateKeyHash;
+    delete next.gateKeySalt;
   }
   if (typeof body.channelUrl === "string") {
     next.channelUrl = body.channelUrl;
@@ -1215,7 +1584,7 @@ app.post(["/api/admin/gate-settings", "/admin/gate-settings"], requireAdmin, asy
   const stored = readGateSettings();
   res.json({
     success: true,
-    keySet: stored.gateKey.length > 0,
+    keySet: isGateKeySet(stored),
     channelUrl: stored.channelUrl,
     durable: save.durable,
     durableWarning: save.durableWarning,
@@ -1253,16 +1622,23 @@ app.post(["/api/admin/site-settings", "/admin/site-settings"], requireAdmin, asy
 });
 
 // Key unlock: enter the key the admin shared for ONE paid book. A
-// successful entry counts one use of that key (maxUses, default 100) and
-// unlocks that book — and only that book — on this device. A wrong key,
-// a key for another book, a revoked key, or a used-up key all get the same
-// generic answer, so nothing leaks about which one it was. No money is
-// involved: the key is free, shared by the admin with a follower.
+// successful entry counts one use of that key (maxUses, default 100)
+// — but ONLY the first time this (key, device) pair presents it, so
+// re-entering the key on the same device never burns another use
+// (L-4). The response carries a short-lived unlock token (30 days)
+// for that book + device; catalog / stream / download accept ONLY the
+// token, never the raw key again (H-4). The client sends its stable
+// per-browser id in `x-device-id`; without one, every presentation
+// counts a use, as before. A wrong key, a key for another book, a
+// revoked key, or a used-up key all get the same generic answer, so
+// nothing leaks about which one it was. No money is involved: the key
+// is free, shared by the admin with a follower.
 app.post(["/api/book-keys/verify", "/book-keys/verify"], async (req, res) => {
   const body = req.body || {};
   const bookId = typeof body.bookId === "string" ? body.bookId.trim() : "";
   const key = typeof body.key === "string" ? body.key : "";
-  const ip = (req.ip || req.socket?.remoteAddress || "unknown").toString();
+  const deviceId = typeof req.headers["x-device-id"] === "string" ? req.headers["x-device-id"].trim() : "";
+  const ip = getClientIp(req);
   if (!bookId || !key) {
     res.status(400).json({ ok: false, error: "Book and key are required." });
     return;
@@ -1282,20 +1658,27 @@ app.post(["/api/book-keys/verify", "/book-keys/verify"], async (req, res) => {
   const store = getBookKeyStore();
   const candidates = store.keys.filter((k) => k.bookId === bookId);
   const record = candidates.find((k) => verifyBookKey(k, key));
-  if (!record || !isKeyUsable(record)) {
+  const alreadyCounted = Boolean(record) && isValidDeviceId(deviceId) && wasKeyDeviceCounted(record.id, deviceId);
+  if (!record || (!alreadyCounted && !isKeyUsable(record))) {
     recordKeyVerifyFailure(ip, bookId);
     res.status(400).json({ ok: false, error: "Wrong key. Check the key and try again." });
     return;
   }
-  record.uses += 1;
-  record.lastUsedAt = new Date().toISOString();
+  if (!alreadyCounted) {
+    record.uses += 1;
+    record.lastUsedAt = new Date().toISOString();
+    if (isValidDeviceId(deviceId)) markKeyDeviceCounted(record.id, deviceId);
+  }
   const save = await saveBookKeyStoreDurably();
+  const unlock = createBookUnlockToken(bookId, isValidDeviceId(deviceId) ? deviceId : "no-device", getSessionSecret());
   res.json({
     ok: true,
     bookId,
     uses: record.uses,
     usesLeft: keyUsesLeft(record),
     maxUses: record.maxUses,
+    unlockToken: unlock.token,
+    unlockExpiresAt: unlock.expiresAt,
     durable: save.durable,
     durableWarning: save.durableWarning,
   });
@@ -1411,12 +1794,14 @@ app.get(["/api/admin/topic-requests", "/admin/topic-requests"], requireAdmin, as
 });
 
 // Admin: how many messages are still new — the bell badge count.
+// Uses a head-count query (F8), not the capped 200-row list, so the
+// bell never undercounts past 200 rows.
 app.get(["/api/admin/topic-requests/unread", "/admin/topic-requests/unread"], requireAdmin, async (req, res) => {
   const config = supabaseAdminConfigOr503(res);
   if (!config) return;
   try {
-    const items = await listTopicRequestsWithReplies(fetch, config);
-    res.json({ unread: countUnread(items) });
+    const unread = await countUnreadRequests(fetch, config);
+    res.json({ unread });
   } catch (err) {
     topicInboxError(res, err);
   }
@@ -1434,6 +1819,22 @@ app.post(["/api/admin/topic-requests/:id/approve", "/admin/topic-requests/:id/ap
       return;
     }
     res.json({ success: true });
+  } catch (err) {
+    topicInboxError(res, err);
+  }
+});
+
+// Admin: delete one message entirely (the inbox Delete button).
+app.delete(["/api/admin/topic-requests/:id", "/admin/topic-requests/:id"], requireAdmin, async (req, res) => {
+  const config = supabaseAdminConfigOr503(res);
+  if (!config) return;
+  try {
+    const result = await deleteTopicRequest(fetch, config, req.params.id);
+    if (!result.found) {
+      res.status(404).json({ error: "Message not found." });
+      return;
+    }
+    res.json({ ok: true });
   } catch (err) {
     topicInboxError(res, err);
   }
@@ -1507,6 +1908,33 @@ app.get(["/api/admin/drive/diagnostic", "/admin/drive/diagnostic"], requireAdmin
   }
 });
 
+/** Validate a `Range: bytes=start-end` header against a known file
+ *  size (L-6). Returns { start, end } on success, or null when the
+ *  range is malformed or unsatisfiable — the caller answers 416 with
+ *  `Content-Range: bytes *​/<size>`. Exported for tests. */
+export function parseRangeHeader(range: string | undefined, fileSize: number): { start: number; end: number } | null {
+  if (!range || typeof range !== "string") return null;
+  const match = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+  if (!match) return null;
+  const startRaw = match[1];
+  const endRaw = match[2];
+  let start: number;
+  let end: number;
+  if (startRaw === "" && endRaw !== "") {
+    // Suffix range: bytes=-N means the last N bytes.
+    const suffix = Number(endRaw);
+    if (!Number.isFinite(suffix) || suffix <= 0) return null;
+    start = Math.max(0, fileSize - suffix);
+    end = fileSize - 1;
+  } else {
+    start = Number(startRaw);
+    end = endRaw === "" ? fileSize - 1 : Number(endRaw);
+  }
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  if (start < 0 || start >= fileSize || end < start || end >= fileSize) return null;
+  return { start, end };
+}
+
 // 1.2 Google Drive Streaming & Reading Endpoint
 export const handleDriveFileStream = async (req: express.Request, res: express.Response) => {
   const rawParam = req.params.fileId || req.params.id || req.params[0] || req.path || "";
@@ -1560,7 +1988,7 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
   // Paid gate: a paid catalog book is never streamed to a locked visitor.
   // Admins (and the admin previewing a just-uploaded file, which has no
   // catalog book yet) are unaffected, and so is a visitor holding that
-  // book's own unlock key (x-book-keys header). Following alone does not
+  // book's own unlock key (x-book-unlock header). Following alone does not
   // open a paid book.
   if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id))) {
     res.status(402).json({
@@ -1610,9 +2038,6 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
       "Cache-Control": "public, max-age=86400",
       "Accept-Ranges": "bytes",
       "Content-Disposition": "inline",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-      "Access-Control-Allow-Headers": "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked",
       "Access-Control-Expose-Headers": "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type",
     };
 
@@ -1624,9 +2049,13 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
     }
 
     if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const parsed = parseRangeHeader(range, fileSize);
+      if (!parsed) {
+        res.setHeader("Content-Range", `bytes */${fileSize}`);
+        res.status(416).json({ error: "Range not satisfiable." });
+        return;
+      }
+      const { start, end } = parsed;
       const chunksize = end - start + 1;
 
       headers["Content-Range"] = `bytes ${start}-${end}/${fileSize}`;
@@ -1671,9 +2100,6 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
         "Cache-Control": "public, max-age=86400",
         "Accept-Ranges": "bytes",
         "Content-Disposition": "inline",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-        "Access-Control-Allow-Headers": "Range, Authorization, Content-Type, Accept, Origin, x-admin-token, x-follow-unlocked",
         "Access-Control-Expose-Headers":
           "Accept-Ranges, Content-Encoding, Content-Length, Content-Range, Content-Type",
       };
@@ -1704,6 +2130,15 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
 
       const range = req.headers.range;
       if (range && size) {
+        // Validate before forwarding to Drive (L-6): a junk range
+        // answers 416 here instead of a 500 or a Drive error.
+        const fileSize = Number(size);
+        const parsed = Number.isFinite(fileSize) ? parseRangeHeader(range, fileSize) : null;
+        if (!parsed) {
+          res.setHeader("Content-Range", `bytes */${size}`);
+          res.status(416).json({ error: "Range not satisfiable." });
+          return;
+        }
         const streamRes = await drive.files.get(
           { fileId: driveFileId, alt: "media", supportsAllDrives: true },
           { responseType: "stream", headers: { Range: range } }
@@ -1713,9 +2148,7 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
         const contentRange = (streamRes.headers as any)?.["content-range"] || (streamRes.headers as any)?.["Content-Range"];
         const contentLength = (streamRes.headers as any)?.["content-length"] || (streamRes.headers as any)?.["Content-Length"];
 
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10) || 0;
-        const end = parts[1] ? parseInt(parts[1], 10) : size - 1;
+        const { start, end } = parsed;
         const computedChunkSize = Math.max(0, end - start + 1);
 
         headers["Content-Range"] = contentRange || `bytes ${start}-${end}/${size}`;
@@ -1743,11 +2176,12 @@ export const handleDriveFileStream = async (req: express.Request, res: express.R
       return;
     } catch (err: any) {
       const errorStatus = err?.status || err?.code || 500;
+      // L-3: log the Drive detail server-side only; the client gets a
+      // generic message so it cannot tell "not found" from "no access".
       console.error(`[DriveStream] Error streaming Drive file ${driveFileId}: status=${errorStatus} message=${err?.message || err}`);
       if (!res.headersSent) {
         res.status(typeof errorStatus === "number" && errorStatus >= 400 && errorStatus < 600 ? errorStatus : 500).json({
-          error: `Failed to stream file from Google Drive: ${err?.message || err}`,
-          status: errorStatus,
+          error: "Could not load this file.",
         });
       }
       return;
@@ -1804,7 +2238,7 @@ app.get(pdfDownloadRoutes, async (req, res) => {
 
   // Paid gate: a paid catalog book is never downloadable by a locked
   // visitor. Admins download it directly, and so does a visitor holding
-  // that book's own unlock key (x-book-keys header). Following alone
+  // that book's own unlock key (x-book-unlock header). Following alone
   // does not open a paid book.
   if (isPaidBookLocked(book, verifyAdminRequest(req), getKeyUnlockedBookIds(req).has(book?.id))) {
     res.status(402).json({
@@ -2128,7 +2562,7 @@ export function sanitizeCatalog(
   if (!catalog) return { folders: [], books: [] };
   const safeFolders = (catalog.folders || []).map(sanitizeFolder);
   // A key unlocks ONE book only, so the check is per book: a Set of
-  // unlocked book ids (from the request's x-book-keys header), or a plain
+  // unlocked book ids (from the request's x-book-unlock header), or a plain
   // boolean for callers/tests that unlock one book at a time. Following
   // alone opens no paid book.
   const safeBooks = (catalog.books || []).map((b: any) =>
@@ -2170,7 +2604,7 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
   // Non-admin catalogs have locked paid-book links stripped (see
   // sanitizeBook) and oversized inline covers dropped, so the public
   // payload stays small and a paid book can never be opened from it —
-  // unless the visitor entered that book's own unlock key (x-book-keys
+  // unless the visitor entered that book's own unlock key (x-book-unlock
   // header), in which case only that book's links stay.
   const safeCatalog = sanitizeCatalog(catalog, isAdmin, getKeyUnlockedBookIds(req));
 
@@ -2185,7 +2619,7 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
     // it may hold different /tmp copies. Vary on the admin token and the
     // book-keys flag so an admin or key-unlocked response is never served
     // to a locked visitor (and vice versa).
-    res.set('Vary', 'x-admin-token, x-follow-unlocked, x-book-keys');
+    res.set('Vary', 'Origin, x-admin-token, x-follow-unlocked, x-book-unlock');
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
     const visibleFolders = (safeCatalog.folders || []).filter((f: any) => f.visible !== false);
     const visibleBooks = (safeCatalog.books || []).filter((b: any) => b.visible !== false);
@@ -2199,7 +2633,7 @@ app.get(["/api/catalog", "/catalog"], async (req, res) => {
 });
 
 // 3. Admin Authentication routes
-app.post(["/api/admin/login", "/admin/login"], (req, res) => {
+app.post(["/api/admin/login", "/admin/login"], async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -2207,30 +2641,27 @@ app.post(["/api/admin/login", "/admin/login"], (req, res) => {
     return;
   }
 
-  // Rate-limited like book-key verify: 10 failed tries per IP in 15 min.
-  if (isAuthRateLimited(req.ip || "unknown", "admin-login")) {
+  const cleanUsername = (username || "").trim();
+  const cleanPassword = (password || "").trim();
+  const ip = getClientIp(req);
+
+  // Rate-limited (H-1): 5 failed tries per IP + username in 15 min.
+  if (isLoginRateLimited(ip, cleanUsername)) {
     res.status(429).json({ success: false, error: "Too many failed login attempts. Try again in 15 minutes." });
     return;
   }
 
-  const cleanUsername = (username || "").trim();
-  const cleanPassword = (password || "").trim();
   const adminUser = getAdminUsername();
-  const adminPass = getAdminPassword();
-  const adminPassHash = getAdminPasswordHash();
-  const passwordHash = crypto.createHash("sha256").update(cleanPassword).digest("hex");
 
   const isUserValid = cleanUsername.toLowerCase() === adminUser.toLowerCase();
   // Timing-safe comparison; an unset stored password ("") never matches.
-  const isPasswordValid =
-    (adminPass !== "" && safeEqualSecret(cleanPassword, adminPass)) ||
-    (adminPassHash !== "" &&
-      (safeEqualSecret(cleanPassword, adminPassHash) ||
-        safeEqualSecret(passwordHash, adminPassHash.toLowerCase())));
+  // The hash path is pbkdf2 (M-4) with an unsalted-SHA-256 shim that
+  // logs a deprecation warning — see isAdminPasswordValid.
+  const isPasswordValid = isAdminPasswordValid(cleanPassword);
 
   if (isUserValid && isPasswordValid) {
+    clearLoginFailures(ip, cleanUsername);
     const sessionToken = generateSessionToken();
-    activeSessions.add(sessionToken);
 
     // httpOnly so page JavaScript (and any injected script) cannot read the
     // session cookie; Secure on Vercel/HTTPS so it is never sent over HTTP.
@@ -2241,9 +2672,12 @@ app.post(["/api/admin/login", "/admin/login"], (req, res) => {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    res.json({ success: true, token: sessionToken, username: adminUser });
+    res.json({ success: true, username: adminUser });
   } else {
-    recordAuthFailure(req.ip || "unknown", "admin-login");
+    recordLoginFailure(ip, cleanUsername);
+    // Fixed ~600 ms delay on failure, matching the gate route, so a
+    // wrong guess always costs the same time.
+    await new Promise((r) => setTimeout(r, 600));
     res.status(401).json({ success: false, error: "Invalid administrator credentials." });
   }
 });
@@ -2765,6 +3199,16 @@ app.post(["/api/admin/upload/init", "/admin/upload/init"], requireAdmin, (req, r
     res.status(400).json({ error: "Filename and fileSize are required." });
     return;
   }
+  // M-5: the allowlist applies to chunked uploads too, on the declared
+  // filename (parts themselves carry no extension).
+  if (!ALLOWED_UPLOAD_EXTS.has(path.extname(filename).toLowerCase())) {
+    res.status(400).json({ error: `File type ${path.extname(filename).toLowerCase() || "(none)"} is not allowed.` });
+    return;
+  }
+  if (!Number.isFinite(Number(fileSize)) || Number(fileSize) <= 0 || Number(fileSize) > MAX_UPLOAD_BYTES) {
+    res.status(400).json({ error: "fileSize must be between 1 byte and 500 MB." });
+    return;
+  }
   const ext = path.extname(filename);
   const uploadId = `up-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
   const sessionDir = path.join(uploadSessionsDir, uploadId);
@@ -2825,6 +3269,9 @@ const chunkUploadStorage = multer.diskStorage({
 const chunkUpload = multer({
   storage: chunkUploadStorage,
   limits: { fileSize: 60 * 1024 * 1024 }, // 60MB chunk max
+  // Note: chunk parts are named part-N with no extension, so the
+  // allowlist is enforced on the declared filename at init and again
+  // at complete time — see below.
 });
 
 app.post(["/api/admin/upload/part", "/admin/upload/part"], requireAdmin, (req, res) => {
@@ -2910,6 +3357,25 @@ app.post(["/api/admin/upload/complete", "/admin/upload/complete"], requireAdmin,
     }
 
     const actualStats = fs.statSync(destPath);
+
+    // M-5: the assembled file must be exactly the size the client
+    // declared, and inside the server cap — a mismatched or oversized
+    // assembly is rejected and deleted, never stored or sent to Drive.
+    if (
+      !ALLOWED_UPLOAD_EXTS.has(path.extname(originalFilename || "").toLowerCase()) ||
+      actualStats.size !== Number(metadata.fileSize) ||
+      actualStats.size > MAX_UPLOAD_BYTES
+    ) {
+      try {
+        fs.rmSync(destPath, { force: true });
+      } catch {
+        // ignore cleanup errors
+      }
+      res.status(400).json({
+        error: "Upload failed: the assembled file does not match the declared size, exceeds the 500 MB limit, or has a disallowed file type.",
+      });
+      return;
+    }
 
     // If Google Drive is configured, upload assembled file to Drive for persistent storage
     if (isGoogleDriveConfigured()) {

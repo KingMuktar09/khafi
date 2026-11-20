@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { generateFallbackCoverSvg } from '../../services/pdf';
+import React, { memo, useState } from 'react';
+import { generateFallbackCoverSvg } from '../../services/fallbackCover';
 import { Book } from '../../types';
 import { getItemType, getItemUrl, getTypeLabel, getTypeBadgeColor, getFileExtension, getBookCoverUrl } from '../../utils/fileUtils';
 import {
@@ -23,9 +23,18 @@ interface CoverImageProps {
   category?: string;
   fileType?: string;
   className?: string;
+  /**
+   * Drive thumbnail width. Grid cards render ~170-190 px wide on a
+   * phone, so they ask for w300; larger views keep the default w400.
+   * Only rewrites a Drive thumbnail URL, nothing else.
+   */
+  thumbWidth?: number;
 }
 
-export const CoverImage: React.FC<CoverImageProps> = ({
+// Memoised: a cover only changes when its own props change. The card
+// list re-renders on every favourite tap / keystroke, and without this
+// each of the 138 covers re-rendered (and re-resolved its URL) with it.
+export const CoverImage: React.FC<CoverImageProps> = memo(({
   book,
   coverUrl,
   fileUrl,
@@ -34,6 +43,7 @@ export const CoverImage: React.FC<CoverImageProps> = ({
   category,
   fileType,
   className = 'w-full h-full object-cover',
+  thumbWidth = 400,
 }) => {
   const [imageError, setImageError] = useState(false);
 
@@ -45,16 +55,22 @@ export const CoverImage: React.FC<CoverImageProps> = ({
   // then the image file itself. Paid books have no Drive id for visitors, so
   // they fall through to the generated title cover below — no leak.
   const rawUrl = book?.thumbnailUrl || book?.coverUrl || coverUrl || getBookCoverUrl(book) || (itemType === 'image' ? (book?.fileUrl || fileUrl) : undefined);
+  // Grid cards ask for a smaller Drive thumbnail (see thumbWidth):
+  // the fileUtils default is w400, which is ~2x the displayed size.
+  const thumbUrl =
+    rawUrl && thumbWidth !== 400 && rawUrl.includes('drive.google.com/thumbnail')
+      ? rawUrl.replace(/([?&])sz=w\d+/, `$1sz=w${thumbWidth}`)
+      : rawUrl;
 
   const ext = getFileExtension(book?.fileUrl || fileUrl || itemTitle).toUpperCase();
   const badgeColor = getTypeBadgeColor(itemType);
 
   // If we have an actual image URL and no loading error
-  if (rawUrl && !imageError) {
+  if (thumbUrl && !imageError) {
     return (
       <div className="relative w-full h-full bg-[var(--bg-surface)] overflow-hidden group/cover flex items-center justify-center">
         <img
-          src={rawUrl}
+          src={thumbUrl}
           alt={`Thumbnail for ${itemTitle}`}
           onError={() => setImageError(true)}
           className={`${className} transition-transform duration-500 group-hover/cover:scale-105`}
@@ -146,4 +162,4 @@ export const CoverImage: React.FC<CoverImageProps> = ({
       <div className="absolute inset-0 border border-white/5 pointer-events-none" />
     </div>
   );
-};
+});

@@ -58,7 +58,8 @@ export const PaidLockScreen: React.FC<PaidLockScreenProps> = ({ book, onBack, ba
       setError(res.error || t('paid.wrongKey', lang));
       return;
     }
-    storage.saveBookKey(book.id, key);
+    // verifyBookKey already stored the unlock token for this device
+    // (api.ts); the raw key is never kept on this device.
     setUnlocked(true);
     try {
       await api.reloadCatalog();

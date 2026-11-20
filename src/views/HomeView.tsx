@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import {
   BookOpen,
   ArrowRight,
@@ -25,7 +25,28 @@ import { localizeJourney, resolveJourneys, journeyProgress } from '../data/speci
 import { getTopicOfTheDay, formatTopicDate, topicRouteFor } from '../data/topicsContent';
 import { greetingForHour } from '../utils/greeting';
 import { t, tf } from '../data/i18n';
-import { HomeSkyCards } from '../components/special/HomeSkyCards';
+// The sky cards pull in astronomy-engine (~400 KB source) for four
+// small facts. Lazy, so the hero paints without it; it loads just
+// after first paint, behind a same-size skeleton so nothing jumps.
+const HomeSkyCards = lazy(() => import('../components/special/HomeSkyCards').then((m) => ({ default: m.HomeSkyCards })));
+
+/** Same-size placeholder for the sky cards: same 4-up grid, same
+ *  card padding and height, so the hero does not jump when the real
+ *  cards load in. */
+const HomeSkyCardsSkeleton: React.FC = () => (
+  <section aria-hidden="true">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="ms-card p-5 space-y-2 min-h-[164px]">
+          <div className="skeleton h-3 w-20" />
+          <div className="skeleton h-6 w-32" />
+          <div className="skeleton h-4 w-full" />
+          <div className="skeleton h-3 w-16" />
+        </div>
+      ))}
+    </div>
+  </section>
+);
 import { HomeReckonBox } from '../components/special/HomeReckonBox';
 
 export const HomeView: React.FC = () => {
@@ -67,6 +88,9 @@ export const HomeView: React.FC = () => {
           <img
             src={siteConfig.logo}
             alt={t('home.logoAltLong', lang)}
+            fetchPriority="high"
+            width={112}
+            height={112}
             className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border border-[var(--gold)]/40 shadow-lg shadow-black/40 animate-fade-up"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
             style={{ animationDelay: '0ms' }}
@@ -155,7 +179,9 @@ export const HomeView: React.FC = () => {
       </div>
 
       {/* The sky right now: live stat cards, then the reckon box. */}
-      <HomeSkyCards />
+      <Suspense fallback={<HomeSkyCardsSkeleton />}>
+        <HomeSkyCards />
+      </Suspense>
       <HomeReckonBox />
 
       {/* Continue Reading Section (If books are in progress) */}

@@ -29,6 +29,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'topics.sourceLabel': 'Source: ',
     'topics.sourcesLabel': 'Sources: ',
     'topics.whatOthersSaid': 'What others said',
+    'topics.commentsLoadFailed': 'Comments could not be loaded. Check your connection and try again.',
+    'topics.showMore': 'Show more comments',
     'topics.anonymous': 'Anonymous',
     'topics.hubTitle': 'Topics',
     'topics.hubSubtitle':
@@ -85,21 +87,24 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'sendbox.requestNote':
       'New topics come from requests like yours. Write the topic you want, with your Instagram name if you want to show who you are, or post as anonymous.',
     'sendbox.requestDone':
-      'Thanks. Your request is saved. New topics get added to this page in the order they were made.',
+      'Thanks. Your request is saved. It is read privately, and the answer is shared on Instagram, not added to this page.',
     'sendbox.askTitle': 'Ask a question',
     'sendbox.askLabel': 'Your question',
     'sendbox.askPlaceholder': 'What do you want to know?',
     'sendbox.askNote':
-      'Send your question with your Instagram name, or post as anonymous. If you give your name, the answer comes back to you on Instagram too. New answers get added here so others can read them too.',
+      'Send your question with your Instagram name, or post as anonymous. If you give your name, the answer comes back to you on Instagram too.',
     'sendbox.askDone':
-      'Thanks. Your question is saved. The answer will come back to you on Instagram, and it will be added here too.',
+      'Thanks. Your question is saved. It is read privately, and the answer will come back to you on Instagram.',
     'sendbox.commentTitle': 'Comments and requests',
     'topics.replyFromLibrary': 'Reply from the library',
     'sendbox.commentLabel': 'Your comment, or a topic you need',
     'sendbox.commentPlaceholder': 'Share a thought on this topic, or write a topic you need.',
-    'sendbox.commentNote': 'Good comments and answered wants get added to this page.',
+    'sendbox.commentNote': 'Good comments get added to this page after they are approved.',
     'sendbox.commentDone':
-      'Thanks. Your note is saved. Good comments and answered wants get added to this page.',
+      'Thanks. Your note is saved. Good comments get added to this page after they are approved.',
+    'sendbox.saveFailed': 'Could not save. Check your connection and try again, or paste it in the DM.',
+    'sendbox.retry': 'Try again',
+    'sendbox.copyAndOpenDm': 'Copy text and open Instagram DM',
   },
   hi: {
     // ---- Topics chrome (hub + topic pages) ----
@@ -115,6 +120,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'topics.sourceLabel': 'Source: ',
     'topics.sourcesLabel': 'Sources: ',
     'topics.whatOthersSaid': 'Doosron ne kya kaha',
+    'topics.commentsLoadFailed': 'Comments load nahi hue. Apna connection check karo aur phir se try karo.',
+    'topics.showMore': 'Aur comments dikhao',
     'topics.anonymous': 'Anonymous',
     'topics.hubTitle': 'Topics',
     'topics.hubSubtitle':
@@ -171,21 +178,24 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'sendbox.requestNote':
       'Naye topics tumhari jaisi guzarish se aate hain. Woh topic likho jo tum chahte ho, apne Instagram naam ke saath agar tum batana chahte ho ki tum kaun ho, ya bina naam ke post karo.',
     'sendbox.requestDone':
-      'Shukriya. Tumhari guzarish save ho gayi. Naye topics is page par usi tartib mein judte hain jis mein woh banaye gaye.',
+      'Shukriya. Tumhari guzarish save ho gayi. Yeh niji taur par padhi jayegi, aur jawab Instagram par diya jayega, is page par nahi.',
     'sendbox.askTitle': 'Ek sawal poochho',
     'sendbox.askLabel': 'Tumhara sawal',
     'sendbox.askPlaceholder': 'Tum kya jaanna chahte ho?',
     'sendbox.askNote':
-      'Apna sawal apne Instagram naam ke saath bhejo, ya bina naam ke post karo. Agar tum apna naam doge, to jawab Instagram par tumhe bhi milega. Naye jawab yahan judte hain taaki doosre bhi padh sakein.',
+      'Apna sawal apne Instagram naam ke saath bhejo, ya bina naam ke post karo. Agar tum apna naam doge, to jawab Instagram par tumhe bhi milega.',
     'sendbox.askDone':
-      'Shukriya. Tumhara sawal save ho gaya. Jawab Instagram par tumhe milega, aur yahan bhi jud jayega.',
+      'Shukriya. Tumhara sawal save ho gaya. Yeh niji taur par padha jayega, aur jawab Instagram par tumhe milega.',
     'sendbox.commentTitle': 'Comments aur requests',
     'topics.replyFromLibrary': 'Library ki taraf se jawab',
     'sendbox.commentLabel': 'Tumhara comment, ya woh topic jo tumhe chahiye',
     'sendbox.commentPlaceholder': 'Is topic par apna khayal likho, ya woh topic likho jo tumhe chahiye.',
-    'sendbox.commentNote': 'Achhe comments aur jawab diye gaye chahat is page par jud jaate hain.',
+    'sendbox.commentNote': 'Achhe comments approve hone ke baad is page par jud jaate hain.',
     'sendbox.commentDone':
-      'Shukriya. Tumhara note save ho gaya. Achhe comments aur jawab diye gaye chahat is page par jud jaate hain.',
+      'Shukriya. Tumhara note save ho gaya. Achhe comments approve hone ke baad is page par jud jaate hain.',
+    'sendbox.saveFailed': 'Save nahi hua. Apna connection check karo aur phir se try karo, ya DM mein paste kar do.',
+    'sendbox.retry': 'Phir se try karo',
+    'sendbox.copyAndOpenDm': 'Text copy karo aur Instagram DM kholo',
   },
   bn: {
     // ---- Topics chrome (hub + topic pages) ----
@@ -201,6 +211,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'topics.sourceLabel': 'উৎস: ',
     'topics.sourcesLabel': 'উৎস: ',
     'topics.whatOthersSaid': 'অন্যরা কী বলেছে',
+    'topics.commentsLoadFailed': 'মন্তব্যগুলো লোড হয়নি। তোমার কানেকশন দেখে আবার চেষ্টা করো।',
+    'topics.showMore': 'আরও মন্তব্য দেখাও',
     'topics.anonymous': 'নামহীন',
     'topics.hubTitle': 'টপিক',
     'topics.hubSubtitle':
@@ -257,21 +269,24 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'sendbox.requestNote':
       'নতুন টপিক তোমার মতো অনুরোধ থেকেই আসে। যে টপিকটি চাও তা লেখো, তোমার ইনস্টাগ্রাম নামসহ যদি তুমি জানাতে চাও তুমি কে, অথবা নাম ছাড়া পোস্ট করো।',
     'sendbox.requestDone':
-      'ধন্যবাদ। তোমার অনুরোধ সেভ হয়েছে। নতুন টপিক এই পাতায় যোগ হয় সেই ক্রমে যেভাবে সেগুলো তৈরি হয়েছিল।',
+      'ধন্যবাদ। তোমার অনুরোধ সেভ হয়েছে। এটা নিজে পড়া হবে, আর উত্তর ইনস্টাগ্রামে দেওয়া হবে, এই পাতায় যোগ হবে না।',
     'sendbox.askTitle': 'একটি প্রশ্ন করো',
     'sendbox.askLabel': 'তোমার প্রশ্ন',
     'sendbox.askPlaceholder': 'তুমি কী জানতে চাও?',
     'sendbox.askNote':
-      'তোমার প্রশ্ন তোমার ইনস্টাগ্রাম নামসহ পাঠাও, অথবা নাম ছাড়া পোস্ট করো। তুমি নাম দিলে, উত্তর ইনস্টাগ্রামেও তোমার কাছে আসবে। নতুন উত্তর এখানে যোগ হয় যাতে অন্যরাও পড়তে পারে।',
+      'তোমার প্রশ্ন তোমার ইনস্টাগ্রাম নামসহ পাঠাও, অথবা নাম ছাড়া পোস্ট করো। তুমি নাম দিলে, উত্তর ইনস্টাগ্রামেও তোমার কাছে আসবে।',
     'sendbox.askDone':
-      'ধন্যবাদ। তোমার প্রশ্ন সেভ হয়েছে। উত্তর ইনস্টাগ্রামে তোমার কাছে আসবে, আর এখানেও যোগ হবে।',
+      'ধন্যবাদ। তোমার প্রশ্ন সেভ হয়েছে। এটা নিজে পড়া হবে, আর উত্তর ইনস্টাগ্রামে তোমার কাছে আসবে।',
     'sendbox.commentTitle': 'মন্তব্য আর অনুরোধ',
     'topics.replyFromLibrary': 'লাইব্রেরির পক্ষ থেকে উত্তর',
     'sendbox.commentLabel': 'তোমার মন্তব্য, অথবা যে টপিকটি তোমার দরকার',
     'sendbox.commentPlaceholder': 'এই টপিক নিয়ে তোমার ভাবনা লেখো, অথবা যে টপিকটি তোমার দরকার তা লেখো।',
-    'sendbox.commentNote': 'ভালো মন্তব্য আর উত্তর দেওয়া চাওয়াগুলো এই পাতায় যোগ হয়।',
+    'sendbox.commentNote': 'ভালো মন্তব্য অনুমোদনের পর এই পাতায় যোগ হয়।',
     'sendbox.commentDone':
-      'ধন্যবাদ। তোমার নোট সেভ হয়েছে। ভালো মন্তব্য আর উত্তর দেওয়া চাওয়াগুলো এই পাতায় যোগ হয়।',
+      'ধন্যবাদ। তোমার নোট সেভ হয়েছে। ভালো মন্তব্য অনুমোদনের পর এই পাতায় যোগ হয়।',
+    'sendbox.saveFailed': 'সেভ হয়নি। তোমার কানেকশন দেখে আবার চেষ্টা করো, অথবা DM-এ পেস্ট করে দাও।',
+    'sendbox.retry': 'আবার চেষ্টা করো',
+    'sendbox.copyAndOpenDm': 'লেখাটি কপি করো আর Instagram DM খোলো',
   },
   ur: {
     'topics.back': 'موضوعات',
@@ -284,6 +299,8 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'topics.sourceLabel': 'ماخذ: ',
     'topics.sourcesLabel': 'ماخذ: ',
     'topics.whatOthersSaid': 'دوسروں نے کیا کہا',
+    'topics.commentsLoadFailed': 'تبصرے لوڈ نہیں ہو سکے۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
+    'topics.showMore': 'مزید تبصرے دکھائیں',
     'topics.anonymous': 'گمنام',
     'topics.hubTitle': 'موضوعات',
     'topics.hubSubtitle': 'لمبی گفتگو، کتابوں سے ماخذ کے ساتھ جمع کی گئی۔ اب تک {count} موضوعات۔',
@@ -324,18 +341,21 @@ export const I18N_TOPICS: Record<SiteLanguage, Record<string, string>> = {
     'sendbox.requestLabel': 'جو موضوع چاہیے',
     'sendbox.requestPlaceholder': 'جو موضوع پڑھنا چاہتے ہیں وہ لکھیں۔',
     'sendbox.requestNote': 'نئے موضوعات آپ جیسی درخواستوں سے آتے ہیں۔ جو موضوع چاہیے وہ لکھیں، اور اگر چاہیں تو اپنا Instagram نام بھی لکھیں، یا گمنام پوسٹ کریں۔',
-    'sendbox.requestDone': 'شکریہ۔ آپ کی درخواست محفوظ ہو گئی۔ نئے موضوعات اسی ترتیب سے اس صفحے پر شامل ہوتے ہیں جس میں وہ بنے تھے۔',
+    'sendbox.requestDone': 'شکریہ۔ آپ کی درخواست محفوظ ہو گئی۔ یہ نجی طور پر پڑھی جائے گی، اور جواب Instagram پر دیا جائے گا، اس صفحے پر نہیں۔',
     'sendbox.askTitle': 'سوال پوچھیں',
     'sendbox.askLabel': 'آپ کا سوال',
     'sendbox.askPlaceholder': 'کیا جاننا چاہتے ہیں؟',
-    'sendbox.askNote': 'اپنا سوال اپنے Instagram نام کے ساتھ بھیجیں، یا گمنام پوسٹ کریں۔ اگر آپ نام دیں گے تو جواب Instagram پر بھی آپ تک پہنچے گا۔ نئے جواب یہاں شامل ہوتے ہیں تاکہ دوسرے بھی پڑھ سکیں۔',
-    'sendbox.askDone': 'شکریہ۔ آپ کا سوال محفوظ ہو گیا۔ جواب Instagram پر آپ تک پہنچے گا، اور یہاں بھی شامل ہو جائے گا۔',
+    'sendbox.askNote': 'اپنا سوال اپنے Instagram نام کے ساتھ بھیجیں، یا گمنام پوسٹ کریں۔ اگر آپ نام دیں گے تو جواب Instagram پر بھی آپ تک پہنچے گا۔',
+    'sendbox.askDone': 'شکریہ۔ آپ کا سوال محفوظ ہو گیا۔ یہ نجی طور پر پڑھا جائے گا، اور جواب Instagram پر آپ تک پہنچے گا۔',
     'sendbox.commentTitle': 'تبصرے اور درخواستیں',
     'topics.replyFromLibrary': 'لائبریری کی طرف سے جواب',
     'sendbox.commentLabel': 'آپ کا تبصرہ، یا جو موضوع چاہیے',
     'sendbox.commentPlaceholder': 'اس موضوع پر اپنی سوچ لکھیں، یا جو موضوع چاہیے وہ لکھیں۔',
-    'sendbox.commentNote': 'اچھے تبصرے اور جواب دی گئی خواہشیں اس صفحے پر شامل ہوتی ہیں۔',
-    'sendbox.commentDone': 'شکریہ۔ آپ کی بات محفوظ ہو گئی۔ اچھے تبصرے اور جواب دی گئی خواہشیں اس صفحے پر شامل ہوتی ہیں۔',
+    'sendbox.commentNote': 'اچھے تبصرے منظوری کے بعد اس صفحے پر شامل ہوتے ہیں۔',
+    'sendbox.commentDone': 'شکریہ۔ آپ کی بات محفوظ ہو گئی۔ اچھے تبصرے منظوری کے بعد اس صفحے پر شامل ہوتے ہیں۔',
+    'sendbox.saveFailed': 'محفوظ نہیں ہوا۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں، یا DM میں پیسٹ کر دیں۔',
+    'sendbox.retry': 'دوبارہ کوشش کریں',
+    'sendbox.copyAndOpenDm': 'متن نقل کریں اور Instagram DM کھولیں',
   },
 };
 

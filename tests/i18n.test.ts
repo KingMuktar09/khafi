@@ -346,7 +346,14 @@ describe('topics: Bengali and Urdu translated, Hinglish from the notebook', () =
       // Hinglish, like a book title; the translation shows in the
       // intro, sections and terms below.
       expect(hi.title.trim().length, `${topic.id} hi title`).toBeGreaterThan(0);
-      expect(hi.intro, `${topic.id} hi intro`).toMatch(/^Main Khafi hoon\./);
+      // Topics 1-12 have impersonal English intros, so their Hinglish
+      // intros must not add "Main Khafi hoon."; topics 13-22 say
+      // "I am Khafi" in English, so theirs do start with it.
+      if (TOPICS.indexOf(topic) < 12) {
+        expect(hi.intro, `${topic.id} hi intro`).not.toMatch(/^Main Khafi hoon\./);
+      } else {
+        expect(hi.intro, `${topic.id} hi intro`).toMatch(/^Main Khafi hoon\./);
+      }
       expect(hi.intro, `${topic.id} hi intro`).not.toBe(topic.intro);
       expect(hi.sections, `${topic.id} hi sections`).toHaveLength(
         NOTEBOOK_SECTION_COUNTS[topic.id],

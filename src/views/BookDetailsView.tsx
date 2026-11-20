@@ -3,8 +3,7 @@ import { ArrowLeft, BookOpen, Download, ExternalLink, Instagram, Star, Tag, Play
 import { appState } from '../state/appState';
 import { t, tf } from '../data/i18n';
 import { router } from '../router/router';
-import { api } from '../services/api';
-import { storage } from '../services/storage';
+import { api, hasBookUnlockToken } from '../services/api';
 import { Book } from '../types';
 import { CoverImage } from '../components/books/CoverImage';
 import { PaidLockScreen } from '../components/books/PaidLockScreen';
@@ -130,7 +129,7 @@ export const BookDetailsView: React.FC = () => {
   // visitor (follow tap or gate key) still sees the lock screen. A
   // visitor holding the book's own unlock key reads it too, and so does
   // the admin. Only a key holder or the admin sees the reader links.
-  const hasKeyUnlock = storage.hasBookKey(book.id);
+  const hasKeyUnlock = hasBookUnlockToken(book.id);
   const isPaidForVisitor = isPaidBookLockedForVisitor({ isPaid: book.isPaid, isAdmin, hasKeyUnlock });
   // Honest static-fallback case: when the live catalog did not load, the
   // client falls back to public/catalog.json, whose paid-book links are

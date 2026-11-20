@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { submitTopicRequest, type TopicRequestKind } from '../../services/topicRequests';
-import { tt, ttf } from '../../data/i18n-topics';
+import React, { useRef, useState } from 'react';
+import { submitTopicRequest, type TopicRequestKind } from '../../services/topicRequests';import { tt, ttf } from '../../data/i18n-topics';
 import { appState } from '../../state/appState';
 
 /** Instagram DM to @ghayb.chronicles. Always offered as a fallback link. */
@@ -54,9 +53,11 @@ async function copyText(text: string): Promise<boolean> {
  *
  * When Supabase is configured, the note is saved there (status pending,
  * shown only after approval) and the visitor is told it is saved.
- * When it is not configured yet, or the save fails, the note is copied
- * to the clipboard and the Instagram DM to @ghayb.chronicles opens, so
- * the visitor can paste it there. The DM link is always shown too.
+ * When the save fails, the visitor sees a real error with a retry
+ * button instead of a success message, and can still copy the text
+ * and paste it in the Instagram DM as a fallback. Requests and
+ * questions are read privately and answered on Instagram; only
+ * approved comments are added to the page.
  * No backend of our own is needed.
  */
 export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
@@ -73,8 +74,16 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
   const [instagramName, setInstagramName] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [message, setMessage] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'saved' | 'copied' | 'copy-failed'>('idle');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'saved' | 'copied' | 'copy-failed' | 'save-failed'>('idle');
   const [fallbackText, setFallbackText] = useState('');
+  const [saveError, setSaveError] = useState('');
+  // Honeypot: a hidden field no human ever fills. A bot that fills it
+  // gets its submit dropped silently, with no network call.
+  const [honeypot, setHoneypot] = useState('');
+  // Double-submit guard (F7): React state updates are not synchronous,
+  // so two taps in the same tick would both pass a state-only guard.
+  // This ref is set synchronously at the top of onSend.
+  const sendingRef = useRef(false);
 
   const canSend = message.trim().length > 0 && (anonymous || instagramName.trim().length > 0);
 
@@ -91,26 +100,41 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
       : `Instagram: @${name.replace(/^@/, '').trim()}\n${copyLabel}: ${text.trim()}`;
 
   const onSend = async () => {
-    if (!canSend || status === 'sending') return;
+    if (sendingRef.current || !canSend || status === 'sending') return;
+    // Honeypot filled: drop the submit silently, no network call.
+    if (honeypot.trim().length > 0) return;
+    sendingRef.current = true;
     setStatus('sending');
-    const name = anonymous ? 'Anonymous' : instagramName.trim().replace(/^@/, '');
-    const text = message.trim();
-    const stored = await submitTopicRequest({ instagramName: name, kind, topic, message: text });
-    if (stored.stored) {
-      setStatus('saved');
-      setInstagramName('');
-      setMessage('');
-      return;
+    setSaveError('');
+    try {
+      const name = anonymous ? 'Anonymous' : instagramName.trim().replace(/^@/, '');
+      const text = message.trim();
+      const result = await submitTopicRequest({ instagramName: name, kind, topic, message: text, anonymous });
+      if (result.stored) {
+        setStatus('saved');
+        setInstagramName('');
+        setMessage('');
+        return;
+      }
+      // A failed save is shown as a failure, never as a success: the
+      // note is kept in the box, with a retry button and the DM
+      // fallback offered as an explicit choice.
+      setFallbackText(buildText(name, text));
+      setSaveError(result.error || tt('sendbox.saveFailed', lang));
+      setStatus('save-failed');
+    } finally {
+      sendingRef.current = false;
     }
-    const fullText = buildText(name, text);
-    const copied = await copyText(fullText);
+  };
+
+  const onCopyAndOpenDm = async () => {
+    const copied = await copyText(fallbackText);
     window.open(INSTAGRAM_DM_URL, '_blank', 'noopener,noreferrer');
     if (copied) {
       setStatus('copied');
       setInstagramName('');
       setMessage('');
     } else {
-      setFallbackText(fullText);
       setStatus('copy-failed');
     }
   };
@@ -131,6 +155,7 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
           onChange={(event) => setInstagramName(event.target.value)}
           placeholder="@yourname"
           autoComplete="off"
+          maxLength={30}
           disabled={anonymous}
           className="ms-field w-full disabled:opacity-50"
         />
@@ -158,7 +183,22 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
           onChange={(event) => setMessage(event.target.value)}
           placeholder={messagePlaceholder}
           rows={3}
+          maxLength={2000}
           className="ms-field w-full"
+        />
+      </div>
+
+      {/* Honeypot field: hidden from sighted users and screen readers. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 0, height: 0, overflow: 'hidden' }}>
+        <label htmlFor={`ig-site-${kind}-${topic}`}>Leave this empty</label>
+        <input
+          id={`ig-site-${kind}-${topic}`}
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(event) => setHoneypot(event.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
         />
       </div>
 
@@ -171,6 +211,19 @@ export const InstagramSendBox: React.FC<InstagramSendBoxProps> = ({
         <p className="ms-body" role="status">
           {tt('sendbox.copied', lang)}
         </p>
+      ) : null}
+      {status === 'save-failed' ? (
+        <div className="space-y-2" role="status">
+          <p className="ms-body">{saveError}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button type="button" onClick={onSend} disabled={!canSend} className="ms-btn-gold">
+              {tt('sendbox.retry', lang)}
+            </button>
+            <button type="button" onClick={onCopyAndOpenDm} className="ms-btn">
+              {tt('sendbox.copyAndOpenDm', lang)}
+            </button>
+          </div>
+        </div>
       ) : null}
       {status === 'copy-failed' ? (
         <div className="space-y-2" role="status">

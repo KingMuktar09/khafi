@@ -27,6 +27,7 @@ import { FilePreviewer, FitMode } from '../components/viewers/FilePreviewer';
 import { PdfZoomOverlay } from '../components/pdf/PdfZoomOverlay';
 import { PaidLockScreen } from '../components/books/PaidLockScreen';
 import { storage } from '../services/storage';
+import { hasBookUnlockToken } from '../services/api';
 
 export const PdfReaderView: React.FC = () => {
   const bookId = appState.route.bookId;
@@ -134,7 +135,7 @@ export const PdfReaderView: React.FC = () => {
     isPaid: book.isPaid,
     isAdmin,
     followUnlocked: storage.hasFollowUnlocked(),
-    hasKeyUnlock: storage.hasBookKey(book.id),
+    hasKeyUnlock: hasBookUnlockToken(book.id),
   });
   if (access === 'paid-lock') {
     return (

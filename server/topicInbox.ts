@@ -59,7 +59,13 @@ export class SupabaseAdminError extends Error {
 type FetchFn = (
   url: string,
   init?: Record<string, unknown>
-) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>;
+) => Promise<{
+  ok: boolean;
+  status: number;
+  json: () => Promise<unknown>;
+  /** Real fetch Responses carry headers; mocks may omit them. */
+  headers?: { get: (name: string) => string | null };
+}>;
 
 /**
  * Read the server-side Supabase config. Returns null when the service key
@@ -138,6 +144,56 @@ export function countUnread(items: { status: string }[]): number {
 }
 
 /**
+ * Count unread (status 'new') requests with a head-count query (F8):
+ * `Prefer: count=exact` + `limit=0` returns no rows, and PostgREST
+ * puts the total in the `Content-Range` header (`*​/N`). The old
+ * unread endpoint counted a list capped at 200 rows, so the bell
+ * undercounted past 200. Falls back to the list count when the header
+ * is missing (e.g. a mock fetch in tests).
+ */
+export async function countUnreadRequests(
+  fetchImpl: FetchFn,
+  config: SupabaseAdminConfig
+): Promise<number> {
+  const headers = supabaseAdminHeaders(config.serviceKey);
+  const res = await fetchImpl(
+    `${config.url}/rest/v1/topic_requests?select=id&status=eq.new&limit=0`,
+    { headers: { ...headers, Prefer: 'count=exact' } }
+  );
+  if (!res.ok) {
+    throw new SupabaseAdminError('Could not load messages from Supabase.', res.status);
+  }
+  const contentRange = res.headers?.get('content-range') || res.headers?.get('Content-Range') || '';
+  const match = /\/(\d+)\s*$/.exec(contentRange);
+  if (match) return Number(match[1]);
+  // No count header (mocked fetch): fall back to the list.
+  const items = await listTopicRequestsWithReplies(fetchImpl, config);
+  return countUnread(items);
+}
+
+/**
+ * Delete one topic request entirely (the inbox Delete button).
+ * Returns { found: false } when no row with that id exists.
+ */
+export async function deleteTopicRequest(
+  fetchImpl: FetchFn,
+  config: SupabaseAdminConfig,
+  id: string | number
+): Promise<{ found: boolean }> {
+  const res = await fetchImpl(
+    `${config.url}/rest/v1/topic_requests?id=eq.${encodeURIComponent(String(id))}`,
+    {
+      method: 'DELETE',
+      headers: { ...supabaseAdminHeaders(config.serviceKey), Prefer: 'return=representation' },
+    }
+  );
+  if (!res.ok) {
+    throw new SupabaseAdminError('Could not delete this message.', res.status);
+  }
+  return { found: toArray(await readJson(res)).length > 0 };
+}
+
+/**
  * List every topic request, newest first, each with its latest admin
  * reply (or null). Throws SupabaseAdminError when Supabase answers badly.
  */
@@ -208,15 +264,22 @@ export async function insertTopicReply(
   const headers = supabaseAdminHeaders(config.serviceKey);
   // The request must exist first: a reply to a missing id would fail on
   // the foreign key, and a plain "not found" is clearer than that error.
+  // F9: replies go only to APPROVED requests — replying to a message
+  // the admin has not approved yet would publish an answer under a
+  // comment nobody can see (or approve a thread by accident).
   const checkRes = await fetchImpl(
-    `${config.url}/rest/v1/topic_requests?select=id&id=eq.${encodeURIComponent(String(requestId))}`,
+    `${config.url}/rest/v1/topic_requests?select=id,status&id=eq.${encodeURIComponent(String(requestId))}`,
     { headers }
   );
   if (!checkRes.ok) {
     throw new SupabaseAdminError('Could not load messages from Supabase.', checkRes.status);
   }
-  if (toArray(await readJson(checkRes)).length === 0) {
+  const found = toArray(await readJson(checkRes));
+  if (found.length === 0) {
     return { ok: false, error: 'Message not found.' };
+  }
+  if (found[0].status !== 'approved') {
+    return { ok: false, error: 'Approve this message before replying to it.' };
   }
   const res = await fetchImpl(`${config.url}/rest/v1/topic_replies`, {
     method: 'POST',

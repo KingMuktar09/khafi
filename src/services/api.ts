@@ -3,36 +3,34 @@ import { uploadFileOptimized, UploadOptions, UploadResult } from '../utils/uploa
 import { storage } from './storage';
 import type { TopicRequestWithReply } from './topicRequests';
 
-const ADMIN_TOKEN_KEY = 'khafi_admin_token';
-
-function getAdminToken(): string | null {
-  try {
-    return localStorage.getItem(ADMIN_TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function setAdminToken(token: string | null) {
-  try {
-    if (token) {
-      localStorage.setItem(ADMIN_TOKEN_KEY, token);
-    } else {
-      localStorage.removeItem(ADMIN_TOKEN_KEY);
-    }
-  } catch {
-    // ignore
-  }
-}
-
+/**
+ * Admin auth is cookie-only (H-7). The server sets an httpOnly, Secure,
+ * SameSite=Lax session cookie on login and never returns the token in
+ * JSON. No admin credential is kept in localStorage, in memory, or in
+ * any header: admin calls below go through adminFetch, which sends the
+ * cookie with `credentials: 'same-origin'`. The admin password lives
+ * only in the Vercel ADMIN_PASSWORD env var, never in code, tests,
+ * data, or logs.
+ */
 function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
-  const token = getAdminToken();
-  const headers: Record<string, string> = { ...extraHeaders };
-  if (token) {
-    headers['x-admin-token'] = token;
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
+  // Kept so existing call sites read unchanged: it adds no auth header.
+  // Auth rides on the session cookie (see adminFetch).
+  return { ...extraHeaders };
+}
+
+/** Same-origin fetch for admin calls: sends the httpOnly session cookie. */
+async function adminFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(input, { credentials: 'same-origin', ...init });
+}
+
+// One-time cleanup: a build from before the cookie-only change may have
+// left a session token or raw book keys in localStorage. They are dead
+// now (nothing reads them) and must not sit on disk.
+try {
+  localStorage.removeItem('khafi_admin_token');
+  localStorage.removeItem('ilmeghayb_book_keys');
+} catch {
+  // No localStorage here (tests, server render) — nothing to clean.
 }
 
 /**
@@ -144,7 +142,7 @@ export function isGateKeySet(status: GateStatus | null | undefined): boolean {
 // here, file downloads in utils/fileUtils, and the in-app viewers). The
 // flag opens the library and free books. A paid book needs its own key:
 // a visitor holding a book's own unlock key sends that too (see
-// BOOK_KEYS_HEADER below) — only that opens the book, and there is no
+// BOOK_UNLOCK_HEADER below) — only that opens the book, and there is no
 // payment step anywhere.
 export const FOLLOW_UNLOCK_HEADER = 'x-follow-unlocked';
 
@@ -152,30 +150,97 @@ export function getFollowUnlockHeaders(): Record<string, string> {
   return storage.hasFollowUnlocked() ? { [FOLLOW_UNLOCK_HEADER]: '1' } : {};
 }
 
-// Paid-book keys header: the browser sends the keys it holds (one per
-// paid book, { bookId: key }) as base64url JSON, so the server can check
-// them and expose that book's links / files. A key unlocks ONE book only.
-// The keys are stored on this device only (see storage.ts).
-export const BOOK_KEYS_HEADER = 'x-book-keys';
+// Paid-book unlock tokens (H-4). The raw key is typed once on the lock
+// screen and never stored, never sent in a header. POST
+// /api/book-keys/verify checks the raw key (with this browser's device
+// id, so one use is counted per device) and returns a short-lived
+// unlock token; only the token is stored on this device, and only the
+// token is sent, in the x-book-unlock header, as JSON { bookId: token }.
+// A token unlocks ONE book only, and it expires.
+export const BOOK_UNLOCK_HEADER = 'x-book-unlock';
+export const DEVICE_ID_HEADER = 'x-device-id';
 
-export function getBookKeyHeaders(): Record<string, string> {
-  const keys = storage.getBookKeys();
-  const ids = Object.keys(keys);
-  if (ids.length === 0) return {};
+const DEVICE_ID_KEY = 'ilmeghayb_device_id';
+const BOOK_UNLOCKS_KEY = 'ilmeghayb_book_unlocks';
+
+/** Stable per-browser device id, made once and kept in localStorage. */
+export function getDeviceId(): string {
   try {
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(keys))))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-    return { [BOOK_KEYS_HEADER]: encoded };
+    const existing = localStorage.getItem(DEVICE_ID_KEY);
+    if (existing) return existing;
+    const id =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `dev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    localStorage.setItem(DEVICE_ID_KEY, id);
+    return id;
+  } catch {
+    return 'unknown-device';
+  }
+}
+
+interface StoredBookUnlock {
+  token: string;
+  expiresAt?: number;
+}
+
+/** Held unlock tokens, with expired ones dropped (never sent). */
+function readBookUnlocks(): Record<string, StoredBookUnlock> {
+  try {
+    const raw = localStorage.getItem(BOOK_UNLOCKS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+    const now = Date.now();
+    const kept: Record<string, StoredBookUnlock> = {};
+    for (const [bookId, value] of Object.entries(parsed)) {
+      const entry = value as StoredBookUnlock;
+      if (entry && typeof entry.token === 'string' && (!entry.expiresAt || entry.expiresAt > now)) {
+        kept[bookId] = entry;
+      }
+    }
+    return kept;
   } catch {
     return {};
   }
 }
 
-/** Catalog + file headers: admin token, gate flag, and any paid-book keys. */
+/** Store an unlock token for one paid book. Never pass a raw key here. */
+export function saveBookUnlockToken(bookId: string, token: string, expiresAt?: number): void {
+  try {
+    const all = readBookUnlocks();
+    all[bookId] = { token, expiresAt };
+    localStorage.setItem(BOOK_UNLOCKS_KEY, JSON.stringify(all));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearBookUnlockToken(bookId: string): void {
+  try {
+    const all = readBookUnlocks();
+    delete all[bookId];
+    localStorage.setItem(BOOK_UNLOCKS_KEY, JSON.stringify(all));
+  } catch {
+    // ignore
+  }
+}
+
+/** True when this browser holds a live (unexpired) unlock token for one paid book. */
+export function hasBookUnlockToken(bookId: string): boolean {
+  return Boolean(readBookUnlocks()[bookId]);
+}
+
+export function getBookUnlockHeaders(): Record<string, string> {
+  const unlocks = readBookUnlocks();
+  const tokens: Record<string, string> = {};
+  for (const [bookId, entry] of Object.entries(unlocks)) tokens[bookId] = entry.token;
+  if (Object.keys(tokens).length === 0) return {};
+  return { [BOOK_UNLOCK_HEADER]: JSON.stringify(tokens) };
+}
+
+/** Catalog + file headers: gate flag, and any held paid-book unlock tokens. */
 export function getPaidBookHeaders(): Record<string, string> {
-  return { ...getFollowUnlockHeaders(), ...getBookKeyHeaders() };
+  return { ...getFollowUnlockHeaders(), ...getBookUnlockHeaders() };
 }
 
 let inFlightCatalogPromise: Promise<CatalogData> | null = null;
@@ -213,6 +278,8 @@ export const api = {
       try {
         const res = await fetchWithRetry('/api/catalog', {
           headers: getAuthHeaders(getPaidBookHeaders()),
+          // Same-origin cookie: an admin gets the admin catalog.
+          credentials: 'same-origin',
         });
         const parsed = await safeParseJson<CatalogData>(res);
         if (parsed.ok && parsed.data && (parsed.data.books?.length || parsed.data.folders?.length)) {
@@ -304,7 +371,7 @@ export const api = {
 
   async saveSiteSettings(settings: { maintenance: { enabled: boolean; message: string } }): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/site-settings', {
+      const res = await adminFetch('/api/admin/site-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(settings),
@@ -317,19 +384,30 @@ export const api = {
     }
   },
 
-  /** Key unlock: check a key for one paid book. On success the caller
-   *  stores the key on the device (storage.saveBookKey) and reloads the
-   *  catalog so that book's links appear. */
-  async verifyBookKey(bookId: string, key: string): Promise<{ ok: boolean; usesLeft?: number; maxUses?: number; error?: string }> {
+  /** Key unlock: check a key for one paid book. On success the server
+   *  returns a short-lived unlock token (plus uses left); the token is
+   *  stored on this device (saveBookUnlockToken) and the catalog is
+   *  reloaded so that book's links appear. The raw key is never stored
+   *  and never sent again. The device id goes in the x-device-id
+   *  header so one use is counted per device, not per re-entry. */
+  async verifyBookKey(bookId: string, key: string): Promise<{ ok: boolean; usesLeft?: number; maxUses?: number; unlockToken?: string; unlockExpiresAt?: number; error?: string }> {
     try {
       const res = await fetch('/api/book-keys/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', [DEVICE_ID_HEADER]: getDeviceId() },
         body: JSON.stringify({ bookId, key }),
       });
-      const parsed = await safeParseJson<{ ok?: boolean; usesLeft?: number; maxUses?: number; error?: string }>(res);
+      const parsed = await safeParseJson<{ ok?: boolean; usesLeft?: number; maxUses?: number; unlockToken?: string; unlockExpiresAt?: number | string; error?: string }>(res);
       if (parsed.ok && parsed.data?.ok) {
-        return { ok: true, usesLeft: parsed.data.usesLeft, maxUses: parsed.data.maxUses };
+        const token = parsed.data.unlockToken;
+        let expiresAt: number | undefined;
+        if (typeof parsed.data.unlockExpiresAt === 'number') expiresAt = parsed.data.unlockExpiresAt;
+        else if (typeof parsed.data.unlockExpiresAt === 'string') {
+          const ms = Date.parse(parsed.data.unlockExpiresAt);
+          if (Number.isFinite(ms)) expiresAt = ms;
+        }
+        if (token) saveBookUnlockToken(bookId, token, expiresAt);
+        return { ok: true, usesLeft: parsed.data.usesLeft, maxUses: parsed.data.maxUses, unlockToken: token, unlockExpiresAt: expiresAt };
       }
       return { ok: false, error: parsed.error || parsed.data?.error || 'Wrong key. Check the key and try again.' };
     } catch (err: any) {
@@ -340,7 +418,7 @@ export const api = {
   /** Admin: list all book keys + monitor totals (no plain keys, no hashes). */
   async getBookKeys(): Promise<{ keys: any[]; totals: any | null }> {
     try {
-      const res = await fetch('/api/admin/book-keys', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/book-keys', { headers: getAuthHeaders() });
       const parsed = await safeParseJson<{ keys?: any[]; totals?: any }>(res);
       if (parsed.ok && parsed.data) return { keys: parsed.data.keys || [], totals: parsed.data.totals || null };
     } catch (err) {
@@ -353,7 +431,7 @@ export const api = {
    *  copy it and share it with the follower now; it cannot be shown again. */
   async generateBookKey(bookId: string, maxUses: number, label?: string): Promise<{ success: boolean; plainKey?: string; key?: any; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/book-keys', {
+      const res = await adminFetch('/api/admin/book-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ bookId, maxUses, label: label || '' }),
@@ -370,7 +448,7 @@ export const api = {
 
   async revokeBookKey(keyId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/book-keys/${encodeURIComponent(keyId)}/revoke`, {
+      const res = await adminFetch(`/api/admin/book-keys/${encodeURIComponent(keyId)}/revoke`, {
         method: 'POST',
         headers: getAuthHeaders(),
       });
@@ -384,7 +462,7 @@ export const api = {
 
   async deleteBookKey(keyId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/book-keys/${encodeURIComponent(keyId)}`, {
+      const res = await adminFetch(`/api/admin/book-keys/${encodeURIComponent(keyId)}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
@@ -417,7 +495,7 @@ export const api = {
 
   async savePaymentSettings(settings: PaymentSettings): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/payment-settings', {
+      const res = await adminFetch('/api/admin/payment-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(settings),
@@ -469,7 +547,7 @@ export const api = {
    *  and the inbox shows the plain setup message instead of failing. */
   async getTopicRequests(): Promise<{ items: TopicRequestWithReply[]; error?: string; notConfigured?: boolean }> {
     try {
-      const res = await fetch('/api/admin/topic-requests', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/topic-requests', { headers: getAuthHeaders() });
       const parsed = await safeParseJson<{ items?: TopicRequestWithReply[]; error?: string }>(res);
       if (parsed.status === 503) return { items: [], error: parsed.error || 'Replies are not set up yet.', notConfigured: true };
       if (parsed.ok && parsed.data) return { items: parsed.data.items || [] };
@@ -479,11 +557,15 @@ export const api = {
     }
   },
 
-  /** Admin inbox: how many messages are still new — the bell badge count. */
-  async getTopicRequestsUnread(): Promise<{ unread: number }> {
+  /** Admin inbox: how many messages are still new — the bell badge count.
+   *  When the service key is not set up yet the server answers 503;
+   *  that comes back as notConfigured (not a false 0) so the bell can
+   *  show a "setup needed" state instead of "no new messages". */
+  async getTopicRequestsUnread(): Promise<{ unread: number; notConfigured?: boolean }> {
     try {
-      const res = await fetch('/api/admin/topic-requests/unread', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/topic-requests/unread', { headers: getAuthHeaders() });
       const parsed = await safeParseJson<{ unread?: number }>(res);
+      if (parsed.status === 503) return { unread: 0, notConfigured: true };
       if (parsed.ok && parsed.data) return { unread: Number(parsed.data.unread) || 0 };
     } catch (err) {
       console.error('Failed to load unread count:', err);
@@ -494,7 +576,7 @@ export const api = {
   /** Admin inbox: approve one message so it shows on the public site. */
   async approveTopicRequest(id: number | string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/topic-requests/${id}/approve`, {
+      const res = await adminFetch(`/api/admin/topic-requests/${id}/approve`, {
         method: 'POST',
         headers: getAuthHeaders(),
       });
@@ -509,7 +591,7 @@ export const api = {
   /** Admin inbox: send a reply to one message. */
   async replyToTopicRequest(id: number | string, reply: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/topic-requests/${id}/reply`, {
+      const res = await adminFetch(`/api/admin/topic-requests/${id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ reply }),
@@ -522,10 +604,26 @@ export const api = {
     }
   },
 
+  /** Admin inbox: delete (reject) one message, e.g. spam. Removes the
+   *  row and its replies server-side. */
+  async deleteTopicRequest(id: number | string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await adminFetch(`/api/admin/topic-requests/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      const parsed = await safeParseJson<{ success?: boolean; error?: string }>(res);
+      if (!parsed.ok || !parsed.data?.success) return { success: false, error: parsed.error || parsed.data?.error || 'Could not delete this message.' };
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Could not delete this message.' };
+    }
+  },
+
   /** Admin gate settings (keySet only — the key value is never sent). */
   async getGateSettings(): Promise<GateSettingsAdmin> {
     try {
-      const res = await fetch('/api/admin/gate-settings', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/gate-settings', { headers: getAuthHeaders() });
       const parsed = await safeParseJson<GateSettingsAdmin>(res);
       if (parsed.ok && parsed.data) {
         return {
@@ -541,7 +639,7 @@ export const api = {
 
   async saveGateSettings(input: { gateKey?: string; channelUrl?: string; removeKey?: boolean }): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; keySet?: boolean; channelUrl?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/gate-settings', {
+      const res = await adminFetch('/api/admin/gate-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(input),
@@ -567,7 +665,7 @@ export const api = {
 
     inFlightCheckAdminPromise = (async () => {
       try {
-        const res = await fetch('/api/admin/me', {
+        const res = await adminFetch('/api/admin/me', {
           headers: getAuthHeaders(),
         });
         const parsed = await safeParseJson<{ authenticated: boolean; username?: string }>(res);
@@ -587,18 +685,18 @@ export const api = {
 
   async loginAdmin(username: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await adminFetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ username, password }),
       });
-      const parsed = await safeParseJson<{ success?: boolean; token?: string; username?: string; error?: string }>(res);
+      const parsed = await safeParseJson<{ success?: boolean; username?: string; error?: string }>(res);
       if (!parsed.ok || !parsed.data || parsed.data.success === false) {
         return { success: false, error: parsed.error || parsed.data?.error || 'Login failed.' };
       }
-      if (parsed.data.token) {
-        setAdminToken(parsed.data.token);
-      }
+      // Cookie-only: the server sets the httpOnly session cookie on
+      // this response. Nothing is stored client-side.
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error during admin login.' };
@@ -607,20 +705,22 @@ export const api = {
 
   async logoutAdmin(): Promise<void> {
     try {
-      await fetch('/api/admin/logout', {
+      await adminFetch('/api/admin/logout', {
         method: 'POST',
         headers: getAuthHeaders(),
+        credentials: 'same-origin',
       });
     } catch {
       // ignore
     } finally {
-      setAdminToken(null);
+      // Drop any in-flight auth check; the cookie is cleared server-side.
+      inFlightCheckAdminPromise = null;
     }
   },
 
   async addBook(book: Partial<Book>): Promise<{ success: boolean; book?: Book; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/books', {
+      const res = await adminFetch('/api/admin/books', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(book),
@@ -637,7 +737,7 @@ export const api = {
 
   async updateBook(id: string, book: Partial<Book>): Promise<{ success: boolean; book?: Book; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/books/${id}`, {
+      const res = await adminFetch(`/api/admin/books/${id}`, {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(book),
@@ -658,7 +758,7 @@ export const api = {
     topicOrder?: string[];
   }): Promise<{ success: boolean; updated?: number; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/reorder', {
+      const res = await adminFetch('/api/admin/reorder', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
@@ -675,7 +775,7 @@ export const api = {
 
   async deleteBook(id: string): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/books/${id}`, {
+      const res = await adminFetch(`/api/admin/books/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
@@ -691,7 +791,7 @@ export const api = {
 
   async addFolder(folder: Partial<Folder>): Promise<{ success: boolean; folder?: Folder; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch('/api/admin/folders', {
+      const res = await adminFetch('/api/admin/folders', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(folder),
@@ -708,7 +808,7 @@ export const api = {
 
   async updateFolder(id: string, folder: Partial<Folder>): Promise<{ success: boolean; folder?: Folder; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/folders/${id}`, {
+      const res = await adminFetch(`/api/admin/folders/${id}`, {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(folder),
@@ -725,7 +825,7 @@ export const api = {
 
   async deleteFolder(id: string): Promise<{ success: boolean; durable?: boolean; durableWarning?: string; error?: string }> {
     try {
-      const res = await fetch(`/api/admin/folders/${id}`, {
+      const res = await adminFetch(`/api/admin/folders/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
@@ -772,7 +872,7 @@ export const api = {
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/import-url/probe', {
+      const res = await adminFetch('/api/admin/import-url/probe', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ url }),
@@ -813,7 +913,7 @@ export const api = {
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/import-url', {
+      const res = await adminFetch('/api/admin/import-url', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
@@ -842,7 +942,7 @@ export const api = {
     message?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/ai/status', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/ai/status', { headers: getAuthHeaders() });
       const parsed = await safeParseJson(res);
       if (!parsed.ok || !parsed.data) {
         return {
@@ -872,7 +972,7 @@ export const api = {
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/ai/diagnostic', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/ai/diagnostic', { headers: getAuthHeaders() });
       const parsed = await safeParseJson(res);
       if (!parsed.ok || !parsed.data) {
         return { success: false, error: parsed.error || 'Failed to execute diagnostic test.' };
@@ -896,7 +996,7 @@ export const api = {
     rootFolderName?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/drive/diagnostic', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/drive/diagnostic', { headers: getAuthHeaders() });
       const parsed = await safeParseJson(res);
       if (!parsed.ok || !parsed.data) {
         return {
@@ -942,7 +1042,7 @@ export const api = {
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/sync', { method: 'POST', headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/sync', { method: 'POST', headers: getAuthHeaders() });
       const parsed = await safeParseJson(res);
       if (!parsed.ok || !parsed.data) {
         return { success: false, error: parsed.error || 'Drive sync request failed.' };
@@ -955,7 +1055,7 @@ export const api = {
 
   async getAiPendingProposals(): Promise<{ success: boolean; proposals: any[]; error?: string }> {
     try {
-      const res = await fetch('/api/admin/ai/pending', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/ai/pending', { headers: getAuthHeaders() });
       const parsed = await safeParseJson(res);
       if (!parsed.ok || !parsed.data) {
         return { success: false, proposals: [], error: parsed.error || 'Failed to fetch proposals' };
@@ -968,7 +1068,7 @@ export const api = {
 
   async getAllAiProposals(): Promise<{ success: boolean; proposals: any[]; error?: string }> {
     try {
-      const res = await fetch('/api/admin/ai/proposals', { headers: getAuthHeaders() });
+      const res = await adminFetch('/api/admin/ai/proposals', { headers: getAuthHeaders() });
       const parsed = await safeParseJson(res);
       if (!parsed.ok || !parsed.data) {
         return { success: false, proposals: [], error: parsed.error || 'Failed to fetch proposal history' };
@@ -987,7 +1087,7 @@ export const api = {
     unorganizedOnly?: boolean;
   }): Promise<{ success: boolean; proposals?: any[]; errors?: any[]; error?: string }> {
     try {
-      const res = await fetch('/api/admin/ai/analyze', {
+      const res = await adminFetch('/api/admin/ai/analyze', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
@@ -1015,7 +1115,7 @@ export const api = {
     error?: string;
   }> {
     try {
-      const res = await fetch('/api/admin/ai/similarity', {
+      const res = await adminFetch('/api/admin/ai/similarity', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
@@ -1035,7 +1135,7 @@ export const api = {
     edits?: any
   ): Promise<{ success: boolean; book?: Book; error?: string }> {
     try {
-      const res = await fetch('/api/admin/ai/approve', {
+      const res = await adminFetch('/api/admin/ai/approve', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ proposalId, edits }),
@@ -1052,7 +1152,7 @@ export const api = {
 
   async rejectAiProposal(proposalId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch('/api/admin/ai/reject', {
+      const res = await adminFetch('/api/admin/ai/reject', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ proposalId }),
@@ -1073,7 +1173,7 @@ export const api = {
     minConfidence?: number
   ): Promise<{ success: boolean; action?: string; processed?: number; results?: any[]; error?: string }> {
     try {
-      const res = await fetch('/api/admin/ai/bulk-action', {
+      const res = await adminFetch('/api/admin/ai/bulk-action', {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action, proposalIds, minConfidence }),

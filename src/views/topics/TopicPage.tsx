@@ -6,7 +6,7 @@ import { formatTopicDate } from '../../data/topicsContent';
 import { localizeTopic } from '../../data/topicsI18n';
 import { tt } from '../../data/i18n-topics';
 import { appState } from '../../state/appState';
-import { fetchVisibleTopicRequests, type TopicRequestRow } from '../../services/topicRequests';
+import { fetchVisibleTopicRequestsPage, isInstagramHandle, type TopicRequestRow } from '../../services/topicRequests';
 import { InstagramSendBox } from './InstagramSendBox';
 
 /**
@@ -24,16 +24,45 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
   const lang = appState.settings.language;
   const display = localizeTopic(topic, lang);
   const [comments, setComments] = useState<TopicRequestRow[]>([]);
+  // When the list cannot be loaded, the last good list stays on screen
+  // and a small note says so, instead of an empty section (F5).
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
     let live = true;
-    fetchVisibleTopicRequests(topic.id).then((rows) => {
-      if (live) setComments(rows);
+    setComments([]);
+    setLoadError(null);
+    setHasMore(false);
+    fetchVisibleTopicRequestsPage(topic.id, { limit: PAGE_SIZE, offset: 0 }).then((page) => {
+      if (!live) return;
+      if (page.error) {
+        setLoadError(page.error);
+        return;
+      }
+      setComments(page.comments);
+      setHasMore(page.comments.length === PAGE_SIZE);
     });
     return () => {
       live = false;
     };
   }, [topic.id]);
+
+  const showMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const page = await fetchVisibleTopicRequestsPage(topic.id, { limit: PAGE_SIZE, offset: comments.length });
+    setLoadingMore(false);
+    if (page.error) {
+      setLoadError(page.error);
+      return;
+    }
+    setLoadError(null);
+    setComments((prev) => [...prev, ...page.comments]);
+    setHasMore(page.comments.length === PAGE_SIZE);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in ms-tools">
@@ -125,6 +154,12 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
         </ul>
       </section>
 
+      {loadError ? (
+        <p className="ms-note-box" role="status">
+          {tt('topics.commentsLoadFailed', lang)}
+        </p>
+      ) : null}
+
       {comments.length > 0 ? (
         <section className="ms-card space-y-3" aria-label={tt('topics.whatOthersSaid', lang)}>
           <h2 className="ms-h2">{tt('topics.whatOthersSaid', lang)}</h2>
@@ -135,7 +170,9 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
                   <span className="font-semibold">
                     {comment.instagram_name.toLowerCase() === 'anonymous'
                       ? tt('topics.anonymous', lang)
-                      : `@${comment.instagram_name}`}
+                      : isInstagramHandle(comment.instagram_name)
+                        ? `@${comment.instagram_name}`
+                        : comment.instagram_name}
                   </span>
                   {' · '}
                   <span className="ms-muted text-sm">{formatTopicDate(new Date(comment.created_at))}</span>
@@ -153,6 +190,11 @@ export const TopicPage: React.FC<{ topic: TopicContent }> = ({ topic }) => {
               </li>
             ))}
           </ul>
+          {hasMore ? (
+            <button type="button" onClick={showMore} disabled={loadingMore} className="ms-btn">
+              {loadingMore ? tt('sendbox.sending', lang) : tt('topics.showMore', lang)}
+            </button>
+          ) : null}
         </section>
       ) : null}
 

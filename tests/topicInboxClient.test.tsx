@@ -76,9 +76,15 @@ describe('TopicInbox rendering', () => {
 
   it('links DM on Instagram only for real handles, never for Anonymous', () => {
     const html = renderInbox();
-    expect(html).toContain('href="https://www.instagram.com/someone"');
+    expect(html).toContain('href="https://ig.me/m/someone"');
     expect(html).not.toContain('instagram.com/Anonymous');
+    expect(html).not.toContain('ig.me/m/Anonymous');
     expect(html.match(/DM on Instagram/g)?.length).toBe(1);
+  });
+
+  it('gives every message a Delete button', () => {
+    const html = renderInbox();
+    expect(html.match(/>Delete</g)?.length).toBe(2);
   });
 
   it('gives every reply box a Send button', () => {
@@ -89,8 +95,8 @@ describe('TopicInbox rendering', () => {
 
 describe('instagramDmUrl', () => {
   it('builds the DM link for a real handle and rejects the rest', () => {
-    expect(instagramDmUrl('someone')).toBe('https://www.instagram.com/someone');
-    expect(instagramDmUrl('@some.one_2')).toBe('https://www.instagram.com/some.one_2');
+    expect(instagramDmUrl('someone')).toBe('https://ig.me/m/someone');
+    expect(instagramDmUrl('@some.one_2')).toBe('https://ig.me/m/some.one_2');
     expect(instagramDmUrl('Anonymous')).toBeNull();
     expect(instagramDmUrl('Guest')).toBeNull();
     expect(instagramDmUrl('')).toBeNull();

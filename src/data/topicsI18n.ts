@@ -75,7 +75,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Chaalis din ki khalwa, aur woh duniyaein jo ek ke baad ek talash karne wale ke saamne khulti hain.",
     intro:
-      "Main Khafi hoon. Aaj main tumhe Ibn Arabi ki 40-day retreat yaani khalwa ke safar par le chalta hoon. Yeh safar The Journey to the Lord of Power kitab mein likha hai. Main tumhe waisa hi le chalunga jaisa kitab kehti hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Main tumhe Ibn Arabi ke ek safar ke baare mein batana chahta hoon. Yeh safar chaalis din ka hai. Yeh ek retreat hai, ek khalwa, Allah ke saath akele waqt. Talash karne wala tanhai mein baithta hai aur uske saamne ek ke baad ek duniya khulti hai. Main ne yeh The Journey to the Lord of Power mein padha hai, aur main tumhe waisa hi le chalunga jaisa kitab kehti hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Shuruat: Averroes (Ibn Rushd) ki Hairani",
@@ -150,7 +150,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Is duniya ke peeche ki roshni wali duniya, aur woh teen aalam jo sab kuch thaame hue hain.",
     intro:
-      "Main Khafi hoon. Aaj hum doosre bade raaz ki taraf chalte hain, Alam al-Malakut. Yeh woh duniya hai jo is duniya ke peeche hai. Tum use chhoo nahi sakte. Lekin woh is duniya ko thaame hue hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Is duniya ke peeche ek aur duniya hai. Tum use chhoo nahi sakte. Lekin woh is duniya ko thaame hue hai, jaise jad ped ko thaame hue hai. Purani kitabein use Alam al-Malakut kehti hain, Sovereignty ki Duniya. Yahan uski poori baat hai, kitabon se jama ki hui. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Teen Aalam: Universe ka Triple Architecture",
@@ -250,7 +250,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     title: "Ruh aur Nafs",
     subtitle: "Ruh kya hai, woh kahan se aati hai, aur jism kis liye hai.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne 40-day khalwa aur Alam al-Malakut ke aasmani safar ko dekha. Aaj ruh aur nafs ki baat karte hain. Dono ke beech asal farq kya hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Log mujhse poochte hain ke ruh kya hai. Kitabein is sawal ka jawab saaf tareeqe se deti hain. Ruh jism nahi hai. Yeh ek roshni hai jo kuch waqt ke liye jism mein rehti hai. Main tumhe woh bataunga jo main ne iske baare mein kitabon se paya. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Do Mukhtalif Aalam: Ruh aur Nafs ka Asal Farq",
@@ -322,7 +322,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     title: "Harf Alif",
     subtitle: "Ek seedhi lakeer, aur uske andar poori ek taleem.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne 40-day khalwa, Alam al-Malakut aur Ruh-o-Nafs ke bhed dekhe. Aaj harf Alif ki baat karte hain. Ek seedhi lakeer. Aur uske andar poori ek duniya. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Alif Arabic alphabet ka pehla harf hai. Yeh ek seedhi lakeer hai. Lekin kitabein is ek lakeer ko poori ek duniya ka matlab deti hain. Main tumhe woh bataunga jo kitabein iske baare mein kehti hain. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Sayyid al-Huruf: Kalam ka Pehla Qatra aur Axis",
@@ -383,7 +383,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Woh angoothi jiske baare mein sab ne suna hai, aur kitabein asal mein kya kehti hain.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakut, Ruh-o-Nafs aur Harf Alif ke asrar khole. Aaj Khatam Sulayman ki baat karte hain. Woh muhr jiske baare mein sab ne suna hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Sulayman ki muhr ke baare mein sab ne suna hai. Lekin kitabein asal mein iske baare mein kya kehti hain? Jawab kahaniyon se zyada careful hai. Main ne Quran aur purani kitabon se jo jama kiya hai, woh tum saaf dekh sakoge. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Anguthi ke Chaar Naqsh: the primordial ring",
@@ -451,7 +451,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Ek saccha khwab, nafs ki apne aap se baat, aur Shaitan ki taraf se ek khwab.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakut, Ruh-o-Nafs, Harf Alif aur Khatam Sulayman ke asrar khole. Aaj khwab ki baat karte hain. Hum sab khwab dekhte hain. Lekin sab khwab ek jaise nahi hote. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Hum sab khwab dekhte hain. Lekin kitabein kehti hain ke sab khwab ek jaise nahi hote. Woh teen tarah ke khwab batati hain, aur har ek ek alag jagah se aata hai. Main tumhe woh teenon bataunga, taaki tum unhe pehchan sako. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Neend Asal Mein Kya Hai?",
@@ -525,7 +525,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Ek badshah apne staff par tike hue hain, ek chhota keeda use kha jata hai, aur jinn ek sakht sach seekhte hain.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakut, Ruh-o-Nafs, Harf Alif, Khatam Sulayman aur khwab ke asrar khole. Aaj Surah Saba ki ayat 34:14 ki baat karte hain. Ek chhoti si ayat. Aur ajeeb si. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Quran mein ek ayat hai jo batati hai ke Sulayman kaise mare. Yeh chhoti si hai, aur ajeeb si. Ek badshah apne asaa par jhuka hai. Ek chhota sa keeda asaa khata hai. Badshah gir jata hai. Main tumhe is ayat se guzarunga, jaisa kitabein samjhati hain. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Surah Saba 34:14 ka Divine Text aur Scenario",
@@ -589,7 +589,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Woh rehnuma jo duniya mein chhup kar chalte hain, aur woh mulaqat jiska waada kitabein karti hain.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakut, Ruh-o-Nafs, Harf Alif, Khatam Sulayman, khwab aur Saba ke asrar khole. Aaj al-Khidr ki baat karte hain. Woh chhupe hue ustaad. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Al-Khidr Sufism ke chhupe hue ustaad hain. Unka na koi school hai, na koi pata. Woh aate hain, sikhate hain, aur chale jate hain. Ibn Arabi unse teen baar mile, aur har mulaqat ko unhone apni kitab mein likha. Yahan woh teenon mulaqatein hain, unki apni kitab se. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Pehli Mulaqat: Seville ki Sadak aur Ustad ki Ta'zim",
@@ -650,7 +650,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     title: "Ibn Arabi ke safar mein drinks",
     subtitle: "Paani, doodh, shahed aur sharab: in drinks ka matlab kya hai.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakut, Ruh-o-Nafs, Harf Alif, Khatam Sulayman, khwab aur Saba ke asrar khole. Aaj drinks ki baat karte hain. Paani, doodh, shahed aur sharab. Yeh sirf drinks nahi hain. Har ek ek tarah ka ilm hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Safar ke beech mein, Ibn Arabi ko drinks pesh kiye jate hain. Paani, doodh, shahed aur sharab. Yeh sirf drinks nahi hain. Har ek ek tarah ka ilm hai, aur kitab unhe ek ek kar ke decode karti hai. Yahan woh decoding hai, kitab se. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Paani (Al-Ma): Absolute Gnosis",
@@ -728,7 +728,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     subtitle:
       "Ghayb ke chhupe hue mard, aur woh markaz jiske gird woh ghoomte hain.",
     intro:
-      "Main Khafi hoon. Pichle rounds mein humne khalwa, Malakut, Ruh-o-Nafs, Harf Alif, Khatam Sulayman, khwab aur Saba ke asrar khole. Aaj Rijal al-Ghayb ki baat karte hain. Woh chhupe hue mard jinke upar duniya ghoomti hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Aise mard hain jinse tum kabhi nahi miloge, aur duniya unhi par ghoomti hai. Kitabein unhe Rijal al-Ghayb kehti hain, Ghayb ke Mard. Woh chhupe hue is liye nahi hain ke woh chhupte hain. Woh chhupe hue is liye hain ke duniya unhe dekhti nahi. Yahan unki tartib hai, jaisa kitabein deti hain. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Gate of Solomon par al-Mundhiri ka Waqia",
@@ -794,7 +794,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     title: "Uwaisi Transmission",
     subtitle: "Zinda ustaad ke bina initiation.",
     intro:
-      "Main Khafi hoon. Har Sufi raaste ka ek ustaad hota hai. Lekin kuch talash karne wale apne ustaad se jism mein kabhi nahi milte. Unhe waqt ke paar, maut ke paar, parde ke paar sikhaya jata hai. Kitabein is tareeqe ko Uwaisi kehti hain. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Har Sufi raaste ka ek ustaad hota hai. Lekin kuch talash karne wale apne ustaad se jism mein kabhi nahi milte. Unhe waqt ke paar, maut ke paar, parde ke paar sikhaya jata hai. Kitabein is tareeqe ko Uwaisi kehti hain. Yahan iska matlab hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Zinda ustaad ke bina initiation",
@@ -829,7 +829,7 @@ const TOPICS_HI: Record<string, TopicLocalization> = {
     title: "Tajaddud al-Khalq",
     subtitle: "Har lamha, duniya dobara banayi jati hai.",
     intro:
-      "Main Khafi hoon. Duniya solid lagti hai. Pathar wahin hai jahan kal tha. Ped wahin khada hai jahan tha. Lekin kitabein kehti hain ke duniya solid hai hi nahi. Woh har lamha dobara banayi jati hai. Ek dum nayi. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
+      "Duniya solid lagti hai. Pathar wahin hai jahan kal tha. Ped wahin khada hai jahan tha. Lekin kitabein kehti hain ke duniya solid hai hi nahi. Woh har lamha dobara banayi jati hai. Ek dum nayi, kuch bhi nahi se. Yahan tajaddud-e-khalq ki taleem hai. Yeh breakdown sirf historic aur academic study ke liye hai. Iska maqsad kisi tarah ka spiritual outcome claim karna ya religious ruling dena bilkul nahi hai.",
     fullSections: [
       {
         heading: "Quranic anchor: ek nayi takhleeq",

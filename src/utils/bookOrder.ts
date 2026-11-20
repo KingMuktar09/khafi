@@ -79,7 +79,7 @@ export function groupBookVersions(books: Book[]): Map<string, BookVersion[]> {
 }
 
 export function getBookVersion(books: Book[], book: Book): BookVersion {
-  const group = groupBookVersions(books).get(normalizeTitle(book.title)) || [];
+  const group = getCachedBookVersions(books).get(normalizeTitle(book.title)) || [];
   return (
     group.find((v) => v.book.id === book.id) || {
       book,
@@ -88,6 +88,26 @@ export function getBookVersion(books: Book[], book: Book): BookVersion {
       versionDate: bookVersionDate(book),
     }
   );
+}
+
+/**
+ * The version map, computed once per catalog. getBookVersion used to
+ * rebuild the whole map (regroup + sort every title) on every call —
+ * and every card calls it on every render, so one favourite tap ran
+ * 138 regroups of 138 books. The cache is keyed by the books array
+ * itself: loadCatalog replaces the array, so a new catalog recomputes
+ * once; renders in between reuse the same map. Length is checked too,
+ * so an in-place add/remove is never served a stale map.
+ */
+let cachedVersionBooks: Book[] | null = null;
+let cachedVersionMap: Map<string, BookVersion[]> | null = null;
+
+export function getCachedBookVersions(books: Book[]): Map<string, BookVersion[]> {
+  if (cachedVersionBooks !== books || cachedVersionMap === null || cachedVersionBooks.length !== books.length) {
+    cachedVersionMap = groupBookVersions(books);
+    cachedVersionBooks = books;
+  }
+  return cachedVersionMap;
 }
 
 /** Distinct categories, in admin order first, then alphabetical. */

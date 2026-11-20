@@ -40,7 +40,7 @@
 // totals on Pages are best-effort; the Vercel/Express totals are the
 // authoritative ones. See server/cf-api-handler.ts.
 
-import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
+import { randomBytes, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 export interface BookKeyRecord {
@@ -226,20 +226,106 @@ export function saveBookKeyStore(filePath: string, store: BookKeyStore): boolean
   }
 }
 
-/** Parse the `x-book-keys` header the browser sends with catalog / file
- *  requests: base64url JSON of { bookId: plainKey }. Returns the map, or
- *  an empty map for a missing / broken header — never throws. */
-export function parseBookKeysHeader(header: unknown): Record<string, string> {
+/** Short-lived unlock tokens (H-4): the raw key must stop being a
+ *  perpetual bearer credential. POST /api/book-keys/verify issues one
+ *  token per (book, device); catalog / stream / download accept ONLY
+ *  the token, in the `x-book-unlock` header (base64url JSON of
+ *  { bookId: token }). The token is `base64url(deviceId.exp.hmac)`
+ *  where hmac = HMAC-SHA256(SESSION_SECRET, `bookId.deviceId.exp`)
+ *  and exp = now + 30 days. A token verifies without the key store,
+ *  so it works on both hosts as long as SESSION_SECRET matches. The
+ *  raw key is never accepted on the header path again. */
+export const BOOK_UNLOCK_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function base64urlEncode(text: string): string {
+  return Buffer.from(text, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function base64urlDecode(raw: string): string | null {
   try {
-    const raw = String(header || '').trim();
-    if (!raw) return {};
-    const json = Buffer.from(raw.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
-    const parsed = JSON.parse(json);
+    const cleaned = String(raw || '').trim();
+    if (!cleaned) return null;
+    return Buffer.from(cleaned.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+  } catch {
+    return null;
+  }
+}
+
+/** A device id is a client-generated stable UUID: no dots (they would
+ *  break the token split), no whitespace, at most 128 chars. */
+export function isValidDeviceId(deviceId: unknown): deviceId is string {
+  return (
+    typeof deviceId === 'string' &&
+    deviceId.length > 0 &&
+    deviceId.length <= 128 &&
+    !deviceId.includes('.') &&
+    !/\s/.test(deviceId)
+  );
+}
+
+export function createBookUnlockToken(
+  bookId: string,
+  deviceId: string,
+  secret: string,
+  nowMs: number = Date.now()
+): { token: string; expiresAt: string } {
+  const exp = nowMs + BOOK_UNLOCK_TTL_MS;
+  const hmac = createHmac('sha256', secret)
+    .update(`${bookId}.${deviceId}.${exp}`)
+    .digest('hex');
+  return {
+    token: base64urlEncode(`${deviceId}.${exp}.${hmac}`),
+    expiresAt: new Date(exp).toISOString(),
+  };
+}
+
+/** Verify an unlock token for one book. Returns the device id on
+ *  success, or null for a missing / expired / forged token. */
+export function verifyBookUnlockToken(
+  token: unknown,
+  bookId: string,
+  secret: string,
+  nowMs: number = Date.now()
+): string | null {
+  try {
+    if (typeof token !== 'string' || !token || !secret) return null;
+    const inner = base64urlDecode(token);
+    if (!inner) return null;
+    const parts = inner.split('.');
+    if (parts.length !== 3) return null;
+    const [deviceId, expRaw, hmac] = parts;
+    if (!isValidDeviceId(deviceId)) return null;
+    const exp = Number(expRaw);
+    if (!Number.isFinite(exp) || exp <= nowMs) return null;
+    const expected = createHmac('sha256', secret)
+      .update(`${bookId}.${deviceId}.${exp}`)
+      .digest('hex');
+    const a = Buffer.from(hmac, 'utf8');
+    const b = Buffer.from(expected, 'utf8');
+    if (a.length !== b.length) return null;
+    return timingSafeEqual(a, b) ? deviceId : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Parse the `x-book-unlock` header: base64url JSON of
+ *  { bookId: unlockToken }. Returns the map, or an empty map for a
+ *  missing / broken header — never throws. */
+export function parseBookUnlockHeader(header: unknown): Record<string, string> {
+  try {
+    const decoded = base64urlDecode(String(header || '').trim());
+    if (!decoded) return {};
+    const parsed = JSON.parse(decoded);
     if (!parsed || typeof parsed !== 'object') return {};
     const out: Record<string, string> = {};
-    for (const [bookId, key] of Object.entries(parsed)) {
-      if (typeof bookId === 'string' && typeof key === 'string' && key.trim()) {
-        out[bookId] = key;
+    for (const [bookId, token] of Object.entries(parsed)) {
+      if (typeof bookId === 'string' && typeof token === 'string' && token.trim()) {
+        out[bookId] = token;
       }
     }
     return out;
@@ -249,27 +335,22 @@ export function parseBookKeysHeader(header: unknown): Record<string, string> {
 }
 
 /** Encode the same header value (client side / tests). */
-export function encodeBookKeysHeader(keys: Record<string, string>): string {
-  return Buffer.from(JSON.stringify(keys), 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+export function encodeBookUnlockHeader(tokens: Record<string, string>): string {
+  return base64urlEncode(JSON.stringify(tokens));
 }
 
-/** Which book ids in this request carry a VALID, usable key? Checks the
- *  header map against the store — one key per book, never cross-book. */
-export function keyUnlockedBookIds(
-  store: BookKeyStore,
-  header: unknown
+/** Which book ids in this request carry a VALID unlock token? One
+ *  token unlocks one book only — a token minted for book A never
+ *  verifies for book B. */
+export function unlockTokenBookIds(
+  header: unknown,
+  secret: string,
+  nowMs: number = Date.now()
 ): Set<string> {
   const out = new Set<string>();
-  const supplied = parseBookKeysHeader(header);
-  for (const [bookId, key] of Object.entries(supplied)) {
-    const record = store.keys.find(
-      (k) => k.bookId === bookId && isKeyUsable(k) && verifyBookKey(k, key)
-    );
-    if (record) out.add(bookId);
+  const supplied = parseBookUnlockHeader(header);
+  for (const [bookId, token] of Object.entries(supplied)) {
+    if (verifyBookUnlockToken(token, bookId, secret, nowMs)) out.add(bookId);
   }
   return out;
 }

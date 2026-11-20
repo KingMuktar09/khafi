@@ -1,24 +1,9 @@
 import { ItemType } from '../types';
 
-const ADMIN_TOKEN_KEY = 'khafi_admin_token';
-
-function getAdminToken(): string | null {
-  try {
-    return localStorage.getItem(ADMIN_TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function getAuthHeaders(): Record<string, string> {
-  const token = getAdminToken();
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers['x-admin-token'] = token;
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-}
+// Admin auth is cookie-only (H-7): the httpOnly session cookie is sent
+// automatically on same-origin requests, so no token header is needed
+// here. There used to be a localStorage token (`khafi_admin_token`) —
+// it is gone, and this file must not bring it back.
 
 export interface UploadProgress {
   loadedBytes: number;
@@ -136,9 +121,6 @@ function uploadSingleXhr(
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/admin/upload');
 
-    const headers = getAuthHeaders();
-    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
-
     if (signal) {
       signal.addEventListener('abort', () => {
         xhr.abort();
@@ -207,9 +189,6 @@ function uploadPartXhr(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/admin/upload/part');
-
-    const headers = getAuthHeaders();
-    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
 
     if (signal) {
       signal.addEventListener('abort', () => {
@@ -283,7 +262,7 @@ async function uploadMultipart(
   const initRes = await retryWithBackoff(async () => {
     const res = await fetch('/api/admin/upload/init', {
       method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         filename: file.name,
         fileSize: file.size,
@@ -365,7 +344,7 @@ async function uploadMultipart(
     const completeRes = await retryWithBackoff(async () => {
       const res = await fetch('/api/admin/upload/complete', {
         method: 'POST',
-        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uploadId }),
         signal,
       });
@@ -391,7 +370,7 @@ async function uploadMultipart(
     try {
       fetch('/api/admin/upload/abort', {
         method: 'POST',
-        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uploadId }),
       }).catch(() => {});
     } catch {

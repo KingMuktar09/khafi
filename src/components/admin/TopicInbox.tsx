@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Bell, Check, Instagram, MessageSquare, RefreshCw, Send } from 'lucide-react';
+import { Bell, Check, Instagram, MessageSquare, RefreshCw, Send, Trash2 } from 'lucide-react';
 import { api } from '../../services/api';
 import {
   instagramDmUrl,
@@ -29,6 +29,9 @@ export const TopicInbox: React.FC<{
 }> = ({ initialItems, initialUnread, onUnreadChange }) => {
   const [items, setItems] = useState<TopicRequestWithReply[]>(initialItems || []);
   const [unread, setUnread] = useState<number>(initialUnread ?? 0);
+  // True when the unread count itself could not be loaded because the
+  // inbox is not set up (F10): the bell must not show a false 0.
+  const [unreadUnknown, setUnreadUnknown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notConfigured, setNotConfigured] = useState(false);
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
@@ -54,6 +57,7 @@ export const TopicInbox: React.FC<{
       }
       const n = count.unread;
       setUnread(n);
+      setUnreadUnknown(Boolean(count.notConfigured));
       onUnreadChangeRef.current?.(n);
     } finally {
       setLoading(false);
@@ -98,6 +102,20 @@ export const TopicInbox: React.FC<{
     await load();
   };
 
+  const handleDelete = async (id: number | string) => {
+    setBusyId(String(id));
+    setNotice(null);
+    const res = await api.deleteTopicRequest(id);
+    setBusyId(null);
+    if (!res.success) {
+      setNotice({ text: res.error || 'Could not delete this message.', ok: false });
+      return;
+    }
+    setItems((prev) => prev.filter((item) => String(item.id) !== String(id)));
+    setNotice({ text: 'Deleted.', ok: true });
+    await load();
+  };
+
   const kindLabel = (kind: string) =>
     kind === 'request' ? 'Request' : kind === 'question' ? 'Question' : 'Comment';
 
@@ -134,15 +152,21 @@ export const TopicInbox: React.FC<{
         <div className="flex items-center gap-2 shrink-0">
           <span
             className="relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--bg-main)] border border-[var(--border-main)] text-[var(--text-main)]"
-            title={`${unread} new message${unread === 1 ? '' : 's'}`}
-            aria-label={`${unread} new messages`}
+            title={unreadUnknown ? 'Messages setup needed' : `${unread} new message${unread === 1 ? '' : 's'}`}
+            aria-label={unreadUnknown ? 'Messages setup needed' : `${unread} new messages`}
           >
             <Bell className="w-4 h-4 text-[var(--gold)]" />
             <span>New</span>
-            {unread > 0 && (
-              <span className="min-w-5 h-5 px-1 rounded-full bg-[var(--gold)] text-black text-[10px] font-bold inline-flex items-center justify-center">
-                {unread > 99 ? '99+' : unread}
+            {unreadUnknown ? (
+              <span className="min-w-5 h-5 px-1 rounded-full bg-amber-500 text-black text-[10px] font-bold inline-flex items-center justify-center">
+                !
               </span>
+            ) : (
+              unread > 0 && (
+                <span className="min-w-5 h-5 px-1 rounded-full bg-[var(--gold)] text-black text-[10px] font-bold inline-flex items-center justify-center">
+                  {unread > 99 ? '99+' : unread}
+                </span>
+              )
             )}
           </span>
           <button
@@ -167,7 +191,7 @@ export const TopicInbox: React.FC<{
         <p className="text-xs leading-relaxed rounded-lg px-3 py-2 border bg-amber-500/10 text-amber-300 border-amber-500/20">
           Replies are not set up yet. Run supabase/migrations/001_topic_replies.sql in the Supabase SQL Editor,
           then add SUPABASE_SERVICE_ROLE_KEY in Vercel and redeploy. Until then you can read messages here,
-          but approving and replying will not work.
+          but approving, replying and deleting will not work.
         </p>
       )}
 
@@ -242,7 +266,8 @@ export const TopicInbox: React.FC<{
                   <button
                     type="button"
                     onClick={() => handleSendReply(item.id)}
-                    disabled={busy || !draft.trim()}
+                    disabled={busy || notConfigured || !draft.trim()}
+                    title={notConfigured ? 'Replies are not set up yet.' : undefined}
                     className="tap-target inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--gold)] hover:bg-[var(--gold-light)] disabled:opacity-60 text-black text-xs font-bold cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
@@ -252,13 +277,24 @@ export const TopicInbox: React.FC<{
                     <button
                       type="button"
                       onClick={() => handleApprove(item.id)}
-                      disabled={busy}
+                      disabled={busy || notConfigured}
+                      title={notConfigured ? 'Replies are not set up yet.' : undefined}
                       className="tap-target inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-[var(--gold)]/60 disabled:opacity-60 text-xs font-semibold text-[var(--text-main)] cursor-pointer"
                     >
                       <Check className="w-4 h-4 text-[var(--gold)]" />
                       <span>Approve</span>
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.id)}
+                    disabled={busy || notConfigured}
+                    title={notConfigured ? 'Replies are not set up yet.' : 'Delete this message'}
+                    className="tap-target inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-main)] hover:border-rose-500/60 disabled:opacity-60 text-xs font-semibold text-[var(--text-main)] cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <span>Delete</span>
+                  </button>
                   {item.status !== 'new' && !item.reply && (
                     <span className="text-xs text-[var(--text-muted)]">Approved — no reply sent yet.</span>
                   )}

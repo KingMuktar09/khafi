@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   Folder as FolderIcon,
   FileText,
@@ -34,7 +34,9 @@ import { ActionMenuPortal } from '../ui/ActionMenuPortal';
 import { api } from '../../services/api';
 import { Breadcrumbs } from '../ui/Breadcrumbs';
 import { ItemDetailsModal } from '../ui/ItemDetailsModal';
-import { FilePreviewModal } from '../viewers/FilePreviewModal';
+// The preview modal (and its heavy viewers) loads only when a file
+// is actually previewed, not with the folder list.
+const FilePreviewModal = lazy(() => import('../viewers/FilePreviewModal').then((m) => ({ default: m.FilePreviewModal })));
 import { NewFolderModal } from './NewFolderModal';
 import { UploadFileModal } from './UploadFileModal';
 import { QuickRenameModal } from '../admin/QuickRenameModal';
@@ -1455,12 +1457,17 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
         }}
       />
 
-      {/* Centralized File Preview Modal */}
-      <FilePreviewModal
-        book={previewModalBook}
-        isOpen={!!previewModalBook}
-        onClose={() => setPreviewModalBook(null)}
-      />
+      {/* Centralized File Preview Modal — mounted only while open, so
+          its chunk downloads on the preview click, not before. */}
+      {previewModalBook && (
+        <Suspense fallback={null}>
+          <FilePreviewModal
+            book={previewModalBook}
+            isOpen={!!previewModalBook}
+            onClose={() => setPreviewModalBook(null)}
+          />
+        </Suspense>
+      )}
 
     </div>
   );

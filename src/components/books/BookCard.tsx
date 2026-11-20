@@ -1,9 +1,9 @@
 import React from 'react';
 import { Star, FileText, CheckCircle2, Trash2 } from 'lucide-react';
-import { Book } from '../../types';
+import { Book, ReadingProgress } from '../../types';
 import { CoverImage } from './CoverImage';
 import { appState } from '../../state/appState';
-import { t, tf } from '../../data/i18n';
+import { t, tf, type SiteLanguage } from '../../data/i18n';
 import { router } from '../../router/router';
 import { getItemType, getTypeLabel, getTypeBadgeColor, getBookCoverUrl, getPaidBadgeLabel, formatBookPrice } from '../../utils/fileUtils';
 
@@ -15,13 +15,25 @@ interface BookCardProps {
   /** Admin-only delete: when set (and the viewer is admin), a small trash
    *  button shows on the card. The parent must confirm before deleting. */
   onDelete?: (book: Book) => void;
+  /**
+   * Store values the card reads, passed as props so React.memo stays
+   * correct. The card used to read appState directly during render, so
+   * a memoised card would freeze: a favourite tap or a language change
+   * re-renders the parents, but with identical props memo would skip
+   * this card and the star / text would never update. The parent
+   * (BookGrid) passes these; other callers may omit them and the card
+   * falls back to reading appState, as before.
+   */
+  lang?: SiteLanguage;
+  isFavorite?: boolean;
+  progress?: ReadingProgress | undefined;
 }
 
 // Memoised: the Library re-renders on every keystroke / filter change, and
 // without memo every one of the 138 cards re-rendered with it. A card only
 // re-renders when its own book, favourite/progress state or index changes.
-export const BookCard: React.FC<BookCardProps> = React.memo(({ book, onSelect, index = 0, onDelete }) => {
-  const lang = appState.settings.language;
+export const BookCard: React.FC<BookCardProps> = React.memo(({ book, onSelect, index = 0, onDelete, lang: langProp, isFavorite: isFavoriteProp, progress: progressProp }) => {
+  const lang = langProp ?? appState.settings.language;
 const typeLabelText = (label: string): string =>
   label === 'Document' ? t('book.typeDocument', lang)
   : label === 'Image' ? t('book.typeImage', lang)
@@ -31,8 +43,8 @@ const typeLabelText = (label: string): string =>
   : label === 'File' ? t('book.typeFile', lang)
   : label;
 
-  const isFav = appState.isFavorite(book.id);
-  const progress = appState.getReadingProgress(book.id);
+  const isFav = isFavoriteProp ?? appState.isFavorite(book.id);
+  const progress = progressProp ?? appState.getReadingProgress(book.id);
   const percentage = progress?.percentage || 0;
   const isCompleted = percentage >= 100;
 
@@ -56,11 +68,16 @@ const typeLabelText = (label: string): string =>
     appState.toggleFavorite(book.id);
   };
 
+  // Only the first 12 cards get the staggered entrance. The rest
+  // mount without an animation: 138 staggered entrances (even capped
+  // at ~0.5 s delay) all restart on every Library mount and keystroke.
+  const animated = index < 12;
+
   return (
     <div
       onClick={handleCardClick}
-      style={{ '--motion-i': Math.min(index, 11) } as React.CSSProperties}
-      className="motion-card motion-item group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex flex-col h-full rounded-[14px] overflow-hidden"
+      style={animated ? ({ '--motion-i': Math.min(index, 11) } as React.CSSProperties) : undefined}
+      className={`motion-card ${animated ? 'motion-item' : ''} group relative bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex flex-col h-full rounded-[14px] overflow-hidden`}
     >
       {/* Cover Image Container — fixed 2:3 book ratio so the grid never jumps while covers load */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-[var(--bg-main)]">
@@ -71,26 +88,27 @@ const typeLabelText = (label: string): string =>
           title={book.title}
           author={book.author}
           category={book.category}
+          thumbWidth={300}
         />
 
         {/* Type Badge Overlay */}
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-col items-start gap-1.5">
-          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border backdrop-blur-sm rounded ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
+          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border rounded ${badgeColor.bg} ${badgeColor.text} ${badgeColor.border}`}>
             {typeLabelText(typeLabel)}
           </span>
           {getPaidBadgeLabel(book) ? (
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-[var(--gold)]/60 bg-black/70 text-[var(--gold)] backdrop-blur-sm rounded">
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-[var(--gold)]/60 bg-black/70 text-[var(--gold)] rounded">
               {t('paid.badge', lang)}
             </span>
           ) : (
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 backdrop-blur-sm rounded">
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 rounded">
               {t('book.freeBadge', lang)}
             </span>
           )}
           {book.isAuthentic && (
             <span
               title={t('book.authenticMeaning', lang)}
-              className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-emerald-400/60 bg-black/70 text-emerald-300 backdrop-blur-sm rounded inline-flex items-center gap-1"
+              className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-emerald-400/60 bg-black/70 text-emerald-300 rounded inline-flex items-center gap-1"
             >
               <CheckCircle2 className="w-3 h-3" />
               {t('book.authenticBadge', lang)}
@@ -101,7 +119,7 @@ const typeLabelText = (label: string): string =>
             return v.totalVersions > 1 ? (
               <span
                 title={tf('book.versionCardTitle', lang, { n: v.versionNumber, total: v.totalVersions, date: v.versionDate || 'unknown' })}
-                className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 backdrop-blur-sm rounded"
+                className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 border border-white/25 bg-black/60 text-white/80 rounded"
               >
                 {tf('book.versionShort', lang, { n: v.versionNumber, total: v.totalVersions })}
               </span>
@@ -111,7 +129,7 @@ const typeLabelText = (label: string): string =>
 
         {/* Reading Progress Ribbon/Badge Overlay */}
         {percentage > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 z-10 bg-[var(--bg-surface)]/90 backdrop-blur-sm px-2.5 py-1.5 border-t border-[var(--border-main)] flex items-center justify-between text-[10px]">
+          <div className="absolute bottom-0 left-0 right-0 z-10 bg-[var(--bg-surface)]/90 px-2.5 py-1.5 border-t border-[var(--border-main)] flex items-center justify-between text-[10px]">
             <span className={`font-bold flex items-center gap-1 ${isCompleted ? 'text-emerald-500' : 'text-[var(--gold)]'}`}>
               {isCompleted ? (
                 <>
@@ -134,7 +152,7 @@ const typeLabelText = (label: string): string =>
         <button
           type="button"
           onClick={handleFavoriteClick}
-          className={`absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full border backdrop-blur-sm transition-all cursor-pointer shadow-xs ${
+          className={`absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full border transition-all cursor-pointer shadow-xs ${
             isFav
               ? 'bg-[var(--bg-surface)]/90 border-amber-400/60 text-amber-400 hover:scale-110'
               : 'bg-[var(--bg-surface)]/80 border-[var(--border-main)] text-[var(--text-muted)] hover:text-amber-400 hover:border-amber-400/50 hover:scale-110'
@@ -158,7 +176,7 @@ const typeLabelText = (label: string): string =>
               e.stopPropagation();
               onDelete(book);
             }}
-            className="absolute top-12 right-2.5 z-10 p-1.5 rounded-full border backdrop-blur-sm transition-all cursor-pointer shadow-xs bg-[var(--bg-surface)]/80 border-[var(--border-main)] text-[var(--text-muted)] hover:text-rose-400 hover:border-rose-400/50 hover:scale-110"
+            className="absolute top-12 right-2.5 z-10 p-1.5 rounded-full border transition-all cursor-pointer shadow-xs bg-[var(--bg-surface)]/80 border-[var(--border-main)] text-[var(--text-muted)] hover:text-rose-400 hover:border-rose-400/50 hover:scale-110"
             title={tf('book.deleteTitleAttr', lang, { title: book.title })}
             aria-label={tf('book.deleteAria', lang, { title: book.title })}
           >

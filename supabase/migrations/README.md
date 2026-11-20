@@ -4,6 +4,15 @@
 
 - `001_topic_replies.sql` — table `public.topic_replies` for admin replies
   to visitor comments, requests and questions. Run it once (steps below).
+- `002_topic_requests_policies.sql` — table `public.topic_requests` plus
+  its Row Level Security policies (anon insert only, anon read only
+  approved rows), and the fixed replies policy (a reply is readable
+  only when its request is approved). Run it once in the dashboard SQL
+  Editor, same way as 001: paste the whole file and press **Run**, then
+  check in Table Editor that `topic_requests` still lists, and that an
+  unapproved row is not readable with the anon key. Until 002 is run,
+  the unapproved-row protection lives only in the dashboard policies
+  set by hand, not in this repo.
 
 ## Step 1 — Run the migration (dashboard, one time)
 

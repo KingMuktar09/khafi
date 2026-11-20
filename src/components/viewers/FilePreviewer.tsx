@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import {
   FileText,
   Image as ImageIcon,
@@ -21,13 +21,25 @@ import {
   getDriveDownloadUrl,
   downloadBookFile,
 } from '../../utils/fileUtils';
-import { PdfCanvasViewer, FitMode } from '../pdf/PdfCanvasViewer';
+import type { FitMode } from '../pdf/PdfCanvasViewer';
+// The two heavy viewers are lazy: PdfCanvasViewer drags in pdf.js
+// and DocxViewer drags in mammoth — neither belongs in the first-load
+// bundle, and a preview only ever shows one of them at a time.
+const PdfCanvasViewer = lazy(() => import('../pdf/PdfCanvasViewer').then((m) => ({ default: m.PdfCanvasViewer })));
+const DocxViewer = lazy(() => import('./DocxViewer').then((m) => ({ default: m.DocxViewer })));
 import { DrivePdfViewer } from '../pdf/DrivePdfViewer';
-import { DocxViewer } from './DocxViewer';
 import { TextViewer } from './TextViewer';
 import { OfficeEmbedViewer } from './OfficeEmbedViewer';
 
 export type { FitMode };
+
+/** Placeholder while a heavy viewer chunk loads: same height as the
+ *  viewer area, so the modal does not jump. */
+const ViewerLoading: React.FC = () => (
+  <div className="w-full h-full min-h-[600px] flex items-center justify-center bg-[var(--bg-main)]">
+    <p className="text-sm font-semibold text-[var(--text-muted)]">Loading…</p>
+  </div>
+);
 
 interface FilePreviewerProps {
   book: Book;
@@ -101,16 +113,18 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
 
     return (
       <div className={`w-full h-full min-h-[600px] flex flex-col bg-[var(--bg-main)] ${className}`}>
-        <PdfCanvasViewer
-          pdfUrl={fileTarget}
-          zoomLevel={activeZoomLevel}
-          isFitWidth={activeIsFitWidth}
-          fitMode={activeFitMode}
-          initialPage={initialPage}
-          onZoomChange={handleZoomChange}
-          onPageChange={onPageChange}
-          onRetry={onRetry}
-        />
+        <Suspense fallback={<ViewerLoading />}>
+          <PdfCanvasViewer
+            pdfUrl={fileTarget}
+            zoomLevel={activeZoomLevel}
+            isFitWidth={activeIsFitWidth}
+            fitMode={activeFitMode}
+            initialPage={initialPage}
+            onZoomChange={handleZoomChange}
+            onPageChange={onPageChange}
+            onRetry={onRetry}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -227,11 +241,13 @@ export const FilePreviewer: React.FC<FilePreviewerProps> = ({
   if (ext === 'docx') {
     const driveDownloadUrl = getDriveDownloadUrl(book);
     return (
-      <DocxViewer
-        fileUrl={driveDownloadUrl || fileTarget}
-        title={book.title}
-        onDownload={handleDownload}
-      />
+      <Suspense fallback={<ViewerLoading />}>
+        <DocxViewer
+          fileUrl={driveDownloadUrl || fileTarget}
+          title={book.title}
+          onDownload={handleDownload}
+        />
+      </Suspense>
     );
   }
 

@@ -17,8 +17,11 @@ import { getPaidBadgeLabel, formatBookPrice } from '../src/utils/fileUtils';
 import {
   FOLLOW_UNLOCK_HEADER,
   getFollowUnlockHeaders,
-  getBookKeyHeaders,
-  BOOK_KEYS_HEADER,
+  getBookUnlockHeaders,
+  BOOK_UNLOCK_HEADER,
+  DEVICE_ID_HEADER,
+  saveBookUnlockToken,
+  getDeviceId,
   api,
 } from '../src/services/api';
 
@@ -213,7 +216,7 @@ describe('sanitizeBook (server/cf-api-handler.ts)', () => {
 });
 
 describe('Cloudflare catalog endpoint', () => {
-  it('sets Vary on the admin token and the book-keys flag', async () => {
+  it('sets Vary on the admin token and the book-unlock flag', async () => {
     const res = await handleCloudflareApiRequest(
       new Request('https://example.com/api/catalog'),
       {}
@@ -221,7 +224,7 @@ describe('Cloudflare catalog endpoint', () => {
     expect(res.status).toBe(200);
     const vary = res.headers.get('Vary') || '';
     expect(vary).toContain('x-admin-token');
-    expect(vary).toContain('x-book-keys');
+    expect(vary).toContain('x-book-unlock');
     const body = (await res.json()) as any;
     expect(Array.isArray(body.books)).toBe(true);
     expect(body.books.length).toBeGreaterThan(0);
@@ -367,7 +370,7 @@ describe('getFollowUnlockHeaders (client)', () => {
   });
 });
 
-describe('getBookKeyHeaders (client)', () => {
+describe('getBookUnlockHeaders (client)', () => {
   const realLocalStorage = (globalThis as any).localStorage;
   let store: Record<string, string> = {};
 
@@ -388,21 +391,110 @@ describe('getBookKeyHeaders (client)', () => {
     store = {};
   });
 
-  it('sends nothing when no key is held', () => {
+  it('sends nothing when no unlock token is held', () => {
     stubLocalStorage();
-    expect(getBookKeyHeaders()).toEqual({});
-    expect(BOOK_KEYS_HEADER).toBe('x-book-keys');
+    expect(getBookUnlockHeaders()).toEqual({});
+    expect(BOOK_UNLOCK_HEADER).toBe('x-book-unlock');
   });
 
-  it('sends the held keys as a base64url JSON header, one per book', () => {
+  it('sends the held unlock tokens as JSON, one per book, never a raw key', () => {
+    stubLocalStorage();
+    saveBookUnlockToken('b-bulhan', 'tok-abc-123');
+    const headers = getBookUnlockHeaders();
+    expect(headers[BOOK_UNLOCK_HEADER]).toBeTruthy();
+    expect(JSON.parse(headers[BOOK_UNLOCK_HEADER])).toEqual({ 'b-bulhan': 'tok-abc-123' });
+    expect(headers[BOOK_UNLOCK_HEADER]).not.toContain('ABCDE-FGHIJ');
+  });
+
+  it('drops expired unlock tokens instead of sending them', () => {
+    stubLocalStorage();
+    saveBookUnlockToken('b-old', 'tok-expired', Date.now() - 1000);
+    saveBookUnlockToken('b-live', 'tok-live', Date.now() + 60000);
+    const headers = getBookUnlockHeaders();
+    expect(JSON.parse(headers[BOOK_UNLOCK_HEADER])).toEqual({ 'b-live': 'tok-live' });
+  });
+
+  it('ignores a raw key left in the old storage slot', () => {
     stubLocalStorage();
     store['ilmeghayb_book_keys'] = JSON.stringify({ 'b-bulhan': 'ABCDE-FGHIJ-KLMNO-PQRST' });
-    const headers = getBookKeyHeaders();
-    expect(headers[BOOK_KEYS_HEADER]).toBeTruthy();
-    const decoded = JSON.parse(
-      Buffer.from(headers[BOOK_KEYS_HEADER].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
-    );
-    expect(decoded).toEqual({ 'b-bulhan': 'ABCDE-FGHIJ-KLMNO-PQRST' });
+    expect(getBookUnlockHeaders()).toEqual({});
+  });
+
+  it('uses one stable device id per browser', () => {
+    stubLocalStorage();
+    const first = getDeviceId();
+    expect(first).toBeTruthy();
+    expect(getDeviceId()).toBe(first);
+    expect(store['ilmeghayb_device_id']).toBe(first);
+  });
+});
+
+describe('api.verifyBookKey stores the unlock token, never the raw key', () => {
+  const realFetch = (globalThis as any).fetch;
+  const realLocalStorage = (globalThis as any).localStorage;
+  let store: Record<string, string> = {};
+  let seen: { url: string; init?: any } | null = null;
+
+  const stubAll = () => {
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => (k in store ? store[k] : null),
+      setItem: (k: string, v: string) => {
+        store[k] = v;
+      },
+      removeItem: (k: string) => {
+        delete store[k];
+      },
+    };
+    (globalThis as any).fetch = vi.fn(async (url: string, init?: any) => {
+      seen = { url, init };
+      return {
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({ ok: true, usesLeft: 99, unlockToken: 'tok-xyz', unlockExpiresAt: Date.now() + 3600000 }),
+      };
+    });
+  };
+
+  afterEach(() => {
+    (globalThis as any).fetch = realFetch;
+    (globalThis as any).localStorage = realLocalStorage;
+    store = {};
+    seen = null;
+    vi.restoreAllMocks();
+  });
+
+  it('sends the device id header and stores only the unlock token', async () => {
+    stubAll();
+    const res = await api.verifyBookKey('b-bulhan', 'ABCDE-FGHIJ-KLMNO-PQRST');
+    expect(res.ok).toBe(true);
+    expect(res.unlockToken).toBe('tok-xyz');
+    expect(res.usesLeft).toBe(99);
+    expect(seen?.url).toBe('/api/book-keys/verify');
+    expect(seen?.init?.headers?.[DEVICE_ID_HEADER]).toBeTruthy();
+    const stored = JSON.parse(store['ilmeghayb_book_unlocks'] || '{}');
+    expect(stored['b-bulhan']?.token).toBe('tok-xyz');
+    expect(JSON.stringify(store)).not.toContain('ABCDE-FGHIJ-KLMNO-PQRST');
+  });
+
+  it('reports a wrong key without storing anything', async () => {
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => (k in store ? store[k] : null),
+      setItem: (k: string, v: string) => {
+        store[k] = v;
+      },
+      removeItem: (k: string) => {
+        delete store[k];
+      },
+    };
+    (globalThis as any).fetch = vi.fn(async () => ({
+      ok: false,
+      status: 400,
+      text: async () => JSON.stringify({ error: 'Wrong key. Check the key and try again.' }),
+    }));
+    const res = await api.verifyBookKey('b-bulhan', 'WRONG-WRONG-WRONG-WRONG');
+    expect(res.ok).toBe(false);
+    expect(store['ilmeghayb_book_unlocks']).toBeUndefined();
   });
 });
 
@@ -457,10 +549,12 @@ describe('api.getCatalog sends the unlock headers', () => {
     expect(Object.keys(seenHeaders || {})).not.toContain('x-follow-unlocked');
   });
 
-  it('includes x-book-keys when a key is held', async () => {
+  it('includes x-book-unlock when an unlock token is held, never x-book-keys', async () => {
     stubAll();
-    store['ilmeghayb_book_keys'] = JSON.stringify({ b1: 'KEY-12345-ABCDE-67890' });
+    saveBookUnlockToken('b1', 'tok-1');
     await api.reloadCatalog();
-    expect((seenHeaders as any)?.['x-book-keys']).toBeTruthy();
+    expect((seenHeaders as any)?.['x-book-unlock']).toBeTruthy();
+    expect(JSON.parse((seenHeaders as any)['x-book-unlock'])).toEqual({ b1: 'tok-1' });
+    expect((seenHeaders as any)?.['x-book-keys']).toBeUndefined();
   });
 });

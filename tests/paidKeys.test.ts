@@ -11,9 +11,13 @@ import {
   createBookKeyRecord,
   publicKeyView,
   keyMonitorTotals,
-  parseBookKeysHeader,
-  encodeBookKeysHeader,
-  keyUnlockedBookIds,
+  createBookUnlockToken,
+  verifyBookUnlockToken,
+  parseBookUnlockHeader,
+  encodeBookUnlockHeader,
+  unlockTokenBookIds,
+  isValidDeviceId,
+  BOOK_UNLOCK_TTL_MS,
   loadBookKeyStore,
   saveBookKeyStore,
   DEFAULT_KEY_MAX_USES,
@@ -142,30 +146,57 @@ describe('publicKeyView + monitor totals', () => {
   });
 });
 
-describe('x-book-keys header', () => {
+describe('x-book-unlock header (H-4: raw keys are never accepted here)', () => {
+  const SECRET = 'test-session-secret-for-unlock-tokens';
+  const DEVICE = '550e8400-e29b-41d4-a716-446655440000';
+
   it('round-trips through encode/parse and unlocks only the right book', () => {
-    const a = createBookKeyRecord('b-a', 100);
-    const b = createBookKeyRecord('b-b', 100);
-    const store = { keys: [a.record, b.record] };
-    const header = encodeBookKeysHeader({ 'b-a': a.plainKey });
-    const unlocked = keyUnlockedBookIds(store, header);
-    expect([...unlocked]).toEqual(['b-a']);
+    const a = createBookUnlockToken('b-a', DEVICE, SECRET);
+    const b = createBookUnlockToken('b-b', DEVICE, SECRET);
+    const header = encodeBookUnlockHeader({ 'b-a': a.token, 'b-b': b.token });
+    expect([...unlockTokenBookIds(header, SECRET)].sort()).toEqual(['b-a', 'b-b']);
 
-    // A key for book A presented as book B's key does not unlock B.
-    const wrongBook = keyUnlockedBookIds(store, encodeBookKeysHeader({ 'b-b': a.plainKey }));
+    // A token minted for book A does not unlock book B.
+    const wrongBook = unlockTokenBookIds(encodeBookUnlockHeader({ 'b-b': a.token }), SECRET);
     expect([...wrongBook]).toEqual([]);
+  });
 
-    // A used-up key does not unlock.
-    a.record.uses = 100;
-    expect([...keyUnlockedBookIds(store, header)]).toEqual([]);
+  it('verifies the token back to its device id, and rejects forgeries', () => {
+    const { token, expiresAt } = createBookUnlockToken('b-a', DEVICE, SECRET);
+    expect(verifyBookUnlockToken(token, 'b-a', SECRET)).toBe(DEVICE);
+    expect(new Date(expiresAt).getTime() - Date.now()).toBeGreaterThan(BOOK_UNLOCK_TTL_MS - 60_000);
+    expect(verifyBookUnlockToken(token, 'b-b', SECRET)).toBeNull();
+    // Tamper with one character of the token: the HMAC must fail.
+    const tampered = token.slice(0, -2) + (token.slice(-2, -1) === 'A' ? 'B' : 'A') + token.slice(-1);
+    expect(verifyBookUnlockToken(tampered, 'b-a', SECRET)).toBeNull();
+    // A token minted under another secret never verifies.
+    expect(verifyBookUnlockToken(token, 'b-a', 'a-different-secret')).toBeNull();
+  });
+
+  it('rejects expired tokens', () => {
+    const now = Date.now();
+    const { token } = createBookUnlockToken('b-a', DEVICE, SECRET, now);
+    expect(verifyBookUnlockToken(token, 'b-a', SECRET, now)).toBe(DEVICE);
+    // 31 days later the 30-day token is dead.
+    expect(verifyBookUnlockToken(token, 'b-a', SECRET, now + 31 * 24 * 60 * 60 * 1000)).toBeNull();
   });
 
   it('a missing or broken header unlocks nothing and never throws', () => {
-    const store = { keys: [] };
-    expect([...keyUnlockedBookIds(store, '')]).toEqual([]);
-    expect([...keyUnlockedBookIds(store, 'not-base64!!!')]).toEqual([]);
-    expect([...keyUnlockedBookIds(store, undefined)]).toEqual([]);
-    expect(parseBookKeysHeader('%%%')).toEqual({});
+    expect([...unlockTokenBookIds('', SECRET)]).toEqual([]);
+    expect([...unlockTokenBookIds('not-base64!!!', SECRET)]).toEqual([]);
+    expect([...unlockTokenBookIds(undefined, SECRET)]).toEqual([]);
+    expect(parseBookUnlockHeader('%%%')).toEqual({});
+    expect(verifyBookUnlockToken('', 'b-a', SECRET)).toBeNull();
+    expect(verifyBookUnlockToken(null, 'b-a', SECRET)).toBeNull();
+  });
+
+  it('rejects device ids that would break the token format', () => {
+    expect(isValidDeviceId(DEVICE)).toBe(true);
+    expect(isValidDeviceId('a.b')).toBe(false); // dots split the token
+    expect(isValidDeviceId('')).toBe(false);
+    expect(isValidDeviceId('has space')).toBe(false);
+    expect(isValidDeviceId('x'.repeat(129))).toBe(false);
+    expect(isValidDeviceId(undefined)).toBe(false);
   });
 });
 

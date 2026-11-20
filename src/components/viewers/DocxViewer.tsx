@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import mammoth from 'mammoth';
+import DOMPurify from 'dompurify';
 import { Download, ExternalLink, RefreshCw, ZoomIn, ZoomOut, FileText, AlertCircle } from 'lucide-react';
 import { getPaidBookHeaders } from '../../services/api';
 
@@ -35,7 +36,11 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({ fileUrl, title, onDownlo
       }
       const arrayBuffer = await response.arrayBuffer();
       const result = await mammoth.convertToHtml({ arrayBuffer });
-      setHtmlContent(result.value);
+      // Sanitise before rendering (L-2): mammoth HTML comes from a
+      // library file, and a crafted DOCX can carry a javascript: link
+      // (or worse). DOMPurify strips scripts and unsafe URIs, so the
+      // rendered page can never run code from the document.
+      setHtmlContent(DOMPurify.sanitize(result.value));
     } catch (err: any) {
       console.warn('Mammoth conversion error, falling back to embedded viewer:', err);
       setError(err.message || 'Could not parse DOCX natively.');
