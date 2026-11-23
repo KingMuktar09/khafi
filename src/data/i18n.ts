@@ -21,15 +21,23 @@
  * falls back to English — and the tests fail on any missing key, so
  * a missing translation can never ship silently.
  *
- * The per-area chunks (i18n-home, i18n-library, i18n-tools,
- * i18n-topics) are merged into STRINGS below. Their views either
- * call t() here or read their own chunk directly (topics/tools
- * helpers); both paths hold the same strings.
+ * The per-area chunks (i18n-home, i18n-library, i18n-topics) are
+ * merged into STRINGS below. Their views either call t() here or
+ * read their own chunk directly (topics helpers); both paths hold
+ * the same strings.
+ *
+ * i18n-tools is deliberately NOT merged here: it is the biggest
+ * chunk (about 3,400 strings across the four languages) and every
+ * tools view reads it directly through tTools() in i18n-tools.ts,
+ * so merging it would ship the whole study-tools dictionary in the
+ * first-load bundle of every page, including Home. Tools routes
+ * are lazy-loaded, so i18n-tools now downloads only when a reader
+ * opens a study tool. Do not re-add it to STRINGS without checking
+ * the first-load bundle size first.
  */
 
 import { I18N_HOME } from './i18n-home';
 import { I18N_LIBRARY } from './i18n-library';
-import { I18N_TOOLS } from './i18n-tools';
 import { I18N_TOPICS } from './i18n-topics';
 
 export type SiteLanguage = 'en' | 'hi' | 'bn' | 'ur';
@@ -464,10 +472,10 @@ const ur: Dict = {
 };
 
 export const STRINGS: Record<SiteLanguage, Dict> = {
-  en: { ...en, ...I18N_HOME.en, ...I18N_LIBRARY.en, ...I18N_TOOLS.en, ...I18N_TOPICS.en },
-  hi: { ...hi, ...I18N_HOME.hi, ...I18N_LIBRARY.hi, ...I18N_TOOLS.hi, ...I18N_TOPICS.hi },
-  bn: { ...bn, ...I18N_HOME.bn, ...I18N_LIBRARY.bn, ...I18N_TOOLS.bn, ...I18N_TOPICS.bn },
-  ur: { ...ur, ...I18N_HOME.ur, ...I18N_LIBRARY.ur, ...I18N_TOOLS.ur, ...I18N_TOPICS.ur },
+  en: { ...en, ...I18N_HOME.en, ...I18N_LIBRARY.en, ...I18N_TOPICS.en },
+  hi: { ...hi, ...I18N_HOME.hi, ...I18N_LIBRARY.hi, ...I18N_TOPICS.hi },
+  bn: { ...bn, ...I18N_HOME.bn, ...I18N_LIBRARY.bn, ...I18N_TOPICS.bn },
+  ur: { ...ur, ...I18N_HOME.ur, ...I18N_LIBRARY.ur, ...I18N_TOPICS.ur },
 };
 
 /**

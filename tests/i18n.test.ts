@@ -163,7 +163,6 @@ describe('switching changes the visible labels', () => {
     'home.languageTitle',
     'library.groupedNote',
     'book.returnToLibrary',
-    'tools.common.search',
     'topics.studyNote',
   ];
 
@@ -175,6 +174,19 @@ describe('switching changes the visible labels', () => {
       expect(t(key, 'bn'), `${key} did not change in Bengali`).not.toBe(en);
       expect(t(key, 'ur'), `${key} did not change in Urdu`).not.toBe(en);
     }
+  });
+
+  it('the tools spot key reads differently through tTools, not t()', () => {
+    // tools.* keys live in the i18n-tools chunk, which the lazy tools
+    // routes load on demand; they are intentionally NOT in the merged
+    // STRINGS dict, so t() must not be used for them.
+    const key = 'tools.common.search';
+    const en = tTools(key, 'en');
+    expect(en, `${key} has no English value`).not.toBe(key);
+    expect(tTools(key, 'hi'), `${key} did not change in Hinglish`).not.toBe(en);
+    expect(tTools(key, 'bn'), `${key} did not change in Bengali`).not.toBe(en);
+    expect(tTools(key, 'ur'), `${key} did not change in Urdu`).not.toBe(en);
+    expect(t(key, 'en'), 'tools keys must stay out of the merged dict').toBe(key);
   });
 
   it('single-word loanwords stay English in Hinglish by design, but change in Bengali', () => {
@@ -217,7 +229,10 @@ describe('every key exists in all four languages', () => {
     expect(hasFullCoverage('bn')).toBe(true);
     expect(hasFullCoverage('ur')).toBe(true);
     const keys = allKeys();
-    expect(keys.length).toBeGreaterThan(1500);
+    // 717 keys as of the tools split: tools.* keys live in the
+    // i18n-tools chunk (loaded only on tools routes) and are covered
+    // by the chunk key-set test below, not by this merged dict.
+    expect(keys.length).toBeGreaterThan(600);
     for (const key of keys) {
       expect(STRINGS.hi[key], `missing hi: ${key}`).toBeTruthy();
       expect(STRINGS.bn[key], `missing bn: ${key}`).toBeTruthy();
