@@ -8,9 +8,9 @@ import { siteConfig } from '../src/config/siteConfig';
 // folder. The two al-Buni books already in the catalog moved there too,
 // still free.
 //
-// NOTE (counts): the catalog in this repo has 137 books / 27 folders
-// (the 173-book figure in older notes was stale). Adding Manba makes
-// 138 books. Kitab Al Bulhan stays paid as before (no price set in the
+// NOTE (counts): the catalog in this repo had 137 books / 27 folders
+// (the 173-book figure in older notes was stale). Adding Manba made
+// 138 books. Fifteen public-domain books added 25 Nov 2026 make 153. Kitab Al Bulhan stays paid as before (no price set in the
 // working catalog); Manba is the only NEW paid book, priced Rs 99 —
 // paid books need their own key, and they open from Drive like the
 // other books once unlocked.
@@ -23,7 +23,7 @@ describe('Manba Usul al-Hikma (paid, needs its own key)', () => {
   const manba = books.find((b) => b.id === 'b-manba-usul-al-hikma');
 
   it('exists as the 138th book', () => {
-    expect(books).toHaveLength(138);
+    expect(books).toHaveLength(153);
     expect(folders).toHaveLength(27);
     expect(manba).toBeTruthy();
   });
@@ -99,7 +99,7 @@ describe('Ahmad al-Buni Collection (separate category, not a folder)', () => {
 
 describe('public (static) catalog copy', () => {
   it('matches the repo catalog counts', () => {
-    expect((publicCatalog as any).books).toHaveLength(138);
+    expect((publicCatalog as any).books).toHaveLength(153);
     expect((publicCatalog as any).folders).toHaveLength(27);
   });
 
@@ -122,8 +122,8 @@ describe('public (static) catalog copy', () => {
 });
 
 describe('gate fallback totals', () => {
-  it('siteConfig totals match the catalog (138 books, 27 folders)', () => {
-    expect(siteConfig.catalogStats.totalBooks).toBe(138);
+  it('siteConfig totals match the catalog (153 books, 27 folders)', () => {
+    expect(siteConfig.catalogStats.totalBooks).toBe(153);
     expect(siteConfig.catalogStats.totalFolders).toBe(27);
   });
 });
